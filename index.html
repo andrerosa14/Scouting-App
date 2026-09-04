@@ -59,10 +59,17 @@
   .btn-danger:hover{background:rgba(193,91,65,.12);}
 
   /* ---------- tabs ---------- */
-  .tabs{display:flex;gap:0;max-width:1100px;margin:0 auto;padding:0 24px;border-bottom:1px solid var(--line);}
-  .tab-btn{background:none;border:none;color:var(--muted);padding:14px 4px;margin-right:26px;font-size:14px;font-weight:600;border-bottom:2px solid transparent;}
-  .tab-btn.active{color:var(--chalk);border-bottom-color:var(--gold);}
-  .tab-btn:hover{color:var(--chalk);}
+  .tabs{display:flex;justify-content:center;gap:10px;max-width:1100px;margin:0 auto;padding:16px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .tab-btn{display:flex;align-items:center;gap:9px;background:var(--pitch-panel);border:1px solid var(--line);color:var(--muted);padding:10px 18px;border-radius:var(--radius);font-size:14px;font-weight:600;transition:background .15s, border-color .15s, color .15s;}
+  .tab-btn svg{flex-shrink:0;}
+  .tab-btn:hover{border-color:var(--gold-dim);color:var(--chalk);}
+  .tab-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1305;}
+
+  @keyframes tabFadeIn{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .tab-fade{animation:tabFadeIn .32s ease;}
 
   /* ---------- shell / filters ---------- */
   .shell{max-width:1100px;margin:0 auto;padding:20px 24px 80px;}
@@ -485,9 +492,9 @@ function showToast(msg){
 
 /* ---------------- app shell ---------------- */
 const TABS = [
-  {v:'players', label:'Jogadores'},
-  {v:'clubs', label:'Clubes'},
-  {v:'shortlists', label:'Shortlists'},
+  {v:'players', label:'Jogadores', icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>'},
+  {v:'clubs', label:'Clubes', icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
+  {v:'shortlists', label:'Shortlists', icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'},
 ];
 function headerPrimaryButtonHtml(){
   if(activeTab==='clubs') return `<button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
@@ -523,10 +530,10 @@ function renderMainShell(){
       </div>
     </header>
     <div class="tabs">
-      ${TABS.map(t=>`<button class="tab-btn ${activeTab===t.v?'active':''}" onclick="switchTab('${t.v}')">${t.label}</button>`).join('')}
+      ${TABS.map(t=>`<button class="tab-btn ${activeTab===t.v?'active':''}" onclick="switchTab('${t.v}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg><span>${t.label}</span></button>`).join('')}
     </div>
     <div class="shell">
-      <div id="tabContent"></div>
+      <div id="tabContent" class="tab-fade"></div>
     </div>
     <footer>
       <button onclick="openSettingsModal()">Definições do GitHub</button>
@@ -547,14 +554,18 @@ function emptyStateHtml(title, desc, onclickAction, btnLabel){
 function renderTabContent(){
   const el = document.getElementById('tabContent');
   if(!el) return;
+  let inner;
   if(activeTab === 'clubs'){
-    el.innerHTML = clubs.length === 0
+    inner = clubs.length === 0
       ? emptyStateHtml('Ainda não tens clubes', 'Cria o primeiro clube para poderes associar jogadores a ele.', "openClubFormModal()", '+ Novo Clube')
       : `<div class="club-list-panel">${clubsListHtml()}</div>`;
   } else if(activeTab === 'shortlists'){
-    el.innerHTML = activeShortlistId ? renderShortlistDetailHtml() : renderShortlistsTabHtml();
+    inner = activeShortlistId ? renderShortlistDetailHtml() : renderShortlistsTabHtml();
   } else {
-    el.innerHTML = `<div class="filters" id="filtersBar"></div><div id="listContainer"></div>`;
+    inner = `<div class="filters" id="filtersBar"></div><div id="listContainer"></div>`;
+  }
+  el.innerHTML = inner;
+  if(activeTab === 'players'){
     renderFilters();
     renderList();
   }
