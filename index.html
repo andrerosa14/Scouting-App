@@ -58,6 +58,12 @@
   .btn-danger{border-color:var(--terracotta);color:var(--terracotta);background:transparent;}
   .btn-danger:hover{background:rgba(193,91,65,.12);}
 
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:0;max-width:1100px;margin:0 auto;padding:0 24px;border-bottom:1px solid var(--line);}
+  .tab-btn{background:none;border:none;color:var(--muted);padding:14px 4px;margin-right:26px;font-size:14px;font-weight:600;border-bottom:2px solid transparent;}
+  .tab-btn.active{color:var(--chalk);border-bottom-color:var(--gold);}
+  .tab-btn:hover{color:var(--chalk);}
+
   /* ---------- shell / filters ---------- */
   .shell{max-width:1100px;margin:0 auto;padding:20px 24px 80px;}
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;padding:14px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);}
@@ -165,6 +171,18 @@
   .ct-soon{color:var(--gold);border-color:var(--gold-dim);}
   .ct-expired{color:var(--terracotta);border-color:var(--terracotta);}
 
+  /* ---------- clubs tab / shortlists ---------- */
+  .club-list-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px;}
+
+  .shortlist-row{display:flex;align-items:center;gap:14px;background:var(--pitch-panel);padding:12px 14px;cursor:pointer;}
+  .shortlist-row:hover{background:var(--pitch-panel-raise);}
+  .shortlist-row .info{flex:1;min-width:0;}
+  .sl-name{font-weight:600;font-size:15px;}
+  .sl-count{font-size:13px;color:var(--muted);margin-top:2px;}
+
+  .shortlist-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .shortlist-detail-title{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 16px;}
+
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--terracotta);color:#2a120a;padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:60;max-width:90vw;text-align:center;}
   footer{max-width:1100px;margin:0 auto;padding:0 24px 40px;display:flex;justify-content:flex-end;gap:18px;}
   footer button{font-size:12px;color:var(--muted);background:none;border:none;text-decoration:underline;}
@@ -232,9 +250,12 @@ const NOTE_TYPES = [
 
 let players = [];
 let clubs = [];
+let shortlists = [];
 let storageOk = true;
 let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'rating'};
 let openDossierId = null;
+let activeTab = 'players'; // 'players' | 'clubs' | 'shortlists'
+let activeShortlistId = null;
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
@@ -395,7 +416,7 @@ function contentsPath(bustCache){
 
 async function fetchDataFromGitHub(){
   const res = await ghRequest(contentsPath(true));
-  if(res.status === 404){ ghSha = null; return {players:[], clubs:[]}; }
+  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[]}; }
   if(res.status === 401) throw new Error('AUTH');
   if(res.status === 403) throw new Error('FORBIDDEN');
   if(!res.ok) throw new Error('HTTP_'+res.status);
@@ -404,9 +425,9 @@ async function fetchDataFromGitHub(){
   const json = b64ToUtf8(data.content);
   let parsed = null;
   try{ parsed = JSON.parse(json); }catch(e){ parsed = null; }
-  if(Array.isArray(parsed)) return {players: parsed, clubs: []}; // formato antigo (só jogadores)
-  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || []};
-  return {players:[], clubs:[]};
+  if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: []}; // formato antigo (só jogadores)
+  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || [], shortlists: parsed.shortlists || []};
+  return {players:[], clubs:[], shortlists:[]};
 }
 
 async function getRemoteSha(){
@@ -421,7 +442,7 @@ async function saveDataToGitHub(){
   const doPut = async () => {
     const body = {
       message: 'Atualizar base de dados de scouting',
-      content: utf8ToB64(JSON.stringify({players, clubs}, null, 2)),
+      content: utf8ToB64(JSON.stringify({players, clubs, shortlists}, null, 2)),
     };
     if(ghSha) body.sha = ghSha;
     return ghRequest(contentsPath(), {method:'PUT', body: JSON.stringify(body)});
@@ -463,6 +484,21 @@ function showToast(msg){
 }
 
 /* ---------------- app shell ---------------- */
+const TABS = [
+  {v:'players', label:'Jogadores'},
+  {v:'clubs', label:'Clubes'},
+  {v:'shortlists', label:'Shortlists'},
+];
+function headerPrimaryButtonHtml(){
+  if(activeTab==='clubs') return `<button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
+  if(activeTab==='shortlists') return `<button class="btn btn-primary" onclick="openShortlistFormModal()">+ Nova Shortlist</button>`;
+  return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
+}
+function switchTab(tab){
+  activeTab = tab;
+  activeShortlistId = null;
+  renderMainShell();
+}
 function renderMainShell(){
   document.getElementById('appRoot').innerHTML = `
     <header>
@@ -477,18 +513,20 @@ function renderMainShell(){
           <span>A tua base de dados pessoal de jogadores observados</span>
         </div>
         <div class="header-actions">
+          ${activeTab==='players' ? `
           <div class="search-box">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input id="searchInput" type="text" placeholder="Procurar nome ou clube..." oninput="onSearch(this.value)">
-          </div>
-          <button class="btn" onclick="openClubsModal()">Clubes</button>
-          <button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>
+            <input id="searchInput" type="text" placeholder="Procurar nome ou clube..." value="${escapeHtml(state.search)}" oninput="onSearch(this.value)">
+          </div>` : ''}
+          ${headerPrimaryButtonHtml()}
         </div>
       </div>
     </header>
+    <div class="tabs">
+      ${TABS.map(t=>`<button class="tab-btn ${activeTab===t.v?'active':''}" onclick="switchTab('${t.v}')">${t.label}</button>`).join('')}
+    </div>
     <div class="shell">
-      <div class="filters" id="filtersBar"></div>
-      <div id="listContainer"></div>
+      <div id="tabContent"></div>
     </div>
     <footer>
       <button onclick="openSettingsModal()">Definições do GitHub</button>
@@ -496,6 +534,30 @@ function renderMainShell(){
     </footer>
   `;
   render();
+}
+
+function emptyStateHtml(title, desc, onclickAction, btnLabel){
+  return `<div class="empty">
+    <h2>${escapeHtml(title)}</h2>
+    <p>${escapeHtml(desc)}</p>
+    <button class="btn btn-primary" onclick="${onclickAction}">${escapeHtml(btnLabel)}</button>
+  </div>`;
+}
+
+function renderTabContent(){
+  const el = document.getElementById('tabContent');
+  if(!el) return;
+  if(activeTab === 'clubs'){
+    el.innerHTML = clubs.length === 0
+      ? emptyStateHtml('Ainda não tens clubes', 'Cria o primeiro clube para poderes associar jogadores a ele.', "openClubFormModal()", '+ Novo Clube')
+      : `<div class="club-list-panel">${clubsListHtml()}</div>`;
+  } else if(activeTab === 'shortlists'){
+    el.innerHTML = activeShortlistId ? renderShortlistDetailHtml() : renderShortlistsTabHtml();
+  } else {
+    el.innerHTML = `<div class="filters" id="filtersBar"></div><div id="listContainer"></div>`;
+    renderFilters();
+    renderList();
+  }
 }
 
 function renderLoadingScreen(msg){
@@ -543,7 +605,8 @@ async function submitSetup(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    activeTab = 'players'; activeShortlistId = null;
     saveConfig(ghConfig);
     storageOk = true;
     renderMainShell();
@@ -556,7 +619,8 @@ async function connectAndLoad(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    activeTab = 'players'; activeShortlistId = null;
     storageOk = true;
     renderMainShell();
   }catch(e){
@@ -609,7 +673,8 @@ async function submitSettings(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    activeTab = 'players'; activeShortlistId = null;
     saveConfig(ghConfig);
     storageOk = true;
     renderMainShell();
@@ -624,6 +689,8 @@ function disconnectGithub(){
   ghSha = null;
   players = [];
   clubs = [];
+  shortlists = [];
+  activeTab = 'players'; activeShortlistId = null;
   closeModal();
   renderSetupScreen();
 }
@@ -740,8 +807,7 @@ function renderList(){
 }
 
 function render(){
-  renderFilters();
-  renderList();
+  renderTabContent();
   if(openDossierId) renderDossier();
 }
 
@@ -805,7 +871,7 @@ function openAddModal(){
     </div>`;
   renderPhotoPreview('f_photo_preview', null);
   wirePhotoPreview('f_photo', 'f_photo_preview', 480, 0.82);
-  setTimeout(()=>document.getElementById('f_name').focus(), 50);
+  setTimeout(()=>{ const el=document.getElementById('f_name'); if(el) el.focus(); }, 50);
 }
 function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 
@@ -863,7 +929,7 @@ function openEditPlayerModal(id){
     </div>`;
   renderPhotoPreview('f_photo_preview', p.photo);
   wirePhotoPreview('f_photo', 'f_photo_preview', 480, 0.82);
-  setTimeout(()=>document.getElementById('f_name').focus(), 50);
+  setTimeout(()=>{ const el=document.getElementById('f_name'); if(el) el.focus(); }, 50);
 }
 
 async function submitEditPlayer(id){
@@ -908,21 +974,6 @@ async function submitInlineClub(){
   fileInput.value = '';
 }
 
-function openClubsModal(){
-  document.getElementById('modalRoot').innerHTML = `
-    <div class="overlay" onclick="if(event.target===this) closeModal()">
-      <div class="modal">
-        <h2>Clubes</h2>
-        <div class="modal-actions" style="justify-content:flex-start;margin:-6px 0 16px;">
-          <button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>
-        </div>
-        <div id="clubsListWrap">${clubsListHtml()}</div>
-        <div class="modal-actions">
-          <button class="btn" onclick="closeModal()">Fechar</button>
-        </div>
-      </div>
-    </div>`;
-}
 function clubsListHtml(){
   if(clubs.length === 0) return `<p style="color:var(--muted);font-size:13px;">Ainda não criaste nenhum clube.</p>`;
   return clubs.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>{
@@ -954,14 +1005,14 @@ function openClubFormModal(editId){
           ${editing && editing.logo ? `<label class="photo-remove-label"><input type="checkbox" id="c_logo_remove"> Remover logótipo atual</label>` : ''}
         </div>
         <div class="modal-actions">
-          <button class="btn" onclick="openClubsModal()">Cancelar</button>
+          <button class="btn" onclick="closeModal()">Cancelar</button>
           <button class="btn btn-primary" onclick="submitClubForm(${editing?`'${editing.id}'`:'null'})">${editing ? 'Guardar' : 'Criar clube'}</button>
         </div>
       </div>
     </div>`;
   renderPhotoPreview('c_logo_preview', editing ? editing.logo : null, 'Sem logótipo');
   wirePhotoPreview('c_logo', 'c_logo_preview', 240, 0.85);
-  setTimeout(()=>document.getElementById('c_name').focus(), 50);
+  setTimeout(()=>{ const el=document.getElementById('c_name'); if(el) el.focus(); }, 50);
 }
 
 async function submitClubForm(editId){
@@ -989,7 +1040,8 @@ async function submitClubForm(editId){
     clubs.push({id: uid(), name, logo, createdAt: Date.now()});
   }
   await saveData();
-  openClubsModal();
+  closeModal();
+  render();
 }
 
 async function removeClub(id){
@@ -1003,7 +1055,113 @@ async function removeClub(id){
   clubs = clubs.filter(x=>x.id!==id);
   players.forEach(p=>{ if(p.clubId===id) p.clubId=null; });
   await saveData();
-  openClubsModal();
+  render();
+}
+
+/* ---------------- shortlists ---------------- */
+function renderShortlistsTabHtml(){
+  if(shortlists.length === 0){
+    return emptyStateHtml('Ainda não tens shortlists', 'Cria uma shortlist para agrupares os jogadores que quiseres destacar — por exemplo, para uma posição em aberto ou uma janela de mercado.', "openShortlistFormModal()", '+ Nova Shortlist');
+  }
+  return `<div class="list">
+    ${shortlists.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(sl=>{
+      const count = sl.playerIds.length;
+      return `
+      <div class="shortlist-row" onclick="openShortlistDetail('${sl.id}')">
+        <div class="badge" style="background:var(--gold-dim);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1305" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="info">
+          <div class="sl-name">${escapeHtml(sl.name)}</div>
+          <div class="sl-count">${count} jogador${count===1?'':'es'}</div>
+        </div>
+        <button type="button" class="btn-ghost" onclick="event.stopPropagation(); openShortlistFormModal('${sl.id}')">Editar</button>
+        <button type="button" class="btn-ghost" onclick="event.stopPropagation(); removeShortlist('${sl.id}')">Eliminar</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function openShortlistDetail(id){
+  activeShortlistId = id;
+  renderTabContent();
+}
+
+function renderShortlistDetailHtml(){
+  const sl = shortlists.find(s=>s.id===activeShortlistId);
+  if(!sl){ activeShortlistId = null; return renderShortlistsTabHtml(); }
+  const list = players.filter(p=>sl.playerIds.includes(p.id));
+  return `
+    <div class="shortlist-detail-head">
+      <button class="btn btn-ghost" onclick="activeShortlistId=null; renderTabContent();">← Shortlists</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="openShortlistFormModal('${sl.id}')">Editar nome</button>
+        <button class="btn btn-ghost" onclick="removeShortlist('${sl.id}')">Eliminar shortlist</button>
+      </div>
+    </div>
+    <h2 class="shortlist-detail-title">${escapeHtml(sl.name)}</h2>
+    ${list.length === 0 ? `<div class="empty"><h2>Ainda sem jogadores</h2><p>Adiciona jogadores a esta shortlist a partir da ficha de cada um (secção "Shortlists").</p></div>` :
+    `<div class="list">${list.map(p=>{
+      const pos = posInfo(p.position);
+      const club = clubInfo(p.clubId);
+      return `
+      <div class="row" style="cursor:pointer;" onclick="openDossier('${p.id}')">
+        ${avatarHtml(p.photo, initials(p.name), pos.line)}
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="club">${club && club.logo ? `<img src="${club.logo}" class="club-logo-mini" alt="">` : ''}<span>${club?escapeHtml(club.name):'—'}</span></div>
+        <div class="pos-tag">${pos.v}</div>
+        <div></div>
+        <button type="button" class="btn-ghost" style="justify-self:end;" onclick="event.stopPropagation(); toggleShortlistPlayer('${sl.id}','${p.id}').then(renderTabContent);">Remover</button>
+      </div>`;
+    }).join('')}</div>`}
+  `;
+}
+
+async function toggleShortlistPlayer(shortlistId, playerId){
+  const sl = shortlists.find(s=>s.id===shortlistId);
+  if(!sl) return;
+  const idx = sl.playerIds.indexOf(playerId);
+  if(idx === -1) sl.playerIds.push(playerId); else sl.playerIds.splice(idx,1);
+  await saveData();
+}
+
+function openShortlistFormModal(editId, addPlayerId){
+  const editing = editId ? shortlists.find(s=>s.id===editId) : null;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>${editing ? 'Editar Shortlist' : 'Nova Shortlist'}</h2>
+        <div class="field"><label>Nome</label><input id="sl_name" type="text" placeholder="ex: Alvos Janeiro" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitShortlistForm(${editing?`'${editing.id}'`:'null'}, ${addPlayerId?`'${addPlayerId}'`:'null'})">${editing?'Guardar':'Criar shortlist'}</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{ const el=document.getElementById('sl_name'); if(el) el.focus(); }, 50);
+}
+
+async function submitShortlistForm(editId, addPlayerId){
+  const name = document.getElementById('sl_name').value.trim();
+  if(!name){ showToast('Indica o nome da shortlist.'); return; }
+  if(editId){
+    const sl = shortlists.find(s=>s.id===editId);
+    if(sl) sl.name = name;
+  } else {
+    shortlists.push({id: uid(), name, playerIds: addPlayerId ? [addPlayerId] : [], createdAt: Date.now()});
+  }
+  await saveData();
+  closeModal();
+  if(addPlayerId){ renderDossier(); } else { render(); }
+}
+
+async function removeShortlist(id){
+  const sl = shortlists.find(s=>s.id===id);
+  if(!sl) return;
+  if(!confirm(`Eliminar a shortlist "${sl.name}"? Os jogadores não são apagados, só deixam de estar nesta lista.`)) return;
+  shortlists = shortlists.filter(s=>s.id!==id);
+  if(activeShortlistId === id) activeShortlistId = null;
+  await saveData();
   render();
 }
 
@@ -1082,6 +1240,15 @@ function renderDossier(){
         </div>
 
         <div class="section">
+          <h3>Shortlists</h3>
+          <div class="chip-group">
+            ${shortlists.length === 0 ? `<span style="color:var(--muted);font-size:13px;">Sem shortlists ainda.</span>` :
+              shortlists.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(sl=>`<button class="chip ${sl.playerIds.includes(p.id)?'active':''}" onclick="toggleShortlistPlayer('${sl.id}','${p.id}').then(renderDossier);">${escapeHtml(sl.name)}</button>`).join('')}
+          </div>
+          <button type="button" class="link-btn" style="margin-top:8px;" onclick="openShortlistFormModal(null, '${p.id}')">+ Nova shortlist</button>
+        </div>
+
+        <div class="section">
           <h3>Dados básicos</h3>
           <dl class="basic-grid">
             <div><dt>Data de nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
@@ -1157,10 +1324,12 @@ async function removePlayer(id){
   render();
 }
 async function confirmClearAll(){
-  if(!confirm('Isto vai apagar TODOS os jogadores e clubes da tua base de dados. Continuar?')) return;
+  if(!confirm('Isto vai apagar TODOS os jogadores, clubes e shortlists da tua base de dados. Continuar?')) return;
   if(!confirm('Tens a certeza absoluta? Não é possível recuperar depois.')) return;
   players = [];
   clubs = [];
+  shortlists = [];
+  activeShortlistId = null;
   await saveData();
   render();
 }
