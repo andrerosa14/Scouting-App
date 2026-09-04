@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scouting — Base de Dados de Jogadores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch-dark:#12271f;
+    --pitch-panel:#1a3a2c;
+    --pitch-panel-raise:#204634;
+    --line:#365848;
+    --line-soft:#2a4738;
+    --chalk:#f1eee3;
+    --muted:#93a89b;
+    --gold:#c99a44;
+    --gold-dim:#8a713f;
+    --blue:#7396a8;
+    --olive:#a6b184;
+    --terracotta:#c15b41;
+    --success:#5f9260;
+    --radius:4px;
+    --font-display:'Oswald',sans-serif;
+    --font-body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--pitch-dark);color:var(--chalk);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--gold-dim);color:var(--chalk);}
+  input,select,textarea,button{font-family:inherit;color:inherit;}
+  button{cursor:pointer;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .num{font-variant-numeric:tabular-nums;}
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+
+  /* ---------- header ---------- */
+  header{position:relative;overflow:hidden;padding:28px 24px 22px;border-bottom:1px solid var(--line);}
+  .motif{position:absolute;inset:0;pointer-events:none;opacity:.16;}
+  .header-inner{position:relative;max-width:1100px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .brand{display:flex;flex-direction:column;gap:2px;}
+  .brand h1{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.03em;margin:0;color:var(--chalk);}
+  .brand span{color:var(--muted);font-size:13px;}
+  .header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .search-box{position:relative;}
+  .search-box input{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px 9px 32px;color:var(--chalk);width:220px;font-size:14px;}
+  .search-box input::placeholder{color:var(--muted);}
+  .search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.6;}
+  .btn{border:1px solid var(--line);background:var(--pitch-panel);color:var(--chalk);padding:9px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;transition:background .15s, border-color .15s;}
+  .btn:hover{border-color:var(--gold-dim);}
+  .btn-primary{background:var(--gold);border-color:var(--gold);color:#1a1305;font-weight:600;}
+  .btn-primary:hover{background:#d9ab54;}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--muted);padding:6px 8px;}
+  .btn-ghost:hover{color:var(--chalk);}
+  .btn-danger{border-color:var(--terracotta);color:var(--terracotta);background:transparent;}
+  .btn-danger:hover{background:rgba(193,91,65,.12);}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:0;max-width:1100px;margin:0 auto;padding:0 24px;border-bottom:1px solid var(--line);}
+  .tab-btn{background:none;border:none;color:var(--muted);padding:14px 4px;margin-right:26px;font-size:14px;font-weight:600;border-bottom:2px solid transparent;}
+  .tab-btn.active{color:var(--chalk);border-bottom-color:var(--gold);}
+  .tab-btn:hover{color:var(--chalk);}
+
+  /* ---------- shell / filters ---------- */
+  .shell{max-width:1100px;margin:0 auto;padding:20px 24px 80px;}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;padding:14px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);}
+  .filters .label{font-size:12px;color:var(--muted);margin-right:2px;}
+  .chip-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 11px;border-radius:var(--radius);font-size:13px;font-weight:600;}
+  .chip.active{background:var(--gold);border-color:var(--gold);color:#1a1305;}
+  select.filter-select{background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:7px 10px;border-radius:var(--radius);font-size:13px;}
+  .filters .spacer{flex:1;}
+  .count-label{font-size:13px;color:var(--muted);}
+
+  /* ---------- list ---------- */
+  .list{display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);}
+  .row{display:grid;grid-template-columns:44px 1.6fr 1fr 64px 110px 96px;gap:14px;align-items:center;background:var(--pitch-panel);padding:12px 14px;text-align:left;border:none;width:100%;}
+  .row:hover{background:var(--pitch-panel-raise);}
+  .badge{width:38px;height:38px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:14px;color:#12271f;}
+  .b-GR{background:var(--gold);} .b-DF{background:var(--blue);} .b-MC{background:var(--olive);} .b-AV{background:var(--terracotta);color:#2a120a;}
+  .row .name{font-weight:600;font-size:15px;}
+  .row .club{color:var(--muted);font-size:13px;}
+  .row .pos-tag{font-size:12px;color:var(--muted);font-weight:600;}
+  .row .age{color:var(--muted);font-size:13px;}
+  .stars{display:flex;gap:2px;}
+  .status-pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px;border:1px solid;text-align:center;white-space:nowrap;}
+  .st-obs{color:var(--muted);border-color:var(--line-soft);}
+  .st-follow{color:var(--gold);border-color:var(--gold-dim);}
+  .st-rec{color:var(--success);border-color:var(--success);}
+  .st-out{color:var(--terracotta);border-color:var(--terracotta);}
+
+  .empty{padding:64px 24px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius);}
+  .empty h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 8px;}
+  .empty p{color:var(--muted);margin:0 0 18px;}
+
+  /* ---------- modal (add player) ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(8,16,12,.68);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .modal{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:24px;}
+  .modal h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+  .field input,.field select{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:9px 10px;border-radius:var(--radius);font-size:14px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+
+  /* ---------- dossier ---------- */
+  .backdrop{position:fixed;inset:0;background:rgba(8,16,12,.55);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:40;}
+  .backdrop.open{opacity:1;pointer-events:auto;}
+  .dossier{position:fixed;top:0;right:0;height:100%;width:min(480px,100%);background:var(--pitch-panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s ease;z-index:45;overflow-y:auto;}
+  .dossier.open{transform:translateX(0);}
+  .dossier-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+  .dossier-body{padding:22px;}
+  .dossier-id{display:flex;gap:14px;align-items:center;margin-bottom:18px;}
+  .dossier-badge{width:56px;height:56px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:20px;color:#12271f;flex-shrink:0;}
+  .dossier-name{font-family:var(--font-display);font-weight:600;font-size:24px;margin:0 0 4px;}
+  .tag-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .tag{font-size:12px;color:var(--muted);border:1px solid var(--line-soft);padding:3px 9px;border-radius:12px;}
+
+  .section{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .section h3{font-family:var(--font-display);font-weight:600;font-size:14px;letter-spacing:.02em;margin:0 0 12px;color:var(--chalk);}
+  .status-select-row{display:flex;gap:6px;flex-wrap:wrap;}
+
+  .rating-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .stars button{background:none;border:none;padding:2px;line-height:0;}
+
+  .basic-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:13px;}
+  .basic-grid dt{color:var(--muted);margin-bottom:2px;}
+  .basic-grid dd{margin:0 0 8px;}
+
+  .note{background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:10px;}
+  .note.t-final{border-color:var(--gold-dim);}
+  .note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
+  .note-head-left{display:flex;align-items:center;gap:8px;}
+  .note-date{font-size:12px;color:var(--muted);font-weight:600;}
+  .note-type-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid;white-space:nowrap;}
+  .note-type-pill.t-nota{color:var(--muted);border-color:var(--line-soft);}
+  .note-type-pill.t-final{color:var(--gold);border-color:var(--gold-dim);}
+  .note p{margin:0;font-size:14px;white-space:pre-wrap;}
+  .note-form textarea{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:10px;font-size:14px;min-height:70px;resize:vertical;margin-top:10px;}
+  .note-form{margin-bottom:14px;}
+  .note-form-actions{display:flex;justify-content:flex-end;margin-top:8px;}
+
+  .danger-zone{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);text-align:right;}
+
+  /* ---------- photos / clubs ---------- */
+  .photo-preview{margin-top:8px;width:160px;height:120px;border:1px dashed var(--line);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--pitch-panel-raise);}
+  .photo-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-preview-empty{color:var(--muted);font-size:12px;text-align:center;padding:8px;}
+  .photo-preview-round{border-radius:50%;width:96px;height:96px;}
+  .photo-remove-label{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--muted);}
+
+  .club-logo-mini{width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+  .row .club{display:flex;align-items:center;gap:6px;}
+
+  .inline-club-form{margin-top:8px;padding:10px;background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);}
+  .inline-club-form .field{margin-bottom:8px;}
+  .link-btn{background:none;border:none;color:var(--gold);font-size:12px;font-weight:600;padding:4px 0;text-decoration:underline;}
+
+  .club-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+  .club-row:last-child{border-bottom:none;}
+  .club-row-avatar{width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--pitch-panel-raise);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--muted);}
+  .club-row-avatar img{width:100%;height:100%;object-fit:cover;}
+  .club-row-info{flex:1;min-width:0;}
+  .club-row-name{font-weight:600;font-size:14px;}
+  .club-row-count{font-size:12px;color:var(--muted);}
+
+  .ct-ok{color:var(--success);border-color:var(--success);}
+  .ct-soon{color:var(--gold);border-color:var(--gold-dim);}
+  .ct-expired{color:var(--terracotta);border-color:var(--terracotta);}
+
+  /* ---------- clubs tab / shortlists ---------- */
+  .club-list-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px;}
+
+  .shortlist-row{display:flex;align-items:center;gap:14px;background:var(--pitch-panel);padding:12px 14px;cursor:pointer;}
+  .shortlist-row:hover{background:var(--pitch-panel-raise);}
+  .shortlist-row .info{flex:1;min-width:0;}
+  .sl-name{font-weight:600;font-size:15px;}
+  .sl-count{font-size:13px;color:var(--muted);margin-top:2px;}
+
+  .shortlist-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .shortlist-detail-title{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 16px;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--terracotta);color:#2a120a;padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:60;max-width:90vw;text-align:center;}
+  footer{max-width:1100px;margin:0 auto;padding:0 24px 40px;display:flex;justify-content:flex-end;gap:18px;}
+  footer button{font-size:12px;color:var(--muted);background:none;border:none;text-decoration:underline;}
+
+  /* ---------- setup / connection screens ---------- */
+  .setup-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .setup-card{width:100%;max-width:440px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px;}
+  .setup-card .brand-mini{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.03em;margin:0 0 4px;}
+  .setup-card .sub{color:var(--muted);font-size:13px;margin:0 0 22px;}
+  .setup-card .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+  .setup-card .field input{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:10px;border-radius:var(--radius);font-size:14px;margin-bottom:14px;}
+  .setup-card .hint{font-size:12px;color:var(--muted);margin:-8px 0 14px;}
+  .setup-error{background:rgba(193,91,65,.12);border:1px solid var(--terracotta);color:var(--chalk);border-radius:var(--radius);padding:10px 12px;font-size:13px;margin-bottom:16px;}
+  .setup-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
+  .loading-state{min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:720px){
+    .row{grid-template-columns:38px 1fr 70px;grid-template-areas:"badge name status" "badge club status";row-gap:2px;}
+    .row .club{grid-area:club;}
+    .row .name{grid-area:name;}
+    .row .badge{grid-area:badge;}
+    .row .status-pill{grid-area:status;justify-self:end;}
+    .row .pos-tag,.row .age,.row .stars{display:none;}
+    .basic-grid{grid-template-columns:1fr 1fr;}
+    .header-inner{align-items:flex-start;}
+    .search-box input{width:150px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="appRoot"></div>
+
+<div id="modalRoot"></div>
+<div id="backdrop" class="backdrop" onclick="closeDossier()"></div>
+<div id="dossierRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ---------------- data / constants ---------------- */
+const POSITIONS = [
+  {v:'GR', label:'Guarda-Redes', line:'GR'},
+  {v:'DC', label:'Defesa Central', line:'DF'},
+  {v:'LD', label:'Lateral Direito', line:'DF'},
+  {v:'LE', label:'Lateral Esquerdo', line:'DF'},
+  {v:'MDC', label:'Médio Defensivo', line:'MC'},
+  {v:'MC', label:'Médio Centro', line:'MC'},
+  {v:'MOC', label:'Médio Ofensivo', line:'MC'},
+  {v:'ED', label:'Extremo Direito', line:'AV'},
+  {v:'EE', label:'Extremo Esquerdo', line:'AV'},
+  {v:'AV', label:'Avançado', line:'AV'},
+];
+const LINES = ['GR','DF','MC','AV'];
+const STATUSES = [
+  {v:'obs', label:'Em observação', cls:'st-obs'},
+  {v:'follow', label:'A seguir', cls:'st-follow'},
+  {v:'rec', label:'Recomendado', cls:'st-rec'},
+  {v:'out', label:'Dispensado', cls:'st-out'},
+];
+const NOTE_TYPES = [
+  {v:'nota', label:'Nota'},
+  {v:'final', label:'Avaliação Final'},
+];
+
+let players = [];
+let clubs = [];
+let shortlists = [];
+let storageOk = true;
+let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'rating'};
+let openDossierId = null;
+let activeTab = 'players'; // 'players' | 'clubs' | 'shortlists'
+let activeShortlistId = null;
+
+function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
+function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
+function noteTypeInfo(v){ return NOTE_TYPES.find(t=>t.v===v) || NOTE_TYPES[0]; }
+function clubInfo(id){ return clubs.find(c=>c.id===id) || null; }
+function initials(name){
+  return name.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function uid(){
+  return (crypto.randomUUID ? crypto.randomUUID() : 'p-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+}
+function fmtDate(iso){
+  return new Date(iso).toLocaleDateString('pt-PT', {day:'2-digit', month:'short', year:'numeric'});
+}
+function calcAge(birthDate){
+  if(!birthDate) return null;
+  const b = new Date(birthDate+'T00:00:00');
+  if(isNaN(b.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if(m < 0 || (m===0 && now.getDate() < b.getDate())) age--;
+  return age;
+}
+function fmtDateOnly(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr+'T00:00:00');
+  if(isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('pt-PT', {day:'2-digit', month:'short', year:'numeric'});
+}
+function contractStatus(contractUntil){
+  if(!contractUntil) return null;
+  const end = new Date(contractUntil+'T00:00:00');
+  if(isNaN(end.getTime())) return null;
+  const now = new Date();
+  const diffDays = Math.ceil((end - now) / (1000*60*60*24));
+  if(diffDays < 0) return {label:'Contrato expirado', cls:'ct-expired'};
+  if(diffDays <= 90) return {label:'Termina em breve', cls:'ct-soon'};
+  return {label:'Contrato ativo', cls:'ct-ok'};
+}
+function avatarHtml(photo, initialsText, lineCls, cls){
+  cls = cls || 'badge';
+  if(photo){
+    return `<div class="${cls} b-${lineCls}" style="padding:0;overflow:hidden;"><img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;" alt=""></div>`;
+  }
+  return `<div class="${cls} b-${lineCls}">${escapeHtml(initialsText)}</div>`;
+}
+
+/* ---------------- image handling (photos / logos) ---------------- */
+function fileToDataUrl(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    if(!file){ resolve(null); return; }
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error('READ'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('IMG'));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else{ w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function renderPhotoPreview(previewId, dataUrl, emptyLabel){
+  const el = document.getElementById(previewId);
+  if(!el) return;
+  el.innerHTML = dataUrl ? `<img src="${dataUrl}" alt="">` : `<span class="photo-preview-empty">${escapeHtml(emptyLabel||'Sem foto')}</span>`;
+}
+function wirePhotoPreview(inputId, previewId, maxDim, quality){
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  input.addEventListener('change', async () => {
+    const file = input.files[0];
+    if(!file) return;
+    try{
+      const dataUrl = await fileToDataUrl(file, maxDim, quality);
+      renderPhotoPreview(previewId, dataUrl);
+    }catch(e){
+      showToast('Não foi possível carregar a imagem.');
+    }
+  });
+}
+function clubOptionsHtml(selectedId){
+  return `<option value="">Sem clube</option>` +
+    clubs.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}" ${selectedId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+}
+function toggleInlineClubForm(forceHide){
+  const el = document.getElementById('inlineClubForm');
+  if(!el) return;
+  if(forceHide){ el.hidden = true; return; }
+  el.hidden = !el.hidden;
+  if(!el.hidden) setTimeout(()=>{ const f=document.getElementById('ic_name'); if(f) f.focus(); }, 30);
+}
+
+/* ---------------- GitHub-backed storage ---------------- */
+const CONFIG_KEY = 'scouting_gh_config_v1';
+const GH_API = 'https://api.github.com';
+const DATA_PATH = 'players.json';
+let ghConfig = null;   // {owner, repo, token} — sempre opera no branch por omissão do repositório
+let ghSha = null;      // sha of the current players.json, null if it doesn't exist yet
+
+function loadConfig(){
+  try{
+    const raw = localStorage.getItem(CONFIG_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function saveConfig(cfg){
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+function clearConfig(){
+  localStorage.removeItem(CONFIG_KEY);
+}
+
+function utf8ToB64(str){
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function b64ToUtf8(b64){
+  const binary = atob(b64.replace(/\n/g,''));
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+async function ghRequest(path, options={}){
+  return fetch(`${GH_API}${path}`, {
+    ...options,
+    cache: 'no-store',
+    headers: {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': `Bearer ${ghConfig.token}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(options.headers||{}),
+    },
+  });
+}
+function contentsPath(bustCache){
+  const base = `/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${DATA_PATH}`;
+  return bustCache ? `${base}?_=${Date.now()}` : base;
+}
+
+async function fetchDataFromGitHub(){
+  const res = await ghRequest(contentsPath(true));
+  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[]}; }
+  if(res.status === 401) throw new Error('AUTH');
+  if(res.status === 403) throw new Error('FORBIDDEN');
+  if(!res.ok) throw new Error('HTTP_'+res.status);
+  const data = await res.json();
+  ghSha = data.sha;
+  const json = b64ToUtf8(data.content);
+  let parsed = null;
+  try{ parsed = JSON.parse(json); }catch(e){ parsed = null; }
+  if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: []}; // formato antigo (só jogadores)
+  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || [], shortlists: parsed.shortlists || []};
+  return {players:[], clubs:[], shortlists:[]};
+}
+
+async function getRemoteSha(){
+  const res = await ghRequest(contentsPath(true));
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error('HTTP_'+res.status);
+  const data = await res.json();
+  return data.sha;
+}
+
+async function saveDataToGitHub(){
+  const doPut = async () => {
+    const body = {
+      message: 'Atualizar base de dados de scouting',
+      content: utf8ToB64(JSON.stringify({players, clubs, shortlists}, null, 2)),
+    };
+    if(ghSha) body.sha = ghSha;
+    return ghRequest(contentsPath(), {method:'PUT', body: JSON.stringify(body)});
+  };
+  let res = await doPut();
+  if(res.status === 409){
+    ghSha = await getRemoteSha();
+    res = await doPut();
+  }
+  if(res.status === 401) throw new Error('AUTH');
+  if(res.status === 403) throw new Error('FORBIDDEN');
+  if(!res.ok) throw new Error('HTTP_'+res.status);
+  const data = await res.json();
+  ghSha = data.content.sha;
+}
+
+function mapGhError(e){
+  const msg = (e && e.message) || '';
+  if(msg === 'AUTH') return 'O token não é válido ou expirou. Vai a Definições e atualiza-o.';
+  if(msg === 'FORBIDDEN') return 'Sem permissão de escrita neste repositório. Confirma o token em Definições.';
+  if(msg === 'HTTP_404') return 'Repositório não encontrado. Confirma o nome em Definições.';
+  return 'Não foi possível guardar no GitHub agora. Verifica a ligação e tenta novamente.';
+}
+
+async function saveData(){
+  try{
+    await saveDataToGitHub();
+    storageOk = true;
+  }catch(e){
+    storageOk = false;
+    showToast(mapGhError(e));
+  }
+}
+
+function showToast(msg){
+  const root = document.getElementById('toastRoot');
+  root.innerHTML = `<div class="toast">${escapeHtml(msg)}</div>`;
+  setTimeout(()=>{ root.innerHTML=''; }, 3200);
+}
+
+/* ---------------- app shell ---------------- */
+const TABS = [
+  {v:'players', label:'Jogadores'},
+  {v:'clubs', label:'Clubes'},
+  {v:'shortlists', label:'Shortlists'},
+];
+function headerPrimaryButtonHtml(){
+  if(activeTab==='clubs') return `<button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
+  if(activeTab==='shortlists') return `<button class="btn btn-primary" onclick="openShortlistFormModal()">+ Nova Shortlist</button>`;
+  return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
+}
+function switchTab(tab){
+  activeTab = tab;
+  activeShortlistId = null;
+  renderMainShell();
+}
+function renderMainShell(){
+  document.getElementById('appRoot').innerHTML = `
+    <header>
+      <svg class="motif" viewBox="0 0 1100 160" preserveAspectRatio="none">
+        <line x1="0" y1="150" x2="1100" y2="150" stroke="var(--chalk)" stroke-width="1"/>
+        <circle cx="550" cy="150" r="60" fill="none" stroke="var(--chalk)" stroke-width="1"/>
+        <circle cx="550" cy="150" r="2" fill="var(--chalk)"/>
+      </svg>
+      <div class="header-inner">
+        <div class="brand">
+          <h1>SCOUTING</h1>
+          <span>A tua base de dados pessoal de jogadores observados</span>
+        </div>
+        <div class="header-actions">
+          ${activeTab==='players' ? `
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="searchInput" type="text" placeholder="Procurar nome ou clube..." value="${escapeHtml(state.search)}" oninput="onSearch(this.value)">
+          </div>` : ''}
+          ${headerPrimaryButtonHtml()}
+        </div>
+      </div>
+    </header>
+    <div class="tabs">
+      ${TABS.map(t=>`<button class="tab-btn ${activeTab===t.v?'active':''}" onclick="switchTab('${t.v}')">${t.label}</button>`).join('')}
+    </div>
+    <div class="shell">
+      <div id="tabContent"></div>
+    </div>
+    <footer>
+      <button onclick="openSettingsModal()">Definições do GitHub</button>
+      <button onclick="confirmClearAll()">Limpar todos os dados</button>
+    </footer>
+  `;
+  render();
+}
+
+function emptyStateHtml(title, desc, onclickAction, btnLabel){
+  return `<div class="empty">
+    <h2>${escapeHtml(title)}</h2>
+    <p>${escapeHtml(desc)}</p>
+    <button class="btn btn-primary" onclick="${onclickAction}">${escapeHtml(btnLabel)}</button>
+  </div>`;
+}
+
+function renderTabContent(){
+  const el = document.getElementById('tabContent');
+  if(!el) return;
+  if(activeTab === 'clubs'){
+    el.innerHTML = clubs.length === 0
+      ? emptyStateHtml('Ainda não tens clubes', 'Cria o primeiro clube para poderes associar jogadores a ele.', "openClubFormModal()", '+ Novo Clube')
+      : `<div class="club-list-panel">${clubsListHtml()}</div>`;
+  } else if(activeTab === 'shortlists'){
+    el.innerHTML = activeShortlistId ? renderShortlistDetailHtml() : renderShortlistsTabHtml();
+  } else {
+    el.innerHTML = `<div class="filters" id="filtersBar"></div><div id="listContainer"></div>`;
+    renderFilters();
+    renderList();
+  }
+}
+
+function renderLoadingScreen(msg){
+  document.getElementById('appRoot').innerHTML = `<div class="loading-state">${escapeHtml(msg)}</div>`;
+}
+
+/* ---------------- GitHub setup screen ---------------- */
+function renderSetupScreen(errorMsg){
+  document.getElementById('appRoot').innerHTML = `
+    <div class="setup-wrap">
+      <div class="setup-card">
+        <h2 class="brand-mini">SCOUTING</h2>
+        <p class="sub">Liga a app ao repositório privado do GitHub onde os teus dados vão ficar guardados.</p>
+        ${errorMsg ? `<div class="setup-error">${escapeHtml(errorMsg)}</div>` : ''}
+        <div class="field">
+          <label>Nome de utilizador do GitHub</label>
+          <input id="s_owner" type="text" placeholder="ex: joaosilva">
+        </div>
+        <div class="field">
+          <label>Nome do repositório privado (dados)</label>
+          <input id="s_repo" type="text" placeholder="ex: scouting-dados">
+        </div>
+        <div class="field">
+          <label>Token de acesso pessoal</label>
+          <input id="s_token" type="password" placeholder="github_pat_...">
+        </div>
+        <p class="hint">O token fica guardado só neste browser — nunca é enviado para a Claude nem para mais lado nenhum além do GitHub.</p>
+        <div class="setup-actions">
+          <button class="btn btn-primary" onclick="submitSetup()">Ligar</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function submitSetup(){
+  const owner = document.getElementById('s_owner').value.trim();
+  const repo = document.getElementById('s_repo').value.trim();
+  const token = document.getElementById('s_token').value.trim();
+  if(!owner || !repo || !token){
+    renderSetupScreen('Preenche os três campos para continuar.');
+    return;
+  }
+  ghConfig = {owner, repo, token};
+  renderLoadingScreen('A ligar ao GitHub...');
+  try{
+    const data = await fetchDataFromGitHub();
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    activeTab = 'players'; activeShortlistId = null;
+    saveConfig(ghConfig);
+    storageOk = true;
+    renderMainShell();
+  }catch(e){
+    renderSetupScreen(mapGhError(e));
+  }
+}
+
+async function connectAndLoad(){
+  renderLoadingScreen('A ligar ao GitHub...');
+  try{
+    const data = await fetchDataFromGitHub();
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    activeTab = 'players'; activeShortlistId = null;
+    storageOk = true;
+    renderMainShell();
+  }catch(e){
+    renderConnectionError(e);
+  }
+}
+
+function renderConnectionError(e){
+  document.getElementById('appRoot').innerHTML = `
+    <div class="setup-wrap">
+      <div class="setup-card">
+        <h2 class="brand-mini">Não foi possível ligar</h2>
+        <div class="setup-error">${escapeHtml(mapGhError(e))}</div>
+        <div class="setup-actions">
+          <button class="btn" onclick="openSettingsModal(true)">Rever definições</button>
+          <button class="btn btn-primary" onclick="connectAndLoad()">Tentar novamente</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- GitHub settings modal ---------------- */
+function openSettingsModal(fromError){
+  const cfg = ghConfig || {owner:'', repo:'', token:''};
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>Definições do GitHub</h2>
+        <div class="field"><label>Nome de utilizador do GitHub</label><input id="set_owner" type="text" value="${escapeHtml(cfg.owner)}"></div>
+        <div class="field"><label>Nome do repositório privado (dados)</label><input id="set_repo" type="text" value="${escapeHtml(cfg.repo)}"></div>
+        <div class="field"><label>Token de acesso pessoal</label><input id="set_token" type="password" value="${escapeHtml(cfg.token)}" placeholder="Cola aqui um novo token se o anterior expirou"></div>
+        <div class="modal-actions" style="justify-content:space-between;">
+          <button class="btn btn-danger" onclick="disconnectGithub()">Desligar conta</button>
+          <div style="display:flex;gap:10px;">
+            <button class="btn" onclick="closeModal()">${fromError ? 'Cancelar' : 'Fechar'}</button>
+            <button class="btn btn-primary" onclick="submitSettings()">Guardar e ligar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+async function submitSettings(){
+  const owner = document.getElementById('set_owner').value.trim();
+  const repo = document.getElementById('set_repo').value.trim();
+  const token = document.getElementById('set_token').value.trim();
+  if(!owner || !repo || !token){ showToast('Preenche os três campos.'); return; }
+  ghConfig = {owner, repo, token};
+  closeModal();
+  renderLoadingScreen('A ligar ao GitHub...');
+  try{
+    const data = await fetchDataFromGitHub();
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    activeTab = 'players'; activeShortlistId = null;
+    saveConfig(ghConfig);
+    storageOk = true;
+    renderMainShell();
+  }catch(e){
+    renderConnectionError(e);
+  }
+}
+function disconnectGithub(){
+  if(!confirm('Isto desliga a app deste repositório neste dispositivo. Os teus dados continuam guardados no GitHub. Continuar?')) return;
+  clearConfig();
+  ghConfig = null;
+  ghSha = null;
+  players = [];
+  clubs = [];
+  shortlists = [];
+  activeTab = 'players'; activeShortlistId = null;
+  closeModal();
+  renderSetupScreen();
+}
+
+/* ---------------- rendering: filters ---------------- */
+function renderFilters(){
+  const bar = document.getElementById('filtersBar');
+  bar.innerHTML = `
+    <span class="label">Linha</span>
+    <div class="chip-group">
+      ${LINES.map(l=>`<button class="chip ${state.line===l?'active':''}" onclick="toggleLine('${l}')">${l}</button>`).join('')}
+    </div>
+    <select class="filter-select" onchange="state.status=this.value; render();">
+      <option value="all" ${state.status==='all'?'selected':''}>Todos os estados</option>
+      ${STATUSES.map(s=>`<option value="${s.v}" ${state.status===s.v?'selected':''}>${s.label}</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="state.clubId=this.value||null; render();">
+      <option value="">Todos os clubes</option>
+      ${clubs.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}" ${state.clubId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="state.minRating=Number(this.value); render();">
+      <option value="0" ${state.minRating===0?'selected':''}>Qualquer rating</option>
+      ${[1,2,3,4,5].map(n=>`<option value="${n}" ${state.minRating===n?'selected':''}>${n}+ ★</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="state.sort=this.value; render();">
+      <option value="rating" ${state.sort==='rating'?'selected':''}>Ordenar: rating</option>
+      <option value="name" ${state.sort==='name'?'selected':''}>Ordenar: nome</option>
+      <option value="age" ${state.sort==='age'?'selected':''}>Ordenar: idade</option>
+      <option value="recent" ${state.sort==='recent'?'selected':''}>Ordenar: recentes</option>
+    </select>
+    <div class="spacer"></div>
+    <span class="count-label" id="countLabel"></span>
+  `;
+}
+function toggleLine(l){
+  state.line = (state.line === l) ? null : l;
+  render();
+}
+function onSearch(v){
+  state.search = v.toLowerCase();
+  render();
+}
+
+/* ---------------- rendering: list ---------------- */
+function getFiltered(){
+  let list = players.filter(p=>{
+    const club = clubInfo(p.clubId);
+    const clubName = club ? club.name.toLowerCase() : '';
+    if(state.search && !(p.name.toLowerCase().includes(state.search) || clubName.includes(state.search))) return false;
+    if(state.line && posInfo(p.position).line !== state.line) return false;
+    if(state.status !== 'all' && p.status !== state.status) return false;
+    if(state.clubId && p.clubId !== state.clubId) return false;
+    if(p.rating < state.minRating) return false;
+    return true;
+  });
+  list.sort((a,b)=>{
+    if(state.sort==='rating') return b.rating - a.rating;
+    if(state.sort==='name') return a.name.localeCompare(b.name);
+    if(state.sort==='age') return (calcAge(a.birthDate)||0) - (calcAge(b.birthDate)||0);
+    if(state.sort==='recent') return b.createdAt - a.createdAt;
+    return 0;
+  });
+  return list;
+}
+
+function starsHtml(rating, size){
+  size = size || 14;
+  let out = '<div class="stars">';
+  for(let i=1;i<=5;i++){
+    out += `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${i<=rating?'var(--gold)':'none'}" stroke="var(--gold-dim)" stroke-width="1.4"><polygon points="12 2 15 9 22 9.5 16.5 14.5 18 22 12 18 6 22 7.5 14.5 2 9.5 9 9"/></svg>`;
+  }
+  return out+'</div>';
+}
+
+function renderList(){
+  const container = document.getElementById('listContainer');
+  const list = getFiltered();
+  document.getElementById('countLabel').textContent = `${list.length} jogador${list.length===1?'':'es'}`;
+
+  if(players.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        <h2>Ainda não tens jogadores</h2>
+        <p>Adiciona o primeiro jogador que observaste para começar a construir a tua base de dados.</p>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>
+      </div>`;
+    return;
+  }
+  if(list.length === 0){
+    container.innerHTML = `<div class="empty"><h2>Nenhum resultado</h2><p>Ajusta os filtros ou a pesquisa.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="list">
+    ${list.map(p=>{
+      const pos = posInfo(p.position);
+      const st = statusInfo(p.status);
+      const club = clubInfo(p.clubId);
+      const age = calcAge(p.birthDate);
+      return `
+      <button class="row" onclick="openDossier('${p.id}')">
+        ${avatarHtml(p.photo, initials(p.name), pos.line)}
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="club">${club && club.logo ? `<img src="${club.logo}" class="club-logo-mini" alt="">` : ''}<span>${club ? escapeHtml(club.name) : '—'}</span></div>
+        <div class="pos-tag">${pos.v}</div>
+        <div class="age num">${age !== null ? age+' anos' : '—'}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          ${starsHtml(p.rating)}
+          <span class="status-pill ${st.cls}">${st.label}</span>
+        </div>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+
+function render(){
+  renderTabContent();
+  if(openDossierId) renderDossier();
+}
+
+/* ---------------- add / edit player modal ---------------- */
+function playerFormFields(p){
+  p = p || {};
+  return `
+        <div class="field"><label>Nome</label><input id="f_name" type="text" placeholder="Nome do jogador" value="${p.name?escapeHtml(p.name):''}"></div>
+        <div class="field-row">
+          <div class="field"><label>Posição</label>
+            <select id="f_pos">${POSITIONS.map(pos=>`<option value="${pos.v}" ${pos.v===p.position?'selected':''}>${pos.label}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>Data de nascimento</label><input id="f_birth" type="date" value="${p.birthDate||''}"></div>
+        </div>
+        <div class="field">
+          <label>Clube</label>
+          <select id="f_club">${clubOptionsHtml(p.clubId||null)}</select>
+          <button type="button" class="link-btn" onclick="toggleInlineClubForm()">+ Criar novo clube</button>
+          <div id="inlineClubForm" class="inline-club-form" hidden>
+            <div class="field"><input id="ic_name" type="text" placeholder="Nome do clube"></div>
+            <div class="field"><input id="ic_logo" type="file" accept="image/*"></div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;">
+              <button type="button" class="btn" onclick="toggleInlineClubForm(true)">Cancelar</button>
+              <button type="button" class="btn btn-primary" onclick="submitInlineClub()">Adicionar</button>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Contrato até</label><input id="f_contract" type="date" value="${p.contractUntil||''}"></div>
+          <div class="field"><label>Altura (cm)</label><input id="f_height" type="number" min="130" max="220" placeholder="ex: 181" value="${p.height||''}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Nacionalidade</label><input id="f_nat" type="text" placeholder="ex: Portugal" value="${p.nationality?escapeHtml(p.nationality):''}"></div>
+          <div class="field"><label>Pé preferido</label>
+            <select id="f_foot">
+              <option value="Direito" ${p.foot==='Direito'?'selected':''}>Direito</option>
+              <option value="Esquerdo" ${p.foot==='Esquerdo'?'selected':''}>Esquerdo</option>
+              <option value="Ambidextro" ${p.foot==='Ambidextro'?'selected':''}>Ambidextro</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Fotografia</label>
+          <input id="f_photo" type="file" accept="image/*">
+          <div id="f_photo_preview" class="photo-preview"></div>
+          ${p.photo ? `<label class="photo-remove-label"><input type="checkbox" id="f_photo_remove"> Remover fotografia atual</label>` : ''}
+        </div>`;
+}
+
+function openAddModal(){
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>Novo Jogador</h2>
+        ${playerFormFields()}
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitNewPlayer()">Criar ficha</button>
+        </div>
+      </div>
+    </div>`;
+  renderPhotoPreview('f_photo_preview', null);
+  wirePhotoPreview('f_photo', 'f_photo_preview', 480, 0.82);
+  setTimeout(()=>{ const el=document.getElementById('f_name'); if(el) el.focus(); }, 50);
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+
+function readPlayerForm(){
+  return {
+    name: document.getElementById('f_name').value.trim(),
+    position: document.getElementById('f_pos').value,
+    clubId: document.getElementById('f_club').value || null,
+    birthDate: document.getElementById('f_birth').value || null,
+    contractUntil: document.getElementById('f_contract').value || null,
+    height: Number(document.getElementById('f_height').value) || null,
+    nationality: document.getElementById('f_nat').value.trim(),
+    foot: document.getElementById('f_foot').value,
+  };
+}
+
+async function submitNewPlayer(){
+  const fields = readPlayerForm();
+  if(!fields.name){ showToast('Indica pelo menos o nome do jogador.'); return; }
+  const file = document.getElementById('f_photo').files[0];
+  let photo = null;
+  if(file){
+    try{ photo = await fileToDataUrl(file, 480, 0.82); }
+    catch(e){ showToast('Não foi possível carregar a fotografia.'); }
+  }
+  const p = {
+    id: uid(),
+    ...fields,
+    photo,
+    status: 'obs',
+    rating: 0,
+    notes: [],
+    createdAt: Date.now(),
+  };
+  players.push(p);
+  await saveData();
+  closeModal();
+  render();
+  openDossier(p.id);
+}
+
+function openEditPlayerModal(id){
+  const p = players.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>Editar Jogador</h2>
+        ${playerFormFields(p)}
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitEditPlayer('${p.id}')">Guardar alterações</button>
+        </div>
+      </div>
+    </div>`;
+  renderPhotoPreview('f_photo_preview', p.photo);
+  wirePhotoPreview('f_photo', 'f_photo_preview', 480, 0.82);
+  setTimeout(()=>{ const el=document.getElementById('f_name'); if(el) el.focus(); }, 50);
+}
+
+async function submitEditPlayer(id){
+  const p = players.find(x=>x.id===id);
+  if(!p) return;
+  const fields = readPlayerForm();
+  if(!fields.name){ showToast('Indica pelo menos o nome do jogador.'); return; }
+  const file = document.getElementById('f_photo').files[0];
+  const removeChk = document.getElementById('f_photo_remove');
+  let photo = p.photo;
+  if(file){
+    try{ photo = await fileToDataUrl(file, 480, 0.82); }
+    catch(e){ showToast('Não foi possível carregar a fotografia.'); }
+  } else if(removeChk && removeChk.checked){
+    photo = null;
+  }
+  Object.assign(p, fields, {photo});
+  await saveData();
+  closeModal();
+  render();
+}
+
+/* ---------------- clubs ---------------- */
+async function submitInlineClub(){
+  const nameEl = document.getElementById('ic_name');
+  const name = nameEl.value.trim();
+  if(!name){ showToast('Indica o nome do clube.'); return; }
+  const fileInput = document.getElementById('ic_logo');
+  const file = fileInput.files[0];
+  let logo = null;
+  if(file){
+    try{ logo = await fileToDataUrl(file, 240, 0.85); }
+    catch(e){ showToast('Não foi possível carregar o logótipo.'); }
+  }
+  const c = {id: uid(), name, logo, createdAt: Date.now()};
+  clubs.push(c);
+  await saveData();
+  const sel = document.getElementById('f_club');
+  if(sel) sel.innerHTML = clubOptionsHtml(c.id);
+  toggleInlineClubForm(true);
+  nameEl.value = '';
+  fileInput.value = '';
+}
+
+function clubsListHtml(){
+  if(clubs.length === 0) return `<p style="color:var(--muted);font-size:13px;">Ainda não criaste nenhum clube.</p>`;
+  return clubs.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>{
+    const count = players.filter(p=>p.clubId===c.id).length;
+    return `
+    <div class="club-row">
+      <div class="club-row-avatar">${c.logo ? `<img src="${c.logo}" alt="">` : `<span>${escapeHtml(initials(c.name))}</span>`}</div>
+      <div class="club-row-info">
+        <div class="club-row-name">${escapeHtml(c.name)}</div>
+        <div class="club-row-count">${count} jogador${count===1?'':'es'}</div>
+      </div>
+      <button class="btn-ghost" onclick="openClubFormModal('${c.id}')">Editar</button>
+      <button class="btn-ghost" onclick="removeClub('${c.id}')">Eliminar</button>
+    </div>`;
+  }).join('');
+}
+
+function openClubFormModal(editId){
+  const editing = editId ? clubs.find(c=>c.id===editId) : null;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>${editing ? 'Editar Clube' : 'Novo Clube'}</h2>
+        <div class="field"><label>Nome do clube</label><input id="c_name" type="text" placeholder="ex: Sporting CP" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="field">
+          <label>Logótipo</label>
+          <input id="c_logo" type="file" accept="image/*">
+          <div id="c_logo_preview" class="photo-preview photo-preview-round"></div>
+          ${editing && editing.logo ? `<label class="photo-remove-label"><input type="checkbox" id="c_logo_remove"> Remover logótipo atual</label>` : ''}
+        </div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitClubForm(${editing?`'${editing.id}'`:'null'})">${editing ? 'Guardar' : 'Criar clube'}</button>
+        </div>
+      </div>
+    </div>`;
+  renderPhotoPreview('c_logo_preview', editing ? editing.logo : null, 'Sem logótipo');
+  wirePhotoPreview('c_logo', 'c_logo_preview', 240, 0.85);
+  setTimeout(()=>{ const el=document.getElementById('c_name'); if(el) el.focus(); }, 50);
+}
+
+async function submitClubForm(editId){
+  const name = document.getElementById('c_name').value.trim();
+  if(!name){ showToast('Indica o nome do clube.'); return; }
+  const fileInput = document.getElementById('c_logo');
+  const file = fileInput.files[0];
+  const removeChk = document.getElementById('c_logo_remove');
+  if(editId){
+    const c = clubs.find(x=>x.id===editId);
+    if(!c){ closeModal(); return; }
+    if(file){
+      try{ c.logo = await fileToDataUrl(file, 240, 0.85); }
+      catch(e){ showToast('Não foi possível carregar o logótipo.'); }
+    } else if(removeChk && removeChk.checked){
+      c.logo = null;
+    }
+    c.name = name;
+  } else {
+    let logo = null;
+    if(file){
+      try{ logo = await fileToDataUrl(file, 240, 0.85); }
+      catch(e){ showToast('Não foi possível carregar o logótipo.'); }
+    }
+    clubs.push({id: uid(), name, logo, createdAt: Date.now()});
+  }
+  await saveData();
+  closeModal();
+  render();
+}
+
+async function removeClub(id){
+  const c = clubs.find(x=>x.id===id);
+  if(!c) return;
+  const count = players.filter(p=>p.clubId===id).length;
+  const msg = count > 0
+    ? `Eliminar "${c.name}"? ${count} jogador${count===1?'':'es'} ficará${count===1?'':'ão'} sem clube atribuído.`
+    : `Eliminar o clube "${c.name}"?`;
+  if(!confirm(msg)) return;
+  clubs = clubs.filter(x=>x.id!==id);
+  players.forEach(p=>{ if(p.clubId===id) p.clubId=null; });
+  await saveData();
+  render();
+}
+
+/* ---------------- shortlists ---------------- */
+function renderShortlistsTabHtml(){
+  if(shortlists.length === 0){
+    return emptyStateHtml('Ainda não tens shortlists', 'Cria uma shortlist para agrupares os jogadores que quiseres destacar — por exemplo, para uma posição em aberto ou uma janela de mercado.', "openShortlistFormModal()", '+ Nova Shortlist');
+  }
+  return `<div class="list">
+    ${shortlists.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(sl=>{
+      const count = sl.playerIds.length;
+      return `
+      <div class="shortlist-row" onclick="openShortlistDetail('${sl.id}')">
+        <div class="badge" style="background:var(--gold-dim);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1305" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="info">
+          <div class="sl-name">${escapeHtml(sl.name)}</div>
+          <div class="sl-count">${count} jogador${count===1?'':'es'}</div>
+        </div>
+        <button type="button" class="btn-ghost" onclick="event.stopPropagation(); openShortlistFormModal('${sl.id}')">Editar</button>
+        <button type="button" class="btn-ghost" onclick="event.stopPropagation(); removeShortlist('${sl.id}')">Eliminar</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function openShortlistDetail(id){
+  activeShortlistId = id;
+  renderTabContent();
+}
+
+function renderShortlistDetailHtml(){
+  const sl = shortlists.find(s=>s.id===activeShortlistId);
+  if(!sl){ activeShortlistId = null; return renderShortlistsTabHtml(); }
+  const list = players.filter(p=>sl.playerIds.includes(p.id));
+  return `
+    <div class="shortlist-detail-head">
+      <button class="btn btn-ghost" onclick="activeShortlistId=null; renderTabContent();">← Shortlists</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="openShortlistFormModal('${sl.id}')">Editar nome</button>
+        <button class="btn btn-ghost" onclick="removeShortlist('${sl.id}')">Eliminar shortlist</button>
+      </div>
+    </div>
+    <h2 class="shortlist-detail-title">${escapeHtml(sl.name)}</h2>
+    ${list.length === 0 ? `<div class="empty"><h2>Ainda sem jogadores</h2><p>Adiciona jogadores a esta shortlist a partir da ficha de cada um (secção "Shortlists").</p></div>` :
+    `<div class="list">${list.map(p=>{
+      const pos = posInfo(p.position);
+      const club = clubInfo(p.clubId);
+      return `
+      <div class="row" style="cursor:pointer;" onclick="openDossier('${p.id}')">
+        ${avatarHtml(p.photo, initials(p.name), pos.line)}
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="club">${club && club.logo ? `<img src="${club.logo}" class="club-logo-mini" alt="">` : ''}<span>${club?escapeHtml(club.name):'—'}</span></div>
+        <div class="pos-tag">${pos.v}</div>
+        <div></div>
+        <button type="button" class="btn-ghost" style="justify-self:end;" onclick="event.stopPropagation(); toggleShortlistPlayer('${sl.id}','${p.id}').then(renderTabContent);">Remover</button>
+      </div>`;
+    }).join('')}</div>`}
+  `;
+}
+
+async function toggleShortlistPlayer(shortlistId, playerId){
+  const sl = shortlists.find(s=>s.id===shortlistId);
+  if(!sl) return;
+  const idx = sl.playerIds.indexOf(playerId);
+  if(idx === -1) sl.playerIds.push(playerId); else sl.playerIds.splice(idx,1);
+  await saveData();
+}
+
+function openShortlistFormModal(editId, addPlayerId){
+  const editing = editId ? shortlists.find(s=>s.id===editId) : null;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>${editing ? 'Editar Shortlist' : 'Nova Shortlist'}</h2>
+        <div class="field"><label>Nome</label><input id="sl_name" type="text" placeholder="ex: Alvos Janeiro" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitShortlistForm(${editing?`'${editing.id}'`:'null'}, ${addPlayerId?`'${addPlayerId}'`:'null'})">${editing?'Guardar':'Criar shortlist'}</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{ const el=document.getElementById('sl_name'); if(el) el.focus(); }, 50);
+}
+
+async function submitShortlistForm(editId, addPlayerId){
+  const name = document.getElementById('sl_name').value.trim();
+  if(!name){ showToast('Indica o nome da shortlist.'); return; }
+  if(editId){
+    const sl = shortlists.find(s=>s.id===editId);
+    if(sl) sl.name = name;
+  } else {
+    shortlists.push({id: uid(), name, playerIds: addPlayerId ? [addPlayerId] : [], createdAt: Date.now()});
+  }
+  await saveData();
+  closeModal();
+  if(addPlayerId){ renderDossier(); } else { render(); }
+}
+
+async function removeShortlist(id){
+  const sl = shortlists.find(s=>s.id===id);
+  if(!sl) return;
+  if(!confirm(`Eliminar a shortlist "${sl.name}"? Os jogadores não são apagados, só deixam de estar nesta lista.`)) return;
+  shortlists = shortlists.filter(s=>s.id!==id);
+  if(activeShortlistId === id) activeShortlistId = null;
+  await saveData();
+  render();
+}
+
+/* ---------------- dossier ---------------- */
+let noteFormType = 'nota';
+function openDossier(id){
+  openDossierId = id;
+  noteFormType = 'nota';
+  document.getElementById('backdrop').classList.add('open');
+  renderDossier();
+}
+function setNoteType(t){
+  noteFormType = t;
+  const group = document.getElementById('noteTypeGroup');
+  if(group){
+    group.querySelectorAll('.chip').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.type === t);
+    });
+  }
+}
+function closeDossier(){
+  openDossierId = null;
+  document.getElementById('backdrop').classList.remove('open');
+  const el = document.getElementById('dossierRoot');
+  const panel = el.querySelector('.dossier');
+  if(panel){ panel.classList.remove('open'); }
+  setTimeout(()=>{ if(!openDossierId) el.innerHTML=''; }, 250);
+}
+
+function renderDossier(){
+  const p = players.find(x=>x.id===openDossierId);
+  const root = document.getElementById('dossierRoot');
+  if(!p){ root.innerHTML=''; return; }
+  const pos = posInfo(p.position);
+  const club = clubInfo(p.clubId);
+  const age = calcAge(p.birthDate);
+  const cStatus = contractStatus(p.contractUntil);
+
+  root.innerHTML = `
+    <div class="dossier">
+      <div class="dossier-head">
+        <button class="btn btn-ghost" onclick="closeDossier()">← Voltar</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost" onclick="openEditPlayerModal('${p.id}')">Editar</button>
+          <button class="btn btn-ghost" onclick="removePlayer('${p.id}')">Eliminar ficha</button>
+        </div>
+      </div>
+      <div class="dossier-body">
+        <div class="dossier-id">
+          ${avatarHtml(p.photo, initials(p.name), pos.line, 'dossier-badge')}
+          <div>
+            <h2 class="dossier-name">${escapeHtml(p.name)}</h2>
+            <div class="tag-row">
+              <span class="tag">${pos.label}</span>
+              <span class="tag">${club ? escapeHtml(club.name) : 'Sem clube'}</span>
+              ${age !== null ? `<span class="tag">${age} anos</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Estado</h3>
+          <div class="status-select-row">
+            ${STATUSES.map(s=>`<button class="chip ${p.status===s.v?'active':''}" onclick="updateStatus('${p.id}','${s.v}')">${s.label}</button>`).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Rating geral</h3>
+          <div class="rating-row">
+            ${[1,2,3,4,5].map(n=>`
+              <button onclick="updateRating('${p.id}',${n})">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="${n<=p.rating?'var(--gold)':'none'}" stroke="var(--gold-dim)" stroke-width="1.4"><polygon points="12 2 15 9 22 9.5 16.5 14.5 18 22 12 18 6 22 7.5 14.5 2 9.5 9 9"/></svg>
+              </button>`).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Shortlists</h3>
+          <div class="chip-group">
+            ${shortlists.length === 0 ? `<span style="color:var(--muted);font-size:13px;">Sem shortlists ainda.</span>` :
+              shortlists.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(sl=>`<button class="chip ${sl.playerIds.includes(p.id)?'active':''}" onclick="toggleShortlistPlayer('${sl.id}','${p.id}').then(renderDossier);">${escapeHtml(sl.name)}</button>`).join('')}
+          </div>
+          <button type="button" class="link-btn" style="margin-top:8px;" onclick="openShortlistFormModal(null, '${p.id}')">+ Nova shortlist</button>
+        </div>
+
+        <div class="section">
+          <h3>Dados básicos</h3>
+          <dl class="basic-grid">
+            <div><dt>Data de nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
+            <div><dt>Idade</dt><dd>${age !== null ? age+' anos' : '—'}</dd></div>
+            <div><dt>Altura</dt><dd>${p.height ? p.height+' cm' : '—'}</dd></div>
+            <div><dt>Nacionalidade</dt><dd>${escapeHtml(p.nationality || '—')}</dd></div>
+            <div><dt>Pé preferido</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
+            <div><dt>Contrato até</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ` <span class="status-pill ${cStatus.cls}">${cStatus.label}</span>` : ''}</dd></div>
+          </dl>
+        </div>
+
+        <div class="section">
+          <h3>Notas e Avaliação Final</h3>
+          <div class="note-form">
+            <div class="chip-group" id="noteTypeGroup">
+              ${NOTE_TYPES.map(t=>`<button type="button" class="chip ${noteFormType===t.v?'active':''}" data-type="${t.v}" onclick="setNoteType('${t.v}')">${t.label}</button>`).join('')}
+            </div>
+            <textarea id="noteText" placeholder="Escreve o que observaste neste jogo..."></textarea>
+            <div class="note-form-actions">
+              <button class="btn btn-primary" onclick="addNote('${p.id}')">Adicionar</button>
+            </div>
+          </div>
+          ${p.notes.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Sem notas nem avaliações ainda.</p>` :
+            p.notes.slice().sort((a,b)=>b.date-a.date).map(n=>{
+              const nt = noteTypeInfo(n.type);
+              return `
+              <div class="note t-${nt.v}">
+                <div class="note-head">
+                  <div class="note-head-left">
+                    <span class="note-type-pill t-${nt.v}">${nt.label}</span>
+                    <span class="note-date">${fmtDate(n.date)}</span>
+                  </div>
+                  <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
+                </div>
+                <p>${escapeHtml(n.text)}</p>
+              </div>`;
+            }).join('')
+          }
+        </div>
+      </div>
+    </div>`;
+  requestAnimationFrame(()=>{
+    const panel = root.querySelector('.dossier');
+    if(panel) panel.classList.add('open');
+  });
+}
+
+/* ---------------- mutations ---------------- */
+async function updateStatus(id, v){
+  const p = players.find(x=>x.id===id); p.status=v; await saveData(); render();
+}
+async function updateRating(id, v){
+  const p = players.find(x=>x.id===id); p.rating = (p.rating===v ? 0 : v); await saveData(); render();
+}
+async function addNote(id){
+  const ta = document.getElementById('noteText');
+  const text = ta.value.trim();
+  if(!text) return;
+  const p = players.find(x=>x.id===id);
+  p.notes.push({id: uid(), date: Date.now(), text, type: noteFormType});
+  await saveData(); renderDossier();
+}
+async function removeNote(id, noteId){
+  const p = players.find(x=>x.id===id);
+  p.notes = p.notes.filter(n=>n.id!==noteId);
+  await saveData(); renderDossier();
+}
+async function removePlayer(id){
+  if(!confirm('Eliminar esta ficha de jogador? Esta ação não pode ser desfeita.')) return;
+  players = players.filter(x=>x.id!==id);
+  await saveData();
+  closeDossier();
+  render();
+}
+async function confirmClearAll(){
+  if(!confirm('Isto vai apagar TODOS os jogadores, clubes e shortlists da tua base de dados. Continuar?')) return;
+  if(!confirm('Tens a certeza absoluta? Não é possível recuperar depois.')) return;
+  players = [];
+  clubs = [];
+  shortlists = [];
+  activeShortlistId = null;
+  await saveData();
+  render();
+}
+
+/* ---------------- init ---------------- */
+async function init(){
+  ghConfig = loadConfig();
+  if(!ghConfig){
+    renderSetupScreen();
+    return;
+  }
+  await connectAndLoad();
+}
+init();
+</script>
+</body>
+</html>
