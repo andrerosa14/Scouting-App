@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scouting — Base de Dados de Jogadores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch-dark:#12271f;
+    --pitch-panel:#1a3a2c;
+    --pitch-panel-raise:#204634;
+    --line:#365848;
+    --line-soft:#2a4738;
+    --chalk:#f1eee3;
+    --muted:#93a89b;
+    --gold:#c99a44;
+    --gold-dim:#8a713f;
+    --blue:#7396a8;
+    --olive:#a6b184;
+    --terracotta:#c15b41;
+    --success:#5f9260;
+    --radius:4px;
+    --font-display:'Oswald',sans-serif;
+    --font-body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--pitch-dark);color:var(--chalk);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--gold-dim);color:var(--chalk);}
+  input,select,textarea,button{font-family:inherit;color:inherit;}
+  button{cursor:pointer;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .num{font-variant-numeric:tabular-nums;}
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+
+  /* ---------- header ---------- */
+  header{position:relative;overflow:hidden;padding:28px 24px 22px;border-bottom:1px solid var(--line);}
+  .motif{position:absolute;inset:0;pointer-events:none;opacity:.16;}
+  .header-inner{position:relative;max-width:1100px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .brand{display:flex;flex-direction:column;gap:2px;}
+  .brand h1{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.03em;margin:0;color:var(--chalk);}
+  .brand span{color:var(--muted);font-size:13px;}
+  .header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .search-box{position:relative;}
+  .search-box input{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px 9px 32px;color:var(--chalk);width:220px;font-size:14px;}
+  .search-box input::placeholder{color:var(--muted);}
+  .search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.6;}
+  .btn{border:1px solid var(--line);background:var(--pitch-panel);color:var(--chalk);padding:9px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;transition:background .15s, border-color .15s;}
+  .btn:hover{border-color:var(--gold-dim);}
+  .btn-primary{background:var(--gold);border-color:var(--gold);color:#1a1305;font-weight:600;}
+  .btn-primary:hover{background:#d9ab54;}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--muted);padding:6px 8px;}
+  .btn-ghost:hover{color:var(--chalk);}
+  .btn-danger{border-color:var(--terracotta);color:var(--terracotta);background:transparent;}
+  .btn-danger:hover{background:rgba(193,91,65,.12);}
+
+  /* ---------- shell / filters ---------- */
+  .shell{max-width:1100px;margin:0 auto;padding:20px 24px 80px;}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;padding:14px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);}
+  .filters .label{font-size:12px;color:var(--muted);margin-right:2px;}
+  .chip-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 11px;border-radius:var(--radius);font-size:13px;font-weight:600;}
+  .chip.active{background:var(--gold);border-color:var(--gold);color:#1a1305;}
+  select.filter-select{background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:7px 10px;border-radius:var(--radius);font-size:13px;}
+  .filters .spacer{flex:1;}
+  .count-label{font-size:13px;color:var(--muted);}
+
+  /* ---------- list ---------- */
+  .list{display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);}
+  .row{display:grid;grid-template-columns:44px 1.6fr 1fr 64px 110px 96px;gap:14px;align-items:center;background:var(--pitch-panel);padding:12px 14px;text-align:left;border:none;width:100%;}
+  .row:hover{background:var(--pitch-panel-raise);}
+  .badge{width:38px;height:38px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:14px;color:#12271f;}
+  .b-GR{background:var(--gold);} .b-DF{background:var(--blue);} .b-MC{background:var(--olive);} .b-AV{background:var(--terracotta);color:#2a120a;}
+  .row .name{font-weight:600;font-size:15px;}
+  .row .club{color:var(--muted);font-size:13px;}
+  .row .pos-tag{font-size:12px;color:var(--muted);font-weight:600;}
+  .row .age{color:var(--muted);font-size:13px;}
+  .stars{display:flex;gap:2px;}
+  .status-pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:12px;border:1px solid;text-align:center;white-space:nowrap;}
+  .st-obs{color:var(--muted);border-color:var(--line-soft);}
+  .st-follow{color:var(--gold);border-color:var(--gold-dim);}
+  .st-rec{color:var(--success);border-color:var(--success);}
+  .st-out{color:var(--terracotta);border-color:var(--terracotta);}
+
+  .empty{padding:64px 24px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius);}
+  .empty h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 8px;}
+  .empty p{color:var(--muted);margin:0 0 18px;}
+
+  /* ---------- modal (add player) ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(8,16,12,.68);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .modal{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:24px;}
+  .modal h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+  .field input,.field select{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:9px 10px;border-radius:var(--radius);font-size:14px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+
+  /* ---------- dossier ---------- */
+  .backdrop{position:fixed;inset:0;background:rgba(8,16,12,.55);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:40;}
+  .backdrop.open{opacity:1;pointer-events:auto;}
+  .dossier{position:fixed;top:0;right:0;height:100%;width:min(480px,100%);background:var(--pitch-panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s ease;z-index:45;overflow-y:auto;}
+  .dossier.open{transform:translateX(0);}
+  .dossier-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+  .dossier-body{padding:22px;}
+  .dossier-id{display:flex;gap:14px;align-items:center;margin-bottom:18px;}
+  .dossier-badge{width:56px;height:56px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:20px;color:#12271f;flex-shrink:0;}
+  .dossier-name{font-family:var(--font-display);font-weight:600;font-size:24px;margin:0 0 4px;}
+  .tag-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .tag{font-size:12px;color:var(--muted);border:1px solid var(--line-soft);padding:3px 9px;border-radius:12px;}
+
+  .section{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .section h3{font-family:var(--font-display);font-weight:600;font-size:14px;letter-spacing:.02em;margin:0 0 12px;color:var(--chalk);}
+  .status-select-row{display:flex;gap:6px;flex-wrap:wrap;}
+
+  .rating-row{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .stars button{background:none;border:none;padding:2px;line-height:0;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .stat-box{background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);padding:10px;text-align:center;}
+  .stat-box .v{font-family:var(--font-display);font-size:22px;font-weight:600;}
+  .stat-box .l{font-size:11px;color:var(--muted);margin-top:2px;}
+  .stat-box .stepper{display:flex;justify-content:center;gap:8px;margin-top:6px;}
+  .stat-box .stepper button{width:22px;height:22px;border-radius:3px;border:1px solid var(--line);background:transparent;color:var(--chalk);font-size:14px;line-height:1;}
+
+  .attr{margin-bottom:12px;}
+  .attr-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;}
+  .attr-top .val{color:var(--gold);font-weight:600;}
+  .attr input[type=range]{width:100%;accent-color:var(--gold);}
+
+  .basic-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:13px;}
+  .basic-grid dt{color:var(--muted);margin-bottom:2px;}
+  .basic-grid dd{margin:0 0 8px;}
+
+  .note{background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:10px;}
+  .note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .note-date{font-size:12px;color:var(--gold);font-weight:600;}
+  .note p{margin:0;font-size:14px;white-space:pre-wrap;}
+  .note-form textarea{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:10px;font-size:14px;min-height:70px;resize:vertical;}
+  .note-form{margin-bottom:14px;}
+  .note-form-actions{display:flex;justify-content:flex-end;margin-top:8px;}
+
+  .danger-zone{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);text-align:right;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--terracotta);color:#2a120a;padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:60;max-width:90vw;text-align:center;}
+  footer{max-width:1100px;margin:0 auto;padding:0 24px 40px;display:flex;justify-content:flex-end;gap:18px;}
+  footer button{font-size:12px;color:var(--muted);background:none;border:none;text-decoration:underline;}
+
+  /* ---------- setup / connection screens ---------- */
+  .setup-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .setup-card{width:100%;max-width:440px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:28px;}
+  .setup-card .brand-mini{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.03em;margin:0 0 4px;}
+  .setup-card .sub{color:var(--muted);font-size:13px;margin:0 0 22px;}
+  .setup-card .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+  .setup-card .field input{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:10px;border-radius:var(--radius);font-size:14px;margin-bottom:14px;}
+  .setup-card .hint{font-size:12px;color:var(--muted);margin:-8px 0 14px;}
+  .setup-error{background:rgba(193,91,65,.12);border:1px solid var(--terracotta);color:var(--chalk);border-radius:var(--radius);padding:10px 12px;font-size:13px;margin-bottom:16px;}
+  .setup-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
+  .loading-state{min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:720px){
+    .row{grid-template-columns:38px 1fr 70px;grid-template-areas:"badge name status" "badge club status";row-gap:2px;}
+    .row .club{grid-area:club;}
+    .row .name{grid-area:name;}
+    .row .badge{grid-area:badge;}
+    .row .status-pill{grid-area:status;justify-self:end;}
+    .row .pos-tag,.row .age,.row .stars{display:none;}
+    .stat-grid{grid-template-columns:1fr 1fr 1fr;}
+    .basic-grid{grid-template-columns:1fr 1fr;}
+    .header-inner{align-items:flex-start;}
+    .search-box input{width:150px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="appRoot"></div>
+
+<div id="modalRoot"></div>
+<div id="backdrop" class="backdrop" onclick="closeDossier()"></div>
+<div id="dossierRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ---------------- data / constants ---------------- */
+const POSITIONS = [
+  {v:'GR', label:'Guarda-Redes', line:'GR'},
+  {v:'DC', label:'Defesa Central', line:'DF'},
+  {v:'LD', label:'Lateral Direito', line:'DF'},
+  {v:'LE', label:'Lateral Esquerdo', line:'DF'},
+  {v:'MDC', label:'Médio Defensivo', line:'MC'},
+  {v:'MC', label:'Médio Centro', line:'MC'},
+  {v:'MOC', label:'Médio Ofensivo', line:'MC'},
+  {v:'ED', label:'Extremo Direito', line:'AV'},
+  {v:'EE', label:'Extremo Esquerdo', line:'AV'},
+  {v:'AV', label:'Avançado', line:'AV'},
+];
+const LINES = ['GR','DF','MC','AV'];
+const STATUSES = [
+  {v:'obs', label:'Em observação', cls:'st-obs'},
+  {v:'follow', label:'A seguir', cls:'st-follow'},
+  {v:'rec', label:'Recomendado', cls:'st-rec'},
+  {v:'out', label:'Dispensado', cls:'st-out'},
+];
+const ATTRS = [
+  {k:'tecnica', label:'Técnica'},
+  {k:'fisico', label:'Físico'},
+  {k:'velocidade', label:'Velocidade'},
+  {k:'visao', label:'Visão de Jogo'},
+  {k:'finalizacao', label:'Finalização'},
+  {k:'defesa', label:'Defesa'},
+];
+
+let players = [];
+let storageOk = true;
+let state = {search:'', line:null, status:'all', minRating:0, sort:'rating'};
+let openDossierId = null;
+
+function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
+function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
+function initials(name){
+  return name.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function uid(){
+  return (crypto.randomUUID ? crypto.randomUUID() : 'p-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+}
+function fmtDate(iso){
+  return new Date(iso).toLocaleDateString('pt-PT', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+/* ---------------- GitHub-backed storage ---------------- */
+const CONFIG_KEY = 'scouting_gh_config_v1';
+const GH_API = 'https://api.github.com';
+const DATA_PATH = 'players.json';
+let ghConfig = null;   // {owner, repo, token, branch}
+let ghSha = null;      // sha of the current players.json, null if it doesn't exist yet
+
+function loadConfig(){
+  try{
+    const raw = localStorage.getItem(CONFIG_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function saveConfig(cfg){
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+function clearConfig(){
+  localStorage.removeItem(CONFIG_KEY);
+}
+
+function utf8ToB64(str){
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function b64ToUtf8(b64){
+  const binary = atob(b64.replace(/\n/g,''));
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+async function ghRequest(path, options={}){
+  return fetch(`${GH_API}${path}`, {
+    ...options,
+    headers: {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': `Bearer ${ghConfig.token}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(options.headers||{}),
+    },
+  });
+}
+function contentsPath(){
+  return `/repos/${ghConfig.owner}/${ghConfig.repo}/contents/${DATA_PATH}`;
+}
+
+async function fetchPlayersFromGitHub(){
+  const res = await ghRequest(contentsPath());
+  if(res.status === 404){ ghSha = null; return []; }
+  if(res.status === 401) throw new Error('AUTH');
+  if(res.status === 403) throw new Error('FORBIDDEN');
+  if(!res.ok) throw new Error('HTTP_'+res.status);
+  const data = await res.json();
+  ghSha = data.sha;
+  const json = b64ToUtf8(data.content);
+  try{ return JSON.parse(json); }catch(e){ return []; }
+}
+
+async function getRemoteSha(){
+  const res = await ghRequest(contentsPath());
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error('HTTP_'+res.status);
+  const data = await res.json();
+  return data.sha;
+}
+
+async function savePlayersToGitHub(){
+  const doPut = async () => {
+    const body = {
+      message: 'Atualizar base de dados de scouting',
+      content: utf8ToB64(JSON.stringify(players, null, 2)),
+      branch: ghConfig.branch || 'main',
+    };
+    if(ghSha) body.sha = ghSha;
+    return ghRequest(contentsPath(), {method:'PUT', body: JSON.stringify(body)});
+  };
+  let res = await doPut();
+  if(res.status === 409){
+    ghSha = await getRemoteSha();
+    res = await doPut();
+  }
+  if(res.status === 401) throw new Error('AUTH');
+  if(res.status === 403) throw new Error('FORBIDDEN');
+  if(!res.ok) throw new Error('HTTP_'+res.status);
+  const data = await res.json();
+  ghSha = data.content.sha;
+}
+
+function mapGhError(e){
+  const msg = (e && e.message) || '';
+  if(msg === 'AUTH') return 'O token não é válido ou expirou. Vai a Definições e atualiza-o.';
+  if(msg === 'FORBIDDEN') return 'Sem permissão de escrita neste repositório. Confirma o token em Definições.';
+  if(msg === 'HTTP_404') return 'Repositório não encontrado. Confirma o nome em Definições.';
+  return 'Não foi possível guardar no GitHub agora. Verifica a ligação e tenta novamente.';
+}
+
+async function savePlayers(){
+  try{
+    await savePlayersToGitHub();
+    storageOk = true;
+  }catch(e){
+    storageOk = false;
+    showToast(mapGhError(e));
+  }
+}
+
+function showToast(msg){
+  const root = document.getElementById('toastRoot');
+  root.innerHTML = `<div class="toast">${escapeHtml(msg)}</div>`;
+  setTimeout(()=>{ root.innerHTML=''; }, 3200);
+}
+
+/* ---------------- app shell ---------------- */
+function renderMainShell(){
+  document.getElementById('appRoot').innerHTML = `
+    <header>
+      <svg class="motif" viewBox="0 0 1100 160" preserveAspectRatio="none">
+        <line x1="0" y1="150" x2="1100" y2="150" stroke="var(--chalk)" stroke-width="1"/>
+        <circle cx="550" cy="150" r="60" fill="none" stroke="var(--chalk)" stroke-width="1"/>
+        <circle cx="550" cy="150" r="2" fill="var(--chalk)"/>
+      </svg>
+      <div class="header-inner">
+        <div class="brand">
+          <h1>SCOUTING</h1>
+          <span>A tua base de dados pessoal de jogadores observados</span>
+        </div>
+        <div class="header-actions">
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="searchInput" type="text" placeholder="Procurar nome ou clube..." oninput="onSearch(this.value)">
+          </div>
+          <button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>
+        </div>
+      </div>
+    </header>
+    <div class="shell">
+      <div class="filters" id="filtersBar"></div>
+      <div id="listContainer"></div>
+    </div>
+    <footer>
+      <button onclick="openSettingsModal()">Definições do GitHub</button>
+      <button onclick="confirmClearAll()">Limpar todos os dados</button>
+    </footer>
+  `;
+  render();
+}
+
+function renderLoadingScreen(msg){
+  document.getElementById('appRoot').innerHTML = `<div class="loading-state">${escapeHtml(msg)}</div>`;
+}
+
+/* ---------------- GitHub setup screen ---------------- */
+function renderSetupScreen(errorMsg){
+  document.getElementById('appRoot').innerHTML = `
+    <div class="setup-wrap">
+      <div class="setup-card">
+        <h2 class="brand-mini">SCOUTING</h2>
+        <p class="sub">Liga a app ao repositório privado do GitHub onde os teus dados vão ficar guardados.</p>
+        ${errorMsg ? `<div class="setup-error">${escapeHtml(errorMsg)}</div>` : ''}
+        <div class="field">
+          <label>Nome de utilizador do GitHub</label>
+          <input id="s_owner" type="text" placeholder="ex: joaosilva">
+        </div>
+        <div class="field">
+          <label>Nome do repositório privado (dados)</label>
+          <input id="s_repo" type="text" placeholder="ex: scouting-dados">
+        </div>
+        <div class="field">
+          <label>Token de acesso pessoal</label>
+          <input id="s_token" type="password" placeholder="github_pat_...">
+        </div>
+        <p class="hint">O token fica guardado só neste browser — nunca é enviado para a Claude nem para mais lado nenhum além do GitHub.</p>
+        <div class="setup-actions">
+          <button class="btn btn-primary" onclick="submitSetup()">Ligar</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function submitSetup(){
+  const owner = document.getElementById('s_owner').value.trim();
+  const repo = document.getElementById('s_repo').value.trim();
+  const token = document.getElementById('s_token').value.trim();
+  if(!owner || !repo || !token){
+    renderSetupScreen('Preenche os três campos para continuar.');
+    return;
+  }
+  ghConfig = {owner, repo, token, branch:'main'};
+  renderLoadingScreen('A ligar ao GitHub...');
+  try{
+    players = await fetchPlayersFromGitHub();
+    saveConfig(ghConfig);
+    storageOk = true;
+    renderMainShell();
+  }catch(e){
+    renderSetupScreen(mapGhError(e));
+  }
+}
+
+async function connectAndLoad(){
+  renderLoadingScreen('A ligar ao GitHub...');
+  try{
+    players = await fetchPlayersFromGitHub();
+    storageOk = true;
+    renderMainShell();
+  }catch(e){
+    renderConnectionError(e);
+  }
+}
+
+function renderConnectionError(e){
+  document.getElementById('appRoot').innerHTML = `
+    <div class="setup-wrap">
+      <div class="setup-card">
+        <h2 class="brand-mini">Não foi possível ligar</h2>
+        <div class="setup-error">${escapeHtml(mapGhError(e))}</div>
+        <div class="setup-actions">
+          <button class="btn" onclick="openSettingsModal(true)">Rever definições</button>
+          <button class="btn btn-primary" onclick="connectAndLoad()">Tentar novamente</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- GitHub settings modal ---------------- */
+function openSettingsModal(fromError){
+  const cfg = ghConfig || {owner:'', repo:'', token:''};
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>Definições do GitHub</h2>
+        <div class="field"><label>Nome de utilizador do GitHub</label><input id="set_owner" type="text" value="${escapeHtml(cfg.owner)}"></div>
+        <div class="field"><label>Nome do repositório privado (dados)</label><input id="set_repo" type="text" value="${escapeHtml(cfg.repo)}"></div>
+        <div class="field"><label>Token de acesso pessoal</label><input id="set_token" type="password" value="${escapeHtml(cfg.token)}" placeholder="Cola aqui um novo token se o anterior expirou"></div>
+        <div class="modal-actions" style="justify-content:space-between;">
+          <button class="btn btn-danger" onclick="disconnectGithub()">Desligar conta</button>
+          <div style="display:flex;gap:10px;">
+            <button class="btn" onclick="closeModal()">${fromError ? 'Cancelar' : 'Fechar'}</button>
+            <button class="btn btn-primary" onclick="submitSettings()">Guardar e ligar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+async function submitSettings(){
+  const owner = document.getElementById('set_owner').value.trim();
+  const repo = document.getElementById('set_repo').value.trim();
+  const token = document.getElementById('set_token').value.trim();
+  if(!owner || !repo || !token){ showToast('Preenche os três campos.'); return; }
+  ghConfig = {owner, repo, token, branch:'main'};
+  closeModal();
+  renderLoadingScreen('A ligar ao GitHub...');
+  try{
+    players = await fetchPlayersFromGitHub();
+    saveConfig(ghConfig);
+    storageOk = true;
+    renderMainShell();
+  }catch(e){
+    renderConnectionError(e);
+  }
+}
+function disconnectGithub(){
+  if(!confirm('Isto desliga a app deste repositório neste dispositivo. Os teus dados continuam guardados no GitHub. Continuar?')) return;
+  clearConfig();
+  ghConfig = null;
+  ghSha = null;
+  players = [];
+  closeModal();
+  renderSetupScreen();
+}
+
+/* ---------------- rendering: filters ---------------- */
+function renderFilters(){
+  const bar = document.getElementById('filtersBar');
+  bar.innerHTML = `
+    <span class="label">Linha</span>
+    <div class="chip-group">
+      ${LINES.map(l=>`<button class="chip ${state.line===l?'active':''}" onclick="toggleLine('${l}')">${l}</button>`).join('')}
+    </div>
+    <select class="filter-select" onchange="state.status=this.value; render();">
+      <option value="all" ${state.status==='all'?'selected':''}>Todos os estados</option>
+      ${STATUSES.map(s=>`<option value="${s.v}" ${state.status===s.v?'selected':''}>${s.label}</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="state.minRating=Number(this.value); render();">
+      <option value="0" ${state.minRating===0?'selected':''}>Qualquer rating</option>
+      ${[1,2,3,4,5].map(n=>`<option value="${n}" ${state.minRating===n?'selected':''}>${n}+ ★</option>`).join('')}
+    </select>
+    <select class="filter-select" onchange="state.sort=this.value; render();">
+      <option value="rating" ${state.sort==='rating'?'selected':''}>Ordenar: rating</option>
+      <option value="name" ${state.sort==='name'?'selected':''}>Ordenar: nome</option>
+      <option value="age" ${state.sort==='age'?'selected':''}>Ordenar: idade</option>
+      <option value="recent" ${state.sort==='recent'?'selected':''}>Ordenar: recentes</option>
+    </select>
+    <div class="spacer"></div>
+    <span class="count-label" id="countLabel"></span>
+  `;
+}
+function toggleLine(l){
+  state.line = (state.line === l) ? null : l;
+  render();
+}
+function onSearch(v){
+  state.search = v.toLowerCase();
+  render();
+}
+
+/* ---------------- rendering: list ---------------- */
+function getFiltered(){
+  let list = players.filter(p=>{
+    if(state.search && !(p.name.toLowerCase().includes(state.search) || p.club.toLowerCase().includes(state.search))) return false;
+    if(state.line && posInfo(p.position).line !== state.line) return false;
+    if(state.status !== 'all' && p.status !== state.status) return false;
+    if(p.rating < state.minRating) return false;
+    return true;
+  });
+  list.sort((a,b)=>{
+    if(state.sort==='rating') return b.rating - a.rating;
+    if(state.sort==='name') return a.name.localeCompare(b.name);
+    if(state.sort==='age') return (a.age||0) - (b.age||0);
+    if(state.sort==='recent') return b.createdAt - a.createdAt;
+    return 0;
+  });
+  return list;
+}
+
+function starsHtml(rating, size){
+  size = size || 14;
+  let out = '<div class="stars">';
+  for(let i=1;i<=5;i++){
+    out += `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${i<=rating?'var(--gold)':'none'}" stroke="var(--gold-dim)" stroke-width="1.4"><polygon points="12 2 15 9 22 9.5 16.5 14.5 18 22 12 18 6 22 7.5 14.5 2 9.5 9 9"/></svg>`;
+  }
+  return out+'</div>';
+}
+
+function renderList(){
+  const container = document.getElementById('listContainer');
+  const list = getFiltered();
+  document.getElementById('countLabel').textContent = `${list.length} jogador${list.length===1?'':'es'}`;
+
+  if(players.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        <h2>Ainda não tens jogadores</h2>
+        <p>Adiciona o primeiro jogador que observaste para começar a construir a tua base de dados.</p>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>
+      </div>`;
+    return;
+  }
+  if(list.length === 0){
+    container.innerHTML = `<div class="empty"><h2>Nenhum resultado</h2><p>Ajusta os filtros ou a pesquisa.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="list">
+    ${list.map(p=>{
+      const pos = posInfo(p.position);
+      const st = statusInfo(p.status);
+      return `
+      <button class="row" onclick="openDossier('${p.id}')">
+        <div class="badge b-${pos.line}">${initials(p.name)}</div>
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="club">${escapeHtml(p.club || '—')}</div>
+        <div class="pos-tag">${pos.v}</div>
+        <div class="age num">${p.age ? p.age+' anos' : '—'}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          ${starsHtml(p.rating)}
+          <span class="status-pill ${st.cls}">${st.label}</span>
+        </div>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+
+function render(){
+  renderFilters();
+  renderList();
+  if(openDossierId) renderDossier();
+}
+
+/* ---------------- add player modal ---------------- */
+function openAddModal(){
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>Novo Jogador</h2>
+        <div class="field"><label>Nome</label><input id="f_name" type="text" placeholder="Nome do jogador"></div>
+        <div class="field-row">
+          <div class="field"><label>Posição</label>
+            <select id="f_pos">${POSITIONS.map(p=>`<option value="${p.v}">${p.label}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>Idade</label><input id="f_age" type="number" min="14" max="45" placeholder="ex: 19"></div>
+        </div>
+        <div class="field"><label>Clube</label><input id="f_club" type="text" placeholder="Clube atual"></div>
+        <div class="field-row">
+          <div class="field"><label>Nacionalidade</label><input id="f_nat" type="text" placeholder="ex: Portugal"></div>
+          <div class="field"><label>Pé preferido</label>
+            <select id="f_foot"><option value="Direito">Direito</option><option value="Esquerdo">Esquerdo</option><option value="Ambidextro">Ambidextro</option></select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitNewPlayer()">Criar ficha</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>document.getElementById('f_name').focus(), 50);
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+
+async function submitNewPlayer(){
+  const name = document.getElementById('f_name').value.trim();
+  if(!name){ showToast('Indica pelo menos o nome do jogador.'); return; }
+  const p = {
+    id: uid(),
+    name,
+    position: document.getElementById('f_pos').value,
+    age: Number(document.getElementById('f_age').value) || null,
+    club: document.getElementById('f_club').value.trim(),
+    nationality: document.getElementById('f_nat').value.trim(),
+    foot: document.getElementById('f_foot').value,
+    height: null,
+    status: 'obs',
+    rating: 0,
+    stats: {games:0, goals:0, assists:0},
+    attrs: {tecnica:5, fisico:5, velocidade:5, visao:5, finalizacao:5, defesa:5},
+    notes: [],
+    createdAt: Date.now(),
+  };
+  players.push(p);
+  await savePlayers();
+  closeModal();
+  render();
+  openDossier(p.id);
+}
+
+/* ---------------- dossier ---------------- */
+function openDossier(id){
+  openDossierId = id;
+  document.getElementById('backdrop').classList.add('open');
+  renderDossier();
+}
+function closeDossier(){
+  openDossierId = null;
+  document.getElementById('backdrop').classList.remove('open');
+  const el = document.getElementById('dossierRoot');
+  const panel = el.querySelector('.dossier');
+  if(panel){ panel.classList.remove('open'); }
+  setTimeout(()=>{ if(!openDossierId) el.innerHTML=''; }, 250);
+}
+
+function renderDossier(){
+  const p = players.find(x=>x.id===openDossierId);
+  const root = document.getElementById('dossierRoot');
+  if(!p){ root.innerHTML=''; return; }
+  const pos = posInfo(p.position);
+
+  root.innerHTML = `
+    <div class="dossier">
+      <div class="dossier-head">
+        <button class="btn btn-ghost" onclick="closeDossier()">← Voltar</button>
+        <button class="btn btn-ghost" onclick="removePlayer('${p.id}')">Eliminar ficha</button>
+      </div>
+      <div class="dossier-body">
+        <div class="dossier-id">
+          <div class="dossier-badge b-${pos.line}">${initials(p.name)}</div>
+          <div>
+            <h2 class="dossier-name">${escapeHtml(p.name)}</h2>
+            <div class="tag-row">
+              <span class="tag">${pos.label}</span>
+              <span class="tag">${escapeHtml(p.club || 'Sem clube')}</span>
+              ${p.age ? `<span class="tag">${p.age} anos</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Estado</h3>
+          <div class="status-select-row">
+            ${STATUSES.map(s=>`<button class="chip ${p.status===s.v?'active':''}" onclick="updateStatus('${p.id}','${s.v}')">${s.label}</button>`).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Rating geral</h3>
+          <div class="rating-row">
+            ${[1,2,3,4,5].map(n=>`
+              <button onclick="updateRating('${p.id}',${n})">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="${n<=p.rating?'var(--gold)':'none'}" stroke="var(--gold-dim)" stroke-width="1.4"><polygon points="12 2 15 9 22 9.5 16.5 14.5 18 22 12 18 6 22 7.5 14.5 2 9.5 9 9"/></svg>
+              </button>`).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Estatísticas observadas</h3>
+          <div class="stat-grid">
+            ${statBox(p,'games','Jogos')}
+            ${statBox(p,'goals','Golos')}
+            ${statBox(p,'assists','Assist.')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Atributos técnicos</h3>
+          ${ATTRS.map(a=>`
+            <div class="attr">
+              <div class="attr-top"><span>${a.label}</span><span class="val num">${p.attrs[a.k]}</span></div>
+              <input type="range" min="0" max="10" value="${p.attrs[a.k]}" oninput="updateAttrLive('${p.id}','${a.k}', this.value)" onchange="updateAttr('${p.id}','${a.k}', this.value)">
+            </div>`).join('')}
+        </div>
+
+        <div class="section">
+          <h3>Dados básicos</h3>
+          <dl class="basic-grid">
+            <div><dt>Nacionalidade</dt><dd>${escapeHtml(p.nationality || '—')}</dd></div>
+            <div><dt>Pé preferido</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
+          </dl>
+        </div>
+
+        <div class="section">
+          <h3>Notas de observação</h3>
+          <div class="note-form">
+            <textarea id="noteText" placeholder="Escreve o que observaste neste jogo..."></textarea>
+            <div class="note-form-actions">
+              <button class="btn btn-primary" onclick="addNote('${p.id}')">Adicionar nota</button>
+            </div>
+          </div>
+          ${p.notes.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Sem notas ainda.</p>` :
+            p.notes.slice().sort((a,b)=>b.date-a.date).map(n=>`
+              <div class="note">
+                <div class="note-head">
+                  <span class="note-date">${fmtDate(n.date)}</span>
+                  <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
+                </div>
+                <p>${escapeHtml(n.text)}</p>
+              </div>`).join('')
+          }
+        </div>
+      </div>
+    </div>`;
+  requestAnimationFrame(()=>{
+    const panel = root.querySelector('.dossier');
+    if(panel) panel.classList.add('open');
+  });
+}
+
+function statBox(p, key, label){
+  return `<div class="stat-box">
+    <div class="v num">${p.stats[key]}</div>
+    <div class="l">${label}</div>
+    <div class="stepper">
+      <button onclick="stepStat('${p.id}','${key}',-1)">−</button>
+      <button onclick="stepStat('${p.id}','${key}',1)">+</button>
+    </div>
+  </div>`;
+}
+
+/* ---------------- mutations ---------------- */
+async function updateStatus(id, v){
+  const p = players.find(x=>x.id===id); p.status=v; await savePlayers(); render();
+}
+async function updateRating(id, v){
+  const p = players.find(x=>x.id===id); p.rating = (p.rating===v ? 0 : v); await savePlayers(); render();
+}
+function updateAttrLive(id, key, v){
+  const p = players.find(x=>x.id===id); p.attrs[key] = Number(v);
+  const valEl = document.querySelectorAll('.attr-top .val');
+  render_attrs_live(p);
+}
+function render_attrs_live(p){
+  const rows = document.querySelectorAll('.attr');
+  rows.forEach((row, i)=>{
+    const key = ATTRS[i].k;
+    row.querySelector('.val').textContent = p.attrs[key];
+  });
+}
+async function updateAttr(id, key, v){
+  const p = players.find(x=>x.id===id); p.attrs[key] = Number(v); await savePlayers();
+}
+async function stepStat(id, key, delta){
+  const p = players.find(x=>x.id===id);
+  p.stats[key] = Math.max(0, p.stats[key] + delta);
+  await savePlayers(); renderDossier();
+}
+async function addNote(id){
+  const ta = document.getElementById('noteText');
+  const text = ta.value.trim();
+  if(!text) return;
+  const p = players.find(x=>x.id===id);
+  p.notes.push({id: uid(), date: Date.now(), text});
+  await savePlayers(); renderDossier();
+}
+async function removeNote(id, noteId){
+  const p = players.find(x=>x.id===id);
+  p.notes = p.notes.filter(n=>n.id!==noteId);
+  await savePlayers(); renderDossier();
+}
+async function removePlayer(id){
+  if(!confirm('Eliminar esta ficha de jogador? Esta ação não pode ser desfeita.')) return;
+  players = players.filter(x=>x.id!==id);
+  await savePlayers();
+  closeDossier();
+  render();
+}
+async function confirmClearAll(){
+  if(!confirm('Isto vai apagar TODOS os jogadores da tua base de dados. Continuar?')) return;
+  if(!confirm('Tens a certeza absoluta? Não é possível recuperar depois.')) return;
+  players = [];
+  await savePlayers();
+  render();
+}
+
+/* ---------------- init ---------------- */
+async function init(){
+  ghConfig = loadConfig();
+  if(!ghConfig){
+    renderSetupScreen();
+    return;
+  }
+  await connectAndLoad();
+}
+init();
+</script>
+</body>
+</html>
