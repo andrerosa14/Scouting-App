@@ -58,12 +58,25 @@
   .btn-danger{border-color:var(--terracotta);color:var(--terracotta);background:transparent;}
   .btn-danger:hover{background:rgba(193,91,65,.12);}
 
-  /* ---------- tabs ---------- */
-  .tabs{display:flex;justify-content:center;gap:10px;max-width:1100px;margin:0 auto;padding:16px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
-  .tab-btn{display:flex;align-items:center;gap:9px;background:var(--pitch-panel);border:1px solid var(--line);color:var(--muted);padding:10px 18px;border-radius:var(--radius);font-size:14px;font-weight:600;transition:background .15s, border-color .15s, color .15s;}
-  .tab-btn svg{flex-shrink:0;}
-  .tab-btn:hover{border-color:var(--gold-dim);color:var(--chalk);}
-  .tab-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1305;}
+  /* ---------- home tiles ---------- */
+  .home-wrap{max-width:1100px;margin:0 auto;padding:56px 24px 80px;}
+  .home-tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;}
+  .tile{
+    width:320px;height:180px;
+    background:var(--pitch-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    transition:background .15s, border-color .15s, transform .15s;
+  }
+  .tile:hover{border-color:var(--gold-dim);transform:translateY(-3px);background:var(--pitch-panel-raise);}
+  .tile-icon{width:52px;height:52px;border-radius:50%;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;color:var(--gold);}
+  .tile:hover .tile-icon{border-color:var(--gold-dim);}
+  .tile-label{font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:.02em;color:var(--chalk);}
+  .tile-count{font-size:12px;color:var(--muted);}
+
+  /* ---------- section back bar ---------- */
+  .section-back-bar{max-width:1100px;margin:0 auto;padding:16px 24px;border-bottom:1px solid var(--line);}
 
   @keyframes tabFadeIn{
     from{opacity:0; transform:translateY(8px);}
@@ -178,6 +191,14 @@
   .ct-soon{color:var(--gold);border-color:var(--gold-dim);}
   .ct-expired{color:var(--terracotta);border-color:var(--terracotta);}
 
+  /* ---------- per-player game notes ---------- */
+  .player-report-card{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;}
+  .player-report-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .player-report-name{font-weight:600;font-size:15px;}
+  .player-report-club{font-size:12px;color:var(--muted);}
+  .player-report-head .spacer{flex:1;}
+  .player-report-count{font-size:12px;color:var(--muted);}
+
   /* ---------- clubs tab / shortlists ---------- */
   .club-list-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px;}
 
@@ -262,8 +283,9 @@ let games = [];
 let storageOk = true;
 let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'rating'};
 let openDossierId = null;
-let activeTab = 'players'; // 'players' | 'clubs' | 'shortlists' | 'games'
+let activeTab = null; // null (início) | 'players' | 'clubs' | 'shortlists' | 'games'
 let activeShortlistId = null;
+let activeGameId = null;
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
@@ -433,8 +455,9 @@ async function fetchDataFromGitHub(){
   const json = b64ToUtf8(data.content);
   let parsed = null;
   try{ parsed = JSON.parse(json); }catch(e){ parsed = null; }
+  const normGames = (arr) => (arr || []).map(g => ({playerIds: [], playerNotes: [], ...g}));
   if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: [], games: []}; // formato antigo (só jogadores)
-  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: parsed.games || []};
+  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: normGames(parsed.games)};
   return {players:[], clubs:[], shortlists:[], games:[]};
 }
 
@@ -507,9 +530,32 @@ function headerPrimaryButtonHtml(){
 function switchTab(tab){
   activeTab = tab;
   activeShortlistId = null;
+  activeGameId = null;
   renderMainShell();
 }
+function goHome(){
+  activeTab = null;
+  activeShortlistId = null;
+  activeGameId = null;
+  renderMainShell();
+}
+function tileCountLabel(tab){
+  if(tab==='players') return `${players.length} ficha${players.length===1?'':'s'}`;
+  if(tab==='clubs') return `${clubs.length} clube${clubs.length===1?'':'s'}`;
+  if(tab==='shortlists') return `${shortlists.length} lista${shortlists.length===1?'':'s'}`;
+  if(tab==='games') return `${games.length} jogo${games.length===1?'':'s'}`;
+  return '';
+}
+function homeTilesHtml(){
+  return TABS.map(t=>`
+    <button class="tile" onclick="switchTab('${t.v}')">
+      <div class="tile-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg></div>
+      <div class="tile-label">${t.label}</div>
+      <div class="tile-count">${tileCountLabel(t.v)}</div>
+    </button>`).join('');
+}
 function renderMainShell(){
+  const inSection = activeTab !== null;
   document.getElementById('appRoot').innerHTML = `
     <header>
       <svg class="motif" viewBox="0 0 1100 160" preserveAspectRatio="none">
@@ -522,6 +568,7 @@ function renderMainShell(){
           <h1>SCOUTING</h1>
           <span>A tua base de dados pessoal de jogadores observados</span>
         </div>
+        ${inSection ? `
         <div class="header-actions">
           ${activeTab==='players' ? `
           <div class="search-box">
@@ -529,15 +576,19 @@ function renderMainShell(){
             <input id="searchInput" type="text" placeholder="Procurar nome ou clube..." value="${escapeHtml(state.search)}" oninput="onSearch(this.value)">
           </div>` : ''}
           ${headerPrimaryButtonHtml()}
-        </div>
+        </div>` : ''}
       </div>
     </header>
-    <div class="tabs">
-      ${TABS.map(t=>`<button class="tab-btn ${activeTab===t.v?'active':''}" onclick="switchTab('${t.v}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg><span>${t.label}</span></button>`).join('')}
+    ${inSection ? `
+    <div class="section-back-bar">
+      <button class="btn btn-ghost" onclick="goHome()">← Início</button>
     </div>
     <div class="shell">
       <div id="tabContent" class="tab-fade"></div>
-    </div>
+    </div>` : `
+    <div class="home-wrap tab-fade">
+      <div class="home-tiles">${homeTilesHtml()}</div>
+    </div>`}
     <footer>
       <button onclick="openSettingsModal()">Definições do GitHub</button>
       <button onclick="confirmClearAll()">Limpar todos os dados</button>
@@ -565,7 +616,11 @@ function renderTabContent(){
   } else if(activeTab === 'shortlists'){
     inner = activeShortlistId ? renderShortlistDetailHtml() : renderShortlistsTabHtml();
   } else if(activeTab === 'games'){
-    if(games.length === 0){
+    const activeGame = activeGameId ? games.find(x=>x.id===activeGameId) : null;
+    if(activeGameId && !activeGame) activeGameId = null;
+    if(activeGame){
+      inner = renderGameDetailHtml(activeGame);
+    } else if(games.length === 0){
       inner = clubs.length < 2
         ? emptyStateHtml('Precisas de clubes primeiro', 'Cria pelo menos dois clubes para poderes registar um jogo entre eles.', "openClubFormModal()", '+ Novo Clube')
         : emptyStateHtml('Ainda não tens jogos', 'Regista os jogos que foste ver, com as duas equipas, a competição e a data.', "openGameFormModal()", '+ Novo Jogo');
@@ -628,7 +683,7 @@ async function submitSetup(){
   try{
     const data = await fetchDataFromGitHub();
     players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
-    activeTab = 'players'; activeShortlistId = null;
+    activeTab = null; activeShortlistId = null; activeGameId = null;
     saveConfig(ghConfig);
     storageOk = true;
     renderMainShell();
@@ -642,7 +697,7 @@ async function connectAndLoad(){
   try{
     const data = await fetchDataFromGitHub();
     players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
-    activeTab = 'players'; activeShortlistId = null;
+    activeTab = null; activeShortlistId = null; activeGameId = null;
     storageOk = true;
     renderMainShell();
   }catch(e){
@@ -696,7 +751,7 @@ async function submitSettings(){
   try{
     const data = await fetchDataFromGitHub();
     players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
-    activeTab = 'players'; activeShortlistId = null;
+    activeTab = null; activeShortlistId = null; activeGameId = null;
     saveConfig(ghConfig);
     storageOk = true;
     renderMainShell();
@@ -712,7 +767,8 @@ function disconnectGithub(){
   players = [];
   clubs = [];
   shortlists = [];
-  activeTab = 'players'; activeShortlistId = null;
+  games = [];
+  activeTab = null; activeShortlistId = null; activeGameId = null;
   closeModal();
   renderSetupScreen();
 }
@@ -1086,15 +1142,16 @@ function gamesListHtml(){
   return games.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(g=>{
     const a = clubInfo(g.clubAId);
     const b = clubInfo(g.clubBId);
+    const count = (g.playerIds||[]).length;
     return `
-    <div class="club-row">
+    <div class="club-row" style="cursor:pointer;" onclick="openGameDetail('${g.id}')">
       <div class="club-row-avatar">${a && a.logo ? `<img src="${a.logo}" alt="">` : `<span>${a?escapeHtml(initials(a.name)):'?'}</span>`}</div>
       <div class="club-row-info">
         <div class="club-row-name">${a?escapeHtml(a.name):'Clube removido'} <span style="color:var(--muted);font-weight:400;">vs</span> ${b?escapeHtml(b.name):'Clube removido'}</div>
-        <div class="club-row-count">${g.competition?escapeHtml(g.competition):'Sem competição'} · ${g.date?fmtDateOnly(g.date):'Sem data'}</div>
+        <div class="club-row-count">${g.competition?escapeHtml(g.competition):'Sem competição'} · ${g.date?fmtDateOnly(g.date):'Sem data'} · ${count} jogador${count===1?'':'es'} observado${count===1?'':'s'}</div>
       </div>
-      <button class="btn-ghost" onclick="openGameFormModal('${g.id}')">Editar</button>
-      <button class="btn-ghost" onclick="removeGame('${g.id}')">Eliminar</button>
+      <button class="btn-ghost" onclick="event.stopPropagation(); openGameFormModal('${g.id}')">Editar</button>
+      <button class="btn-ghost" onclick="event.stopPropagation(); removeGame('${g.id}')">Eliminar</button>
     </div>`;
   }).join('');
 }
@@ -1143,8 +1200,14 @@ async function submitGameForm(editId){
     const g = games.find(x=>x.id===editId);
     if(!g){ closeModal(); return; }
     g.clubAId = clubAId; g.clubBId = clubBId; g.competition = competition; g.date = date;
+    if(!g.playerIds) g.playerIds = [];
+    // se a equipa mudou, só mantém jogadores que continuam associados a uma das duas equipas do jogo
+    g.playerIds = g.playerIds.filter(pid => {
+      const p = players.find(x=>x.id===pid);
+      return p && (p.clubId === clubAId || p.clubId === clubBId);
+    });
   } else {
-    games.push({id: uid(), clubAId, clubBId, competition, date, createdAt: Date.now()});
+    games.push({id: uid(), clubAId, clubBId, competition, date, playerIds: [], playerNotes: [], createdAt: Date.now()});
   }
   await saveData();
   closeModal();
@@ -1156,8 +1219,112 @@ async function removeGame(id){
   if(!g) return;
   if(!confirm('Eliminar este jogo?')) return;
   games = games.filter(x=>x.id!==id);
+  if(activeGameId === id) activeGameId = null;
   await saveData();
   render();
+}
+
+function openGameDetail(id){
+  activeGameId = id;
+  renderTabContent();
+}
+
+function renderGameDetailHtml(g){
+  const a = clubInfo(g.clubAId);
+  const b = clubInfo(g.clubBId);
+  const eligiblePlayers = players.filter(p => p.clubId === g.clubAId || p.clubId === g.clubBId);
+  const selectedIds = (g.playerIds || []).filter(pid => eligiblePlayers.some(p=>p.id===pid));
+  const playerNotes = g.playerNotes || [];
+  return `
+    <div class="shortlist-detail-head">
+      <button class="btn btn-ghost" onclick="activeGameId=null; renderTabContent();">← Jogos</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="openGameFormModal('${g.id}')">Editar jogo</button>
+        <button class="btn btn-ghost" onclick="removeGame('${g.id}')">Eliminar jogo</button>
+      </div>
+    </div>
+    <h2 class="shortlist-detail-title">${a?escapeHtml(a.name):'Clube removido'} <span style="color:var(--muted);font-weight:400;">vs</span> ${b?escapeHtml(b.name):'Clube removido'}</h2>
+    <div class="tag-row" style="margin:-10px 0 20px;">
+      ${g.competition ? `<span class="tag">${escapeHtml(g.competition)}</span>` : ''}
+      ${g.date ? `<span class="tag">${fmtDateOnly(g.date)}</span>` : ''}
+    </div>
+
+    <div class="section" style="margin-top:0;padding-top:0;border-top:none;">
+      <h3>Jogadores observados</h3>
+      ${eligiblePlayers.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Nenhum dos dois clubes tem jogadores associados ainda. Associa jogadores a "${a?escapeHtml(a.name):'uma das equipas'}" ou "${b?escapeHtml(b.name):'outra equipa'}" para os poderes selecionar aqui.</p>` :
+      `<div class="chip-group">
+        ${eligiblePlayers.slice().sort((x,y)=>x.name.localeCompare(y.name)).map(p=>`<button class="chip ${selectedIds.includes(p.id)?'active':''}" onclick="toggleGamePlayer('${g.id}','${p.id}').then(renderTabContent);">${escapeHtml(p.name)}</button>`).join('')}
+      </div>`}
+    </div>
+
+    <div class="section">
+      <h3>Notas por jogador</h3>
+      ${selectedIds.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Seleciona jogadores acima para lhes poderes associar notas deste jogo.</p>` :
+      players.filter(p=>selectedIds.includes(p.id)).slice().sort((x,y)=>x.name.localeCompare(y.name)).map(p=>{
+        const pos = posInfo(p.position);
+        const club = clubInfo(p.clubId);
+        const notesForPlayer = playerNotes.filter(n=>n.playerId===p.id);
+        return `
+        <div class="player-report-card">
+          <div class="player-report-head">
+            ${avatarHtml(p.photo, initials(p.name), pos.line)}
+            <div>
+              <div class="player-report-name">${escapeHtml(p.name)}</div>
+              <div class="player-report-club">${club?escapeHtml(club.name):'—'} · ${pos.v}</div>
+            </div>
+            <div class="spacer"></div>
+            <div class="player-report-count">${notesForPlayer.length} nota${notesForPlayer.length===1?'':'s'}</div>
+            <button type="button" class="btn-ghost" onclick="toggleGamePlayer('${g.id}','${p.id}').then(renderTabContent);">Remover do jogo</button>
+          </div>
+          <div class="note-form">
+            <textarea id="gpn_${p.id}" placeholder="Escreve as tuas notas sobre ${escapeHtml(p.name)} neste jogo..."></textarea>
+            <div class="note-form-actions">
+              <button class="btn btn-primary" onclick="addGamePlayerNote('${g.id}','${p.id}')">Adicionar</button>
+            </div>
+          </div>
+          ${notesForPlayer.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Sem notas ainda neste jogo.</p>` :
+            notesForPlayer.slice().sort((x,y)=>y.date-x.date).map(n=>`
+            <div class="note">
+              <div class="note-head">
+                <span class="note-date">${fmtDate(n.date)}</span>
+                <button class="btn-ghost" style="font-size:12px;" onclick="removeGamePlayerNote('${g.id}','${n.id}')">Remover</button>
+              </div>
+              <p>${escapeHtml(n.text)}</p>
+            </div>`).join('')
+          }
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function toggleGamePlayer(gameId, playerId){
+  const g = games.find(x=>x.id===gameId);
+  if(!g) return;
+  if(!g.playerIds) g.playerIds = [];
+  const idx = g.playerIds.indexOf(playerId);
+  if(idx === -1) g.playerIds.push(playerId); else g.playerIds.splice(idx,1);
+  await saveData();
+}
+
+async function addGamePlayerNote(gameId, playerId){
+  const ta = document.getElementById('gpn_'+playerId);
+  const text = ta.value.trim();
+  if(!text) return;
+  const g = games.find(x=>x.id===gameId);
+  if(!g) return;
+  if(!g.playerNotes) g.playerNotes = [];
+  g.playerNotes.push({id: uid(), playerId, date: Date.now(), text});
+  await saveData();
+  renderTabContent();
+}
+
+async function removeGamePlayerNote(gameId, noteId){
+  const g = games.find(x=>x.id===gameId);
+  if(!g) return;
+  g.playerNotes = (g.playerNotes || []).filter(n=>n.id!==noteId);
+  await saveData();
+  renderTabContent();
 }
 
 /* ---------------- shortlists ---------------- */
