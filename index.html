@@ -116,10 +116,10 @@
   /* ---------- dossier ---------- */
   .backdrop{position:fixed;inset:0;background:rgba(8,16,12,.55);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:40;}
   .backdrop.open{opacity:1;pointer-events:auto;}
-  .dossier{position:fixed;top:0;right:0;height:100%;width:min(480px,100%);background:var(--pitch-panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s ease;z-index:45;overflow-y:auto;}
+  .dossier{position:fixed;top:0;left:0;height:100%;width:100%;background:var(--pitch-dark);transform:translateX(100%);transition:transform .25s ease;z-index:45;overflow-y:auto;}
   .dossier.open{transform:translateX(0);}
-  .dossier-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
-  .dossier-body{padding:22px;}
+  .dossier-head{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--pitch-dark);z-index:1;}
+  .dossier-body{padding:26px 24px 80px;max-width:1100px;margin:0 auto;}
   .dossier-id{display:flex;gap:14px;align-items:center;margin-bottom:18px;}
   .dossier-badge{width:56px;height:56px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:20px;color:#12271f;flex-shrink:0;}
   .dossier-name{font-family:var(--font-display);font-weight:600;font-size:24px;margin:0 0 4px;}
@@ -258,10 +258,11 @@ const NOTE_TYPES = [
 let players = [];
 let clubs = [];
 let shortlists = [];
+let games = [];
 let storageOk = true;
 let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'rating'};
 let openDossierId = null;
-let activeTab = 'players'; // 'players' | 'clubs' | 'shortlists'
+let activeTab = 'players'; // 'players' | 'clubs' | 'shortlists' | 'games'
 let activeShortlistId = null;
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
@@ -432,9 +433,9 @@ async function fetchDataFromGitHub(){
   const json = b64ToUtf8(data.content);
   let parsed = null;
   try{ parsed = JSON.parse(json); }catch(e){ parsed = null; }
-  if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: []}; // formato antigo (só jogadores)
-  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || [], shortlists: parsed.shortlists || []};
-  return {players:[], clubs:[], shortlists:[]};
+  if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: [], games: []}; // formato antigo (só jogadores)
+  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: parsed.games || []};
+  return {players:[], clubs:[], shortlists:[], games:[]};
 }
 
 async function getRemoteSha(){
@@ -449,7 +450,7 @@ async function saveDataToGitHub(){
   const doPut = async () => {
     const body = {
       message: 'Atualizar base de dados de scouting',
-      content: utf8ToB64(JSON.stringify({players, clubs, shortlists}, null, 2)),
+      content: utf8ToB64(JSON.stringify({players, clubs, shortlists, games}, null, 2)),
     };
     if(ghSha) body.sha = ghSha;
     return ghRequest(contentsPath(), {method:'PUT', body: JSON.stringify(body)});
@@ -495,10 +496,12 @@ const TABS = [
   {v:'players', label:'Jogadores', icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>'},
   {v:'clubs', label:'Clubes', icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
   {v:'shortlists', label:'Shortlists', icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'},
+  {v:'games', label:'Jogos', icon:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
 ];
 function headerPrimaryButtonHtml(){
   if(activeTab==='clubs') return `<button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
   if(activeTab==='shortlists') return `<button class="btn btn-primary" onclick="openShortlistFormModal()">+ Nova Shortlist</button>`;
+  if(activeTab==='games') return `<button class="btn btn-primary" onclick="openGameFormModal()">+ Novo Jogo</button>`;
   return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
 }
 function switchTab(tab){
@@ -561,6 +564,14 @@ function renderTabContent(){
       : `<div class="club-list-panel">${clubsListHtml()}</div>`;
   } else if(activeTab === 'shortlists'){
     inner = activeShortlistId ? renderShortlistDetailHtml() : renderShortlistsTabHtml();
+  } else if(activeTab === 'games'){
+    if(games.length === 0){
+      inner = clubs.length < 2
+        ? emptyStateHtml('Precisas de clubes primeiro', 'Cria pelo menos dois clubes para poderes registar um jogo entre eles.', "openClubFormModal()", '+ Novo Clube')
+        : emptyStateHtml('Ainda não tens jogos', 'Regista os jogos que foste ver, com as duas equipas, a competição e a data.', "openGameFormModal()", '+ Novo Jogo');
+    } else {
+      inner = `<div class="club-list-panel">${gamesListHtml()}</div>`;
+    }
   } else {
     inner = `<div class="filters" id="filtersBar"></div><div id="listContainer"></div>`;
   }
@@ -616,7 +627,7 @@ async function submitSetup(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
     activeTab = 'players'; activeShortlistId = null;
     saveConfig(ghConfig);
     storageOk = true;
@@ -630,7 +641,7 @@ async function connectAndLoad(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
     activeTab = 'players'; activeShortlistId = null;
     storageOk = true;
     renderMainShell();
@@ -684,7 +695,7 @@ async function submitSettings(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
     activeTab = 'players'; activeShortlistId = null;
     saveConfig(ghConfig);
     storageOk = true;
@@ -1069,6 +1080,86 @@ async function removeClub(id){
   render();
 }
 
+/* ---------------- games ---------------- */
+function gamesListHtml(){
+  if(games.length === 0) return `<p style="color:var(--muted);font-size:13px;">Ainda não registaste nenhum jogo.</p>`;
+  return games.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(g=>{
+    const a = clubInfo(g.clubAId);
+    const b = clubInfo(g.clubBId);
+    return `
+    <div class="club-row">
+      <div class="club-row-avatar">${a && a.logo ? `<img src="${a.logo}" alt="">` : `<span>${a?escapeHtml(initials(a.name)):'?'}</span>`}</div>
+      <div class="club-row-info">
+        <div class="club-row-name">${a?escapeHtml(a.name):'Clube removido'} <span style="color:var(--muted);font-weight:400;">vs</span> ${b?escapeHtml(b.name):'Clube removido'}</div>
+        <div class="club-row-count">${g.competition?escapeHtml(g.competition):'Sem competição'} · ${g.date?fmtDateOnly(g.date):'Sem data'}</div>
+      </div>
+      <button class="btn-ghost" onclick="openGameFormModal('${g.id}')">Editar</button>
+      <button class="btn-ghost" onclick="removeGame('${g.id}')">Eliminar</button>
+    </div>`;
+  }).join('');
+}
+
+function openGameFormModal(editId){
+  if(clubs.length < 2){
+    showToast('Precisas de ter pelo menos dois clubes criados para registares um jogo.');
+    return;
+  }
+  const editing = editId ? games.find(g=>g.id===editId) : null;
+  const clubOptions = clubs.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>${editing ? 'Editar Jogo' : 'Novo Jogo'}</h2>
+        <div class="field-row">
+          <div class="field">
+            <label>Equipa 1</label>
+            <select id="g_clubA">${clubOptions.map(c=>`<option value="${c.id}" ${editing&&editing.clubAId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select>
+          </div>
+          <div class="field">
+            <label>Equipa 2</label>
+            <select id="g_clubB">${clubOptions.map(c=>`<option value="${c.id}" ${editing&&editing.clubBId===c.id?'selected':(!editing&&clubOptions[1]&&c.id===clubOptions[1].id?'selected':'')}>${escapeHtml(c.name)}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="field"><label>Competição</label><input id="g_competition" type="text" placeholder="ex: Liga Portugal" value="${editing?escapeHtml(editing.competition||''):''}"></div>
+        <div class="field"><label>Data</label><input id="g_date" type="date" value="${editing&&editing.date?editing.date:''}"></div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitGameForm(${editing?`'${editing.id}'`:'null'})">${editing ? 'Guardar' : 'Criar jogo'}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function submitGameForm(editId){
+  const clubAId = document.getElementById('g_clubA').value;
+  const clubBId = document.getElementById('g_clubB').value;
+  const competition = document.getElementById('g_competition').value.trim();
+  const date = document.getElementById('g_date').value;
+  if(!clubAId || !clubBId){ showToast('Seleciona as duas equipas.'); return; }
+  if(clubAId === clubBId){ showToast('As duas equipas têm de ser diferentes.'); return; }
+  if(!competition){ showToast('Indica a competição.'); return; }
+  if(!date){ showToast('Indica a data do jogo.'); return; }
+  if(editId){
+    const g = games.find(x=>x.id===editId);
+    if(!g){ closeModal(); return; }
+    g.clubAId = clubAId; g.clubBId = clubBId; g.competition = competition; g.date = date;
+  } else {
+    games.push({id: uid(), clubAId, clubBId, competition, date, createdAt: Date.now()});
+  }
+  await saveData();
+  closeModal();
+  render();
+}
+
+async function removeGame(id){
+  const g = games.find(x=>x.id===id);
+  if(!g) return;
+  if(!confirm('Eliminar este jogo?')) return;
+  games = games.filter(x=>x.id!==id);
+  await saveData();
+  render();
+}
+
 /* ---------------- shortlists ---------------- */
 function renderShortlistsTabHtml(){
   if(shortlists.length === 0){
@@ -1335,11 +1426,12 @@ async function removePlayer(id){
   render();
 }
 async function confirmClearAll(){
-  if(!confirm('Isto vai apagar TODOS os jogadores, clubes e shortlists da tua base de dados. Continuar?')) return;
+  if(!confirm('Isto vai apagar TODOS os jogadores, clubes, shortlists e jogos da tua base de dados. Continuar?')) return;
   if(!confirm('Tens a certeza absoluta? Não é possível recuperar depois.')) return;
   players = [];
   clubs = [];
   shortlists = [];
+  games = [];
   activeShortlistId = null;
   await saveData();
   render();
