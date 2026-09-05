@@ -343,15 +343,17 @@
 /* ---------------- data / constants ---------------- */
 const POSITIONS = [
   {v:'GR', label:'Guarda-Redes', line:'GR'},
-  {v:'DC', label:'Defesa Central', line:'DF'},
-  {v:'LD', label:'Lateral Direito', line:'DF'},
-  {v:'LE', label:'Lateral Esquerdo', line:'DF'},
+  {v:'DD', label:'Lateral Direito', line:'DF'},
+  {v:'DCD', label:'Defesa Central Direito', line:'DF'},
+  {v:'DCE', label:'Defesa Central Esquerdo', line:'DF'},
+  {v:'DE', label:'Defesa Esquerdo', line:'DF'},
   {v:'MDC', label:'Médio Defensivo', line:'MC'},
   {v:'MC', label:'Médio Centro', line:'MC'},
   {v:'MOC', label:'Médio Ofensivo', line:'MC'},
   {v:'ED', label:'Extremo Direito', line:'AV'},
   {v:'EE', label:'Extremo Esquerdo', line:'AV'},
-  {v:'AV', label:'Avançado', line:'AV'},
+  {v:'SA', label:'Segundo Avançado', line:'AV'},
+  {v:'PL', label:'Ponta de Lança', line:'AV'},
 ];
 const LINES = ['GR','DF','MC','AV'];
 const STATUSES = [
@@ -380,7 +382,7 @@ let activeShadowTeamId = null;
 let activeClubId = null;
 let urgentPanelExpanded = false;
 
-function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
+function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS.find(p=>p.v==='MC') || POSITIONS[0]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
 function noteTypeInfo(v){ return NOTE_TYPES.find(t=>t.v===v) || NOTE_TYPES[0]; }
 function clubInfo(id){ return clubs.find(c=>c.id===id) || null; }
@@ -597,8 +599,20 @@ async function fetchDataFromGitHub(){
       }
     });
   };
+  // migração: as posições antigas (Defesa Central única, Lateral Direito/Esquerdo, Avançado único)
+  // deram lugar a um conjunto mais detalhado (DCD/DCE, DD/DE, Segundo Avançado/Ponta de Lança)
+  const LEGACY_POSITION_MAP = {DC:'DCD', LD:'DD', LE:'DE', AV:'PL'};
+  const migratePositions = (playersArr) => {
+    const validNow = POSITIONS.map(p=>p.v);
+    (playersArr || []).forEach(p => {
+      if(p.position && !validNow.includes(p.position)){
+        p.position = LEGACY_POSITION_MAP[p.position] || p.position;
+      }
+    });
+  };
   if(Array.isArray(parsed)){
     migrateStatuses(parsed);
+    migratePositions(parsed);
     return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: []}; // formato antigo (só jogadores)
   }
   if(parsed && typeof parsed === 'object'){
@@ -606,6 +620,7 @@ async function fetchDataFromGitHub(){
     const outGames = normGames(parsed.games);
     migrateLegacyGameNotes(outPlayers, outGames);
     migrateStatuses(outPlayers);
+    migratePositions(outPlayers);
     return {players: outPlayers, clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: outGames, shadowTeams: parsed.shadowTeams || []};
   }
   return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[]};
@@ -1919,8 +1934,7 @@ function renderDossier(){
   const age = calcAge(p.birthDate);
   const cStatus = contractStatus(p.contractUntil);
 
-  root.innerHTML = `
-    <div class="dossier">
+  const dossierBodyHtml = `
       <div class="dossier-head">
         <button class="btn btn-ghost" onclick="closeDossier()">← Voltar</button>
         <div style="display:flex;gap:6px;">
@@ -1942,10 +1956,15 @@ function renderDossier(){
         </div>
 
         <div class="section">
-          <h3>Estado</h3>
-          <div class="status-select-row">
-            ${STATUSES.map(s=>`<button class="chip ${s.cls} ${p.status===s.v?'active':''}" onclick="updateStatus('${p.id}','${s.v}')">${s.label}</button>`).join('')}
-          </div>
+          <h3>Dados básicos</h3>
+          <dl class="basic-grid">
+            <div><dt>Data de nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
+            <div><dt>Idade</dt><dd>${age !== null ? age+' anos' : '—'}</dd></div>
+            <div><dt>Altura</dt><dd>${p.height ? p.height+' cm' : '—'}</dd></div>
+            <div><dt>Nacionalidade</dt><dd>${escapeHtml(p.nationality || '—')}</dd></div>
+            <div><dt>Pé preferido</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
+            <div><dt>Contrato até</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ` <span class="status-pill ${cStatus.cls}">${cStatus.label}</span>` : ''}</dd></div>
+          </dl>
         </div>
 
         <div class="section">
@@ -1959,33 +1978,10 @@ function renderDossier(){
         </div>
 
         <div class="section">
-          <h3>Shortlists</h3>
-          <div class="chip-group">
-            ${shortlists.length === 0 ? `<span style="color:var(--muted);font-size:13px;">Sem shortlists ainda.</span>` :
-              shortlists.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(sl=>`<button class="chip ${sl.playerIds.includes(p.id)?'active':''}" onclick="toggleShortlistPlayer('${sl.id}','${p.id}').then(renderDossier);">${escapeHtml(sl.name)}</button>`).join('')}
+          <h3>Estado</h3>
+          <div class="status-select-row">
+            ${STATUSES.map(s=>`<button class="chip ${s.cls} ${p.status===s.v?'active':''}" onclick="updateStatus('${p.id}','${s.v}')">${s.label}</button>`).join('')}
           </div>
-          <button type="button" class="link-btn" style="margin-top:8px;" onclick="openShortlistFormModal(null, '${p.id}')">+ Nova shortlist</button>
-        </div>
-
-        <div class="section">
-          <h3>Shadow Teams</h3>
-          <div class="chip-group">
-            ${shadowTeams.length === 0 ? `<span style="color:var(--muted);font-size:13px;">Sem Shadow Teams ainda.</span>` :
-              shadowTeams.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(st=>`<button class="chip ${st.playerIds.includes(p.id)?'active':''}" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderDossier);">${escapeHtml(st.name)}</button>`).join('')}
-          </div>
-          <button type="button" class="link-btn" style="margin-top:8px;" onclick="openShadowTeamFormModal(null, '${p.id}')">+ Nova Shadow Team</button>
-        </div>
-
-        <div class="section">
-          <h3>Dados básicos</h3>
-          <dl class="basic-grid">
-            <div><dt>Data de nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
-            <div><dt>Idade</dt><dd>${age !== null ? age+' anos' : '—'}</dd></div>
-            <div><dt>Altura</dt><dd>${p.height ? p.height+' cm' : '—'}</dd></div>
-            <div><dt>Nacionalidade</dt><dd>${escapeHtml(p.nationality || '—')}</dd></div>
-            <div><dt>Pé preferido</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
-            <div><dt>Contrato até</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ` <span class="status-pill ${cStatus.cls}">${cStatus.label}</span>` : ''}</dd></div>
-          </dl>
         </div>
 
         <div class="section">
@@ -2020,12 +2016,35 @@ function renderDossier(){
             }).join('')
           }
         </div>
-      </div>
-    </div>`;
-  requestAnimationFrame(()=>{
-    const panel = root.querySelector('.dossier');
-    if(panel) panel.classList.add('open');
-  });
+
+        <div class="section">
+          <h3>Shortlists</h3>
+          <div class="chip-group">
+            ${shortlists.length === 0 ? `<span style="color:var(--muted);font-size:13px;">Sem shortlists ainda.</span>` :
+              shortlists.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(sl=>`<button class="chip ${sl.playerIds.includes(p.id)?'active':''}" onclick="toggleShortlistPlayer('${sl.id}','${p.id}').then(renderDossier);">${escapeHtml(sl.name)}</button>`).join('')}
+          </div>
+          <button type="button" class="link-btn" style="margin-top:8px;" onclick="openShortlistFormModal(null, '${p.id}')">+ Nova shortlist</button>
+        </div>
+
+        <div class="section">
+          <h3>Shadow Teams</h3>
+          <div class="chip-group">
+            ${shadowTeams.length === 0 ? `<span style="color:var(--muted);font-size:13px;">Sem Shadow Teams ainda.</span>` :
+              shadowTeams.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(st=>`<button class="chip ${st.playerIds.includes(p.id)?'active':''}" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderDossier);">${escapeHtml(st.name)}</button>`).join('')}
+          </div>
+          <button type="button" class="link-btn" style="margin-top:8px;" onclick="openShadowTeamFormModal(null, '${p.id}')">+ Nova Shadow Team</button>
+        </div>
+      </div>`;
+  let panel = root.querySelector('.dossier');
+  if(panel){
+    // ficha já está aberta (ex: mudar estado, rating, notas) — atualiza o conteúdo
+    // sem recriar o painel, para não voltar a disparar a transição de abertura
+    panel.innerHTML = dossierBodyHtml;
+  } else {
+    root.innerHTML = `<div class="dossier">${dossierBodyHtml}</div>`;
+    panel = root.querySelector('.dossier');
+    requestAnimationFrame(()=>{ panel.classList.add('open'); });
+  }
 }
 
 /* ---------------- mutations ---------------- */
