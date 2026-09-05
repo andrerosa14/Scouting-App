@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scouting — Base de Dados de Jogadores</title>
+<title>Scouting Base</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -152,8 +152,8 @@
 
   .note{background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-bottom:10px;}
   .note.t-final{border-color:var(--gold-dim);}
-  .note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
-  .note-head-left{display:flex;align-items:center;gap:8px;}
+  .note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;}
+  .note-head-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .note-date{font-size:12px;color:var(--muted);font-weight:600;}
   .note-type-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid;white-space:nowrap;}
   .note-type-pill.t-nota{color:var(--muted);border-color:var(--line-soft);}
@@ -455,9 +455,32 @@ async function fetchDataFromGitHub(){
   const json = b64ToUtf8(data.content);
   let parsed = null;
   try{ parsed = JSON.parse(json); }catch(e){ parsed = null; }
-  const normGames = (arr) => (arr || []).map(g => ({playerIds: [], playerNotes: [], ...g}));
+  const normGames = (arr) => (arr || []).map(g => ({playerIds: [], ...g}));
+  // migração: versões antigas guardavam as notas por jogador dentro do próprio jogo (game.playerNotes);
+  // agora vivem na ficha do jogador (player.notes), com uma referência gameId
+  const migrateLegacyGameNotes = (playersArr, gamesArr) => {
+    (gamesArr || []).forEach(g => {
+      if(Array.isArray(g.playerNotes) && g.playerNotes.length){
+        g.playerNotes.forEach(n => {
+          const p = playersArr.find(x => x.id === n.playerId);
+          if(p){
+            if(!p.notes) p.notes = [];
+            if(!p.notes.some(existing => existing.id === n.id)){
+              p.notes.push({id: n.id, date: n.date, text: n.text, type: 'nota', gameId: g.id});
+            }
+          }
+        });
+      }
+      delete g.playerNotes;
+    });
+  };
   if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: [], games: []}; // formato antigo (só jogadores)
-  if(parsed && typeof parsed === 'object') return {players: parsed.players || [], clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: normGames(parsed.games)};
+  if(parsed && typeof parsed === 'object'){
+    const outPlayers = parsed.players || [];
+    const outGames = normGames(parsed.games);
+    migrateLegacyGameNotes(outPlayers, outGames);
+    return {players: outPlayers, clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: outGames};
+  }
   return {players:[], clubs:[], shortlists:[], games:[]};
 }
 
@@ -565,7 +588,7 @@ function renderMainShell(){
       </svg>
       <div class="header-inner">
         <div class="brand">
-          <h1>SCOUTING</h1>
+          <h1>SCOUTING BASE</h1>
           <span>A tua base de dados pessoal de jogadores observados</span>
         </div>
         ${inSection ? `
@@ -646,7 +669,7 @@ function renderSetupScreen(errorMsg){
   document.getElementById('appRoot').innerHTML = `
     <div class="setup-wrap">
       <div class="setup-card">
-        <h2 class="brand-mini">SCOUTING</h2>
+        <h2 class="brand-mini">SCOUTING BASE</h2>
         <p class="sub">Liga a app ao repositório privado do GitHub onde os teus dados vão ficar guardados.</p>
         ${errorMsg ? `<div class="setup-error">${escapeHtml(errorMsg)}</div>` : ''}
         <div class="field">
@@ -1207,7 +1230,7 @@ async function submitGameForm(editId){
       return p && (p.clubId === clubAId || p.clubId === clubBId);
     });
   } else {
-    games.push({id: uid(), clubAId, clubBId, competition, date, playerIds: [], playerNotes: [], createdAt: Date.now()});
+    games.push({id: uid(), clubAId, clubBId, competition, date, playerIds: [], createdAt: Date.now()});
   }
   await saveData();
   closeModal();
@@ -1234,7 +1257,6 @@ function renderGameDetailHtml(g){
   const b = clubInfo(g.clubBId);
   const eligiblePlayers = players.filter(p => p.clubId === g.clubAId || p.clubId === g.clubBId);
   const selectedIds = (g.playerIds || []).filter(pid => eligiblePlayers.some(p=>p.id===pid));
-  const playerNotes = g.playerNotes || [];
   return `
     <div class="shortlist-detail-head">
       <button class="btn btn-ghost" onclick="activeGameId=null; renderTabContent();">← Jogos</button>
@@ -1263,7 +1285,7 @@ function renderGameDetailHtml(g){
       players.filter(p=>selectedIds.includes(p.id)).slice().sort((x,y)=>x.name.localeCompare(y.name)).map(p=>{
         const pos = posInfo(p.position);
         const club = clubInfo(p.clubId);
-        const notesForPlayer = playerNotes.filter(n=>n.playerId===p.id);
+        const notesForPlayer = (p.notes || []).filter(n=>n.gameId===g.id);
         return `
         <div class="player-report-card">
           <div class="player-report-head">
@@ -1287,7 +1309,7 @@ function renderGameDetailHtml(g){
             <div class="note">
               <div class="note-head">
                 <span class="note-date">${fmtDate(n.date)}</span>
-                <button class="btn-ghost" style="font-size:12px;" onclick="removeGamePlayerNote('${g.id}','${n.id}')">Remover</button>
+                <button class="btn-ghost" style="font-size:12px;" onclick="removeGamePlayerNote('${p.id}','${n.id}')">Remover</button>
               </div>
               <p>${escapeHtml(n.text)}</p>
             </div>`).join('')
@@ -1311,18 +1333,19 @@ async function addGamePlayerNote(gameId, playerId){
   const ta = document.getElementById('gpn_'+playerId);
   const text = ta.value.trim();
   if(!text) return;
-  const g = games.find(x=>x.id===gameId);
-  if(!g) return;
-  if(!g.playerNotes) g.playerNotes = [];
-  g.playerNotes.push({id: uid(), playerId, date: Date.now(), text});
+  const p = players.find(x=>x.id===playerId);
+  if(!p) return;
+  if(!p.notes) p.notes = [];
+  // as notas criadas a partir de um jogo ficam guardadas na ficha do jogador (tipo "Nota"), com referência ao jogo
+  p.notes.push({id: uid(), date: Date.now(), text, type: 'nota', gameId});
   await saveData();
   renderTabContent();
 }
 
-async function removeGamePlayerNote(gameId, noteId){
-  const g = games.find(x=>x.id===gameId);
-  if(!g) return;
-  g.playerNotes = (g.playerNotes || []).filter(n=>n.id!==noteId);
+async function removeGamePlayerNote(playerId, noteId){
+  const p = players.find(x=>x.id===playerId);
+  if(!p) return;
+  p.notes = (p.notes || []).filter(n=>n.id!==noteId);
   await saveData();
   renderTabContent();
 }
@@ -1543,12 +1566,16 @@ function renderDossier(){
           ${p.notes.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Sem notas nem avaliações ainda.</p>` :
             p.notes.slice().sort((a,b)=>b.date-a.date).map(n=>{
               const nt = noteTypeInfo(n.type);
+              const ng = n.gameId ? games.find(x=>x.id===n.gameId) : null;
+              const gaClub = ng ? clubInfo(ng.clubAId) : null;
+              const gbClub = ng ? clubInfo(ng.clubBId) : null;
               return `
               <div class="note t-${nt.v}">
                 <div class="note-head">
                   <div class="note-head-left">
                     <span class="note-type-pill t-${nt.v}">${nt.label}</span>
                     <span class="note-date">${fmtDate(n.date)}</span>
+                    ${ng ? `<span class="tag">Jogo: ${gaClub?escapeHtml(gaClub.name):'—'} vs ${gbClub?escapeHtml(gbClub.name):'—'}</span>` : ''}
                   </div>
                   <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
                 </div>
