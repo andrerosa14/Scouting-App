@@ -38,7 +38,7 @@
   }
 
   /* ---------- header ---------- */
-  header{position:relative;overflow:hidden;padding:28px 24px 22px;border-bottom:1px solid var(--line);}
+  header{position:relative;padding:28px 24px 22px;border-bottom:1px solid var(--line);}
   .motif{position:absolute;inset:0;pointer-events:none;opacity:.16;}
   .header-inner{position:relative;max-width:1100px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
   .brand{display:flex;flex-direction:column;gap:2px;}
@@ -49,6 +49,16 @@
   .search-box input{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px 9px 32px;color:var(--chalk);width:220px;font-size:14px;}
   .search-box input::placeholder{color:var(--muted);}
   .search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.6;}
+  .search-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;width:320px;background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:30;max-height:360px;overflow-y:auto;}
+  .sd-group-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:10px 14px 4px;}
+  .sd-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;}
+  .sd-item:hover{background:var(--pitch-panel);}
+  .sd-badge{width:30px;height:30px;border-radius:var(--radius);font-size:12px;flex-shrink:0;}
+  .sd-club-badge{width:30px;height:30px;border-radius:50%;background:var(--pitch-panel);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0;overflow:hidden;}
+  .sd-club-badge img{width:100%;height:100%;object-fit:cover;}
+  .sd-name{font-weight:600;font-size:13px;}
+  .sd-sub{font-size:12px;color:var(--muted);}
+  .sd-empty{padding:12px 14px;font-size:13px;color:var(--muted);}
   .btn{border:1px solid var(--line);background:var(--pitch-panel);color:var(--chalk);padding:9px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;transition:background .15s, border-color .15s;}
   .btn:hover{border-color:var(--gold-dim);}
   .btn-primary{background:var(--gold);border-color:var(--gold);color:#1a1305;font-weight:600;}
@@ -192,12 +202,17 @@
   .ct-expired{color:var(--terracotta);border-color:var(--terracotta);}
 
   /* ---------- per-player game notes ---------- */
-  .player-report-card{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;}
-  .player-report-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
-  .player-report-name{font-weight:600;font-size:15px;}
-  .player-report-club{font-size:12px;color:var(--muted);}
-  .player-report-head .spacer{flex:1;}
-  .player-report-count{font-size:12px;color:var(--muted);}
+  .player-report-card{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px;}
+  .player-card-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;}
+  .player-card-photo{width:64px;height:82px;border-radius:6px;overflow:hidden;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--muted);}
+  .player-card-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+  .player-card-body{flex:1;min-width:0;}
+  .player-card-name{font-family:var(--font-display);font-weight:600;font-size:18px;margin:0 0 6px;}
+  .player-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted);}
+  .player-card-meta .pos-badge{background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:2px 6px;font-weight:600;color:var(--chalk);font-size:11px;}
+  .player-card-meta .sep{opacity:.5;}
+  .player-card-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-left:auto;flex-shrink:0;}
+  .player-card-count{font-size:12px;color:var(--muted);}
 
   /* ---------- clubs tab / shortlists ---------- */
   .club-list-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px;}
@@ -210,6 +225,25 @@
 
   .shortlist-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
   .shortlist-detail-title{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 16px;}
+
+  /* ---------- shadow teams (pitch graphic) ---------- */
+  .pitch-wrap{position:relative;background:linear-gradient(180deg, #17331f 0%, #143221 50%, #17331f 100%);border:1px solid var(--line);border-radius:var(--radius);padding:36px 20px;overflow:hidden;}
+  .pitch-lines{position:absolute;inset:0;opacity:.35;pointer-events:none;}
+  .pitch-rows{position:relative;display:flex;flex-direction:column;gap:34px;}
+  .pitch-row{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;}
+  .pitch-player{position:relative;width:148px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 10px 12px;text-align:center;}
+  .pitch-player-remove{position:absolute;top:2px;right:4px;background:none;border:none;color:var(--muted);font-size:16px;line-height:1;padding:4px;}
+  .pitch-player-remove:hover{color:var(--chalk);}
+  .pitch-crest{width:34px;height:34px;border-radius:50%;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;}
+  .pitch-crest img{width:100%;height:100%;object-fit:cover;}
+  .pitch-name{font-weight:600;font-size:13px;margin-bottom:2px;}
+  .pitch-club{font-size:11px;color:var(--muted);margin-bottom:10px;}
+  .pitch-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+  .pitch-status-btn{font-size:10px;font-weight:600;padding:4px 2px;border-radius:3px;border:1px solid var(--line-soft);background:transparent;color:var(--muted);line-height:1.2;}
+  .pitch-status-btn.active-obs{background:var(--pitch-panel-raise);border-color:var(--muted);color:var(--chalk);}
+  .pitch-status-btn.active-follow{background:var(--gold-dim);border-color:var(--gold-dim);color:#1a1305;}
+  .pitch-status-btn.active-rec{background:var(--success);border-color:var(--success);color:#0d1f10;}
+  .pitch-status-btn.active-out{background:var(--terracotta);border-color:var(--terracotta);color:#2a120a;}
 
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--terracotta);color:#2a120a;padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:60;max-width:90vw;text-align:center;}
   footer{max-width:1100px;margin:0 auto;padding:0 24px 40px;display:flex;justify-content:flex-end;gap:18px;}
@@ -266,10 +300,10 @@ const POSITIONS = [
 ];
 const LINES = ['GR','DF','MC','AV'];
 const STATUSES = [
-  {v:'obs', label:'Em observação', cls:'st-obs'},
-  {v:'follow', label:'A seguir', cls:'st-follow'},
-  {v:'rec', label:'Recomendado', cls:'st-rec'},
-  {v:'out', label:'Dispensado', cls:'st-out'},
+  {v:'obs', label:'Em observação', cls:'st-obs', short:'Obs.'},
+  {v:'follow', label:'A seguir', cls:'st-follow', short:'Seguir'},
+  {v:'rec', label:'Recomendado', cls:'st-rec', short:'Rec.'},
+  {v:'out', label:'Dispensado', cls:'st-out', short:'Disp.'},
 ];
 const NOTE_TYPES = [
   {v:'nota', label:'Nota'},
@@ -280,12 +314,14 @@ let players = [];
 let clubs = [];
 let shortlists = [];
 let games = [];
+let shadowTeams = [];
 let storageOk = true;
 let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'rating'};
 let openDossierId = null;
-let activeTab = null; // null (início) | 'players' | 'clubs' | 'shortlists' | 'games'
+let activeTab = null; // null (início) | 'players' | 'clubs' | 'shortlists' | 'games' | 'shadowteams'
 let activeShortlistId = null;
 let activeGameId = null;
+let activeShadowTeamId = null;
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
@@ -446,7 +482,7 @@ function contentsPath(bustCache){
 
 async function fetchDataFromGitHub(){
   const res = await ghRequest(contentsPath(true));
-  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[]}; }
+  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[]}; }
   if(res.status === 401) throw new Error('AUTH');
   if(res.status === 403) throw new Error('FORBIDDEN');
   if(!res.ok) throw new Error('HTTP_'+res.status);
@@ -474,14 +510,14 @@ async function fetchDataFromGitHub(){
       delete g.playerNotes;
     });
   };
-  if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: [], games: []}; // formato antigo (só jogadores)
+  if(Array.isArray(parsed)) return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: []}; // formato antigo (só jogadores)
   if(parsed && typeof parsed === 'object'){
     const outPlayers = parsed.players || [];
     const outGames = normGames(parsed.games);
     migrateLegacyGameNotes(outPlayers, outGames);
-    return {players: outPlayers, clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: outGames};
+    return {players: outPlayers, clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: outGames, shadowTeams: parsed.shadowTeams || []};
   }
-  return {players:[], clubs:[], shortlists:[], games:[]};
+  return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[]};
 }
 
 async function getRemoteSha(){
@@ -496,7 +532,7 @@ async function saveDataToGitHub(){
   const doPut = async () => {
     const body = {
       message: 'Atualizar base de dados de scouting',
-      content: utf8ToB64(JSON.stringify({players, clubs, shortlists, games}, null, 2)),
+      content: utf8ToB64(JSON.stringify({players, clubs, shortlists, games, shadowTeams}, null, 2)),
     };
     if(ghSha) body.sha = ghSha;
     return ghRequest(contentsPath(), {method:'PUT', body: JSON.stringify(body)});
@@ -543,23 +579,27 @@ const TABS = [
   {v:'clubs', label:'Clubes', icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
   {v:'shortlists', label:'Shortlists', icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'},
   {v:'games', label:'Jogos', icon:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
+  {v:'shadowteams', label:'Shadow Teams', icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.4" fill="currentColor" stroke="none"/>'},
 ];
 function headerPrimaryButtonHtml(){
   if(activeTab==='clubs') return `<button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
   if(activeTab==='shortlists') return `<button class="btn btn-primary" onclick="openShortlistFormModal()">+ Nova Shortlist</button>`;
   if(activeTab==='games') return `<button class="btn btn-primary" onclick="openGameFormModal()">+ Novo Jogo</button>`;
+  if(activeTab==='shadowteams') return `<button class="btn btn-primary" onclick="openShadowTeamFormModal()">+ Nova Shadow Team</button>`;
   return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
 }
 function switchTab(tab){
   activeTab = tab;
   activeShortlistId = null;
   activeGameId = null;
+  activeShadowTeamId = null;
   renderMainShell();
 }
 function goHome(){
   activeTab = null;
   activeShortlistId = null;
   activeGameId = null;
+  activeShadowTeamId = null;
   renderMainShell();
 }
 function tileCountLabel(tab){
@@ -567,6 +607,7 @@ function tileCountLabel(tab){
   if(tab==='clubs') return `${clubs.length} clube${clubs.length===1?'':'s'}`;
   if(tab==='shortlists') return `${shortlists.length} lista${shortlists.length===1?'':'s'}`;
   if(tab==='games') return `${games.length} jogo${games.length===1?'':'s'}`;
+  if(tab==='shadowteams') return `${shadowTeams.length} equipa${shadowTeams.length===1?'':'s'}`;
   return '';
 }
 function homeTilesHtml(){
@@ -593,11 +634,11 @@ function renderMainShell(){
         </div>
         ${inSection ? `
         <div class="header-actions">
-          ${activeTab==='players' ? `
           <div class="search-box">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input id="searchInput" type="text" placeholder="Procurar nome ou clube..." value="${escapeHtml(state.search)}" oninput="onSearch(this.value)">
-          </div>` : ''}
+            <input id="searchInput" type="text" placeholder="Procurar jogador ou clube..." value="${escapeHtml(state.search)}" oninput="onSearch(this.value)">
+            <div id="searchDropdown" class="search-dropdown"></div>
+          </div>
           ${headerPrimaryButtonHtml()}
         </div>` : ''}
       </div>
@@ -618,6 +659,7 @@ function renderMainShell(){
     </footer>
   `;
   render();
+  if(inSection && activeTab !== 'players') renderSearchDropdown();
 }
 
 function emptyStateHtml(title, desc, onclickAction, btnLabel){
@@ -650,6 +692,10 @@ function renderTabContent(){
     } else {
       inner = `<div class="club-list-panel">${gamesListHtml()}</div>`;
     }
+  } else if(activeTab === 'shadowteams'){
+    const activeShadowTeam = activeShadowTeamId ? shadowTeams.find(x=>x.id===activeShadowTeamId) : null;
+    if(activeShadowTeamId && !activeShadowTeam) activeShadowTeamId = null;
+    inner = activeShadowTeam ? renderShadowTeamDetailHtml(activeShadowTeam) : renderShadowTeamsTabHtml();
   } else {
     inner = `<div class="filters" id="filtersBar"></div><div id="listContainer"></div>`;
   }
@@ -705,8 +751,8 @@ async function submitSetup(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
-    activeTab = null; activeShortlistId = null; activeGameId = null;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams;
+    activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null;
     saveConfig(ghConfig);
     storageOk = true;
     renderMainShell();
@@ -719,8 +765,8 @@ async function connectAndLoad(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
-    activeTab = null; activeShortlistId = null; activeGameId = null;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams;
+    activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null;
     storageOk = true;
     renderMainShell();
   }catch(e){
@@ -773,8 +819,8 @@ async function submitSettings(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games;
-    activeTab = null; activeShortlistId = null; activeGameId = null;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams;
+    activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null;
     saveConfig(ghConfig);
     storageOk = true;
     renderMainShell();
@@ -791,7 +837,8 @@ function disconnectGithub(){
   clubs = [];
   shortlists = [];
   games = [];
-  activeTab = null; activeShortlistId = null; activeGameId = null;
+  shadowTeams = [];
+  activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null;
   closeModal();
   renderSetupScreen();
 }
@@ -832,7 +879,60 @@ function toggleLine(l){
 }
 function onSearch(v){
   state.search = v.toLowerCase();
-  render();
+  if(activeTab === 'players'){
+    render();
+  } else {
+    renderSearchDropdown();
+  }
+}
+
+function renderSearchDropdown(){
+  const el = document.getElementById('searchDropdown');
+  if(!el) return;
+  const q = state.search.trim();
+  if(!q){ el.innerHTML=''; el.style.display='none'; return; }
+  const matchingPlayers = players.filter(p=>{
+    const clubName = (clubInfo(p.clubId)||{}).name || '';
+    return p.name.toLowerCase().includes(q) || clubName.toLowerCase().includes(q);
+  }).slice(0,6);
+  const matchingClubs = clubs.filter(c=>c.name.toLowerCase().includes(q)).slice(0,6);
+  if(matchingPlayers.length===0 && matchingClubs.length===0){
+    el.innerHTML = `<div class="sd-empty">Sem resultados para "${escapeHtml(q)}".</div>`;
+    el.style.display='block';
+    return;
+  }
+  el.innerHTML = `
+    ${matchingPlayers.length ? `<div class="sd-group-label">Jogadores</div>${matchingPlayers.map(p=>{
+      const pos = posInfo(p.position);
+      const club = clubInfo(p.clubId);
+      return `<div class="sd-item" onclick="searchGoToPlayer('${p.id}')">
+        ${avatarHtml(p.photo, initials(p.name), pos.line, 'sd-badge')}
+        <div><div class="sd-name">${escapeHtml(p.name)}</div><div class="sd-sub">${club?escapeHtml(club.name):'Sem clube'} · ${pos.v}</div></div>
+      </div>`;
+    }).join('')}` : ''}
+    ${matchingClubs.length ? `<div class="sd-group-label">Clubes</div>${matchingClubs.map(c=>{
+      const count = players.filter(p=>p.clubId===c.id).length;
+      return `<div class="sd-item" onclick="searchGoToClub('${c.id}')">
+        <div class="sd-club-badge">${c.logo?`<img src="${c.logo}" alt="">`:escapeHtml(initials(c.name))}</div>
+        <div><div class="sd-name">${escapeHtml(c.name)}</div><div class="sd-sub">${count} jogador${count===1?'':'es'}</div></div>
+      </div>`;
+    }).join('')}` : ''}
+  `;
+  el.style.display='block';
+}
+
+function searchGoToPlayer(id){
+  state.search = '';
+  const dd = document.getElementById('searchDropdown');
+  if(dd){ dd.innerHTML=''; dd.style.display='none'; }
+  const input = document.getElementById('searchInput');
+  if(input) input.value = '';
+  openDossier(id);
+}
+
+function searchGoToClub(id){
+  state.search = '';
+  switchTab('clubs');
 }
 
 /* ---------------- rendering: list ---------------- */
@@ -1288,15 +1388,22 @@ function renderGameDetailHtml(g){
         const notesForPlayer = (p.notes || []).filter(n=>n.gameId===g.id);
         return `
         <div class="player-report-card">
-          <div class="player-report-head">
-            ${avatarHtml(p.photo, initials(p.name), pos.line)}
-            <div>
-              <div class="player-report-name">${escapeHtml(p.name)}</div>
-              <div class="player-report-club">${club?escapeHtml(club.name):'—'} · ${pos.v}</div>
+          <div class="player-card-head">
+            <div class="player-card-photo">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div>
+            <div class="player-card-body">
+              <div class="player-card-name">${escapeHtml(p.name)}</div>
+              <div class="player-card-meta">
+                <span class="pos-badge">${pos.v}</span>
+                <span class="sep">·</span>
+                <span>${club?escapeHtml(club.name):'Sem clube'}</span>
+                <span class="sep">·</span>
+                <span>${p.height ? p.height+' cm' : '—'}</span>
+              </div>
             </div>
-            <div class="spacer"></div>
-            <div class="player-report-count">${notesForPlayer.length} nota${notesForPlayer.length===1?'':'s'}</div>
-            <button type="button" class="btn-ghost" onclick="toggleGamePlayer('${g.id}','${p.id}').then(renderTabContent);">Remover do jogo</button>
+            <div class="player-card-actions">
+              <div class="player-card-count">${notesForPlayer.length} nota${notesForPlayer.length===1?'':'s'}</div>
+              <button type="button" class="btn-ghost" style="padding:2px;" onclick="toggleGamePlayer('${g.id}','${p.id}').then(renderTabContent);">Remover do jogo</button>
+            </div>
           </div>
           <div class="note-form">
             <textarea id="gpn_${p.id}" placeholder="Escreve as tuas notas sobre ${escapeHtml(p.name)} neste jogo..."></textarea>
@@ -1457,6 +1564,138 @@ async function removeShortlist(id){
   render();
 }
 
+/* ---------------- shadow teams ---------------- */
+function renderShadowTeamsTabHtml(){
+  if(shadowTeams.length === 0){
+    return emptyStateHtml('Ainda não tens Shadow Teams', 'Cria uma Shadow Team e depois adiciona jogadores a partir da ficha de cada um (secção "Shadow Teams").', "openShadowTeamFormModal()", '+ Nova Shadow Team');
+  }
+  return `<div class="list">
+    ${shadowTeams.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(st=>{
+      const count = st.playerIds.length;
+      return `
+      <div class="shortlist-row" onclick="openShadowTeamDetail('${st.id}')">
+        <div class="badge" style="background:var(--gold-dim);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1305" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="16" r="1.4" fill="#1a1305" stroke="none"/><circle cx="16" cy="16" r="1.4" fill="#1a1305" stroke="none"/><circle cx="12" cy="8" r="1.4" fill="#1a1305" stroke="none"/></svg>
+        </div>
+        <div class="info">
+          <div class="sl-name">${escapeHtml(st.name)}</div>
+          <div class="sl-count">${count} jogador${count===1?'':'es'}</div>
+        </div>
+        <button type="button" class="btn-ghost" onclick="event.stopPropagation(); openShadowTeamFormModal('${st.id}')">Editar</button>
+        <button type="button" class="btn-ghost" onclick="event.stopPropagation(); removeShadowTeam('${st.id}')">Eliminar</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function openShadowTeamDetail(id){
+  activeShadowTeamId = id;
+  renderTabContent();
+}
+
+function pitchPlayerCardHtml(st, p){
+  const club = clubInfo(p.clubId);
+  return `
+  <div class="pitch-player">
+    <button type="button" class="pitch-player-remove" title="Remover da Shadow Team" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderTabContent);">×</button>
+    <div class="pitch-crest">${club && club.logo ? `<img src="${club.logo}" alt="">` : escapeHtml(club?initials(club.name):'—')}</div>
+    <div class="pitch-name">${escapeHtml(p.name)}</div>
+    <div class="pitch-club">${club?escapeHtml(club.name):'Sem clube'}</div>
+    <div class="pitch-status-grid">
+      ${STATUSES.map(s=>`<button type="button" class="pitch-status-btn ${p.status===s.v?'active-'+s.v:''}" onclick="updateStatus('${p.id}','${s.v}')">${s.short}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderShadowTeamDetailHtml(st){
+  const list = players.filter(p=>st.playerIds.includes(p.id));
+  const headHtml = `
+    <div class="shortlist-detail-head">
+      <button class="btn btn-ghost" onclick="activeShadowTeamId=null; renderTabContent();">← Shadow Teams</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="openShadowTeamFormModal('${st.id}')">Editar nome</button>
+        <button class="btn btn-ghost" onclick="removeShadowTeam('${st.id}')">Eliminar</button>
+      </div>
+    </div>
+    <h2 class="shortlist-detail-title">${escapeHtml(st.name)}</h2>
+  `;
+  if(list.length === 0){
+    return headHtml + `<div class="empty"><h2>Ainda sem jogadores</h2><p>Adiciona jogadores a esta Shadow Team a partir da ficha de cada um (secção "Shadow Teams").</p></div>`;
+  }
+  // agrupar por linha, dispostos como uma formação: ataque em cima, guarda-redes em baixo
+  const byLine = {AV:[], MC:[], DF:[], GR:[]};
+  list.forEach(p=>{
+    const line = posInfo(p.position).line;
+    (byLine[line] || byLine.MC).push(p);
+  });
+  const rowHtml = (arr) => arr.length === 0 ? '' : `<div class="pitch-row">${arr.map(p=>pitchPlayerCardHtml(st, p)).join('')}</div>`;
+  return headHtml + `
+    <div class="pitch-wrap">
+      <svg class="pitch-lines" viewBox="0 0 1000 600" preserveAspectRatio="none">
+        <line x1="0" y1="300" x2="1000" y2="300" stroke="var(--chalk)" stroke-width="2"/>
+        <circle cx="500" cy="300" r="90" fill="none" stroke="var(--chalk)" stroke-width="2"/>
+        <circle cx="500" cy="300" r="3" fill="var(--chalk)"/>
+        <rect x="350" y="0" width="300" height="90" fill="none" stroke="var(--chalk)" stroke-width="2"/>
+        <rect x="350" y="510" width="300" height="90" fill="none" stroke="var(--chalk)" stroke-width="2"/>
+      </svg>
+      <div class="pitch-rows">
+        ${rowHtml(byLine.AV)}
+        ${rowHtml(byLine.MC)}
+        ${rowHtml(byLine.DF)}
+        ${rowHtml(byLine.GR)}
+      </div>
+    </div>
+  `;
+}
+
+async function toggleShadowTeamPlayer(shadowTeamId, playerId){
+  const st = shadowTeams.find(s=>s.id===shadowTeamId);
+  if(!st) return;
+  const idx = st.playerIds.indexOf(playerId);
+  if(idx === -1) st.playerIds.push(playerId); else st.playerIds.splice(idx,1);
+  await saveData();
+}
+
+function openShadowTeamFormModal(editId, addPlayerId){
+  const editing = editId ? shadowTeams.find(s=>s.id===editId) : null;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>${editing ? 'Editar Shadow Team' : 'Nova Shadow Team'}</h2>
+        <div class="field"><label>Nome</label><input id="st_name" type="text" placeholder="ex: Onze Ideal Janeiro" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitShadowTeamForm(${editing?`'${editing.id}'`:'null'}, ${addPlayerId?`'${addPlayerId}'`:'null'})">${editing ? 'Guardar' : 'Criar Shadow Team'}</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{ const el=document.getElementById('st_name'); if(el) el.focus(); }, 50);
+}
+
+async function submitShadowTeamForm(editId, addPlayerId){
+  const name = document.getElementById('st_name').value.trim();
+  if(!name){ showToast('Indica o nome da Shadow Team.'); return; }
+  if(editId){
+    const st = shadowTeams.find(s=>s.id===editId);
+    if(st) st.name = name;
+  } else {
+    shadowTeams.push({id: uid(), name, playerIds: addPlayerId ? [addPlayerId] : [], createdAt: Date.now()});
+  }
+  await saveData();
+  closeModal();
+  if(addPlayerId){ renderDossier(); } else { render(); }
+}
+
+async function removeShadowTeam(id){
+  const st = shadowTeams.find(s=>s.id===id);
+  if(!st) return;
+  if(!confirm(`Eliminar a Shadow Team "${st.name}"? Os jogadores não são apagados, só deixam de estar nesta equipa.`)) return;
+  shadowTeams = shadowTeams.filter(s=>s.id!==id);
+  if(activeShadowTeamId === id) activeShadowTeamId = null;
+  await saveData();
+  render();
+}
+
 /* ---------------- dossier ---------------- */
 let noteFormType = 'nota';
 function openDossier(id){
@@ -1541,6 +1780,15 @@ function renderDossier(){
         </div>
 
         <div class="section">
+          <h3>Shadow Teams</h3>
+          <div class="chip-group">
+            ${shadowTeams.length === 0 ? `<span style="color:var(--muted);font-size:13px;">Sem Shadow Teams ainda.</span>` :
+              shadowTeams.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(st=>`<button class="chip ${st.playerIds.includes(p.id)?'active':''}" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderDossier);">${escapeHtml(st.name)}</button>`).join('')}
+          </div>
+          <button type="button" class="link-btn" style="margin-top:8px;" onclick="openShadowTeamFormModal(null, '${p.id}')">+ Nova Shadow Team</button>
+        </div>
+
+        <div class="section">
           <h3>Dados básicos</h3>
           <dl class="basic-grid">
             <div><dt>Data de nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
@@ -1620,13 +1868,16 @@ async function removePlayer(id){
   render();
 }
 async function confirmClearAll(){
-  if(!confirm('Isto vai apagar TODOS os jogadores, clubes, shortlists e jogos da tua base de dados. Continuar?')) return;
+  if(!confirm('Isto vai apagar TODOS os jogadores, clubes, shortlists, jogos e Shadow Teams da tua base de dados. Continuar?')) return;
   if(!confirm('Tens a certeza absoluta? Não é possível recuperar depois.')) return;
   players = [];
   clubs = [];
   shortlists = [];
   games = [];
+  shadowTeams = [];
   activeShortlistId = null;
+  activeGameId = null;
+  activeShadowTeamId = null;
   await saveData();
   render();
 }
