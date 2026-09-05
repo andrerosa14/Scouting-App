@@ -108,6 +108,10 @@
   .urgent-pos{background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:2px 7px;font-weight:600;color:var(--chalk);font-size:11px;flex-shrink:0;}
   .urgent-arrow{color:var(--muted);flex-shrink:0;}
   .urgent-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
+  .urgent-sub .dot{opacity:.5;margin:0 4px;}
+  .urgent-time{color:var(--status-urgent);}
+  .urgent-toggle{display:block;width:100%;text-align:center;padding:12px 20px;background:var(--pitch-panel-raise);border:none;border-top:1px solid var(--line-soft);color:var(--gold);font-size:13px;font-weight:600;}
+  .urgent-toggle:hover{background:var(--line-soft);}
 
   /* ---------- section back bar ---------- */
   .section-back-bar{max-width:1100px;margin:0 auto;padding:16px 24px;border-bottom:1px solid var(--line);}
@@ -374,6 +378,7 @@ let activeShortlistId = null;
 let activeGameId = null;
 let activeShadowTeamId = null;
 let activeClubId = null;
+let urgentPanelExpanded = false;
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS[5]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
@@ -390,6 +395,22 @@ function uid(){
 }
 function fmtDate(iso){
   return new Date(iso).toLocaleDateString('pt-PT', {day:'2-digit', month:'short', year:'numeric'});
+}
+function timeAgo(ts){
+  if(!ts) return '';
+  const diffMs = Date.now() - ts;
+  const diffDays = Math.floor(diffMs / (1000*60*60*24));
+  if(diffDays <= 0) return 'hoje';
+  if(diffDays === 1) return 'há 1 dia';
+  if(diffDays < 7) return `há ${diffDays} dias`;
+  const diffWeeks = Math.floor(diffDays / 7);
+  if(diffWeeks === 1) return 'há 1 semana';
+  if(diffWeeks < 5) return `há ${diffWeeks} semanas`;
+  const diffMonths = Math.floor(diffDays / 30);
+  if(diffMonths === 1) return 'há 1 mês';
+  if(diffMonths < 12) return `há ${diffMonths} meses`;
+  const diffYears = Math.floor(diffDays / 365);
+  return diffYears === 1 ? 'há 1 ano' : `há ${diffYears} anos`;
 }
 function calcAge(birthDate){
   if(!birthDate) return null;
@@ -571,6 +592,9 @@ async function fetchDataFromGitHub(){
       if(!validNow.includes(p.status)){
         p.status = LEGACY_STATUS_MAP[p.status] || 'follow';
       }
+      if(!p.statusChangedAt){
+        p.statusChangedAt = p.createdAt || Date.now();
+      }
     });
   };
   if(Array.isArray(parsed)){
@@ -687,11 +711,19 @@ function homeTilesHtml(){
       <div class="tile-count">${tileCountLabel(t.v)}</div>
     </button>`).join('');
 }
+function toggleUrgentPanel(){
+  urgentPanelExpanded = !urgentPanelExpanded;
+  renderMainShell();
+}
 function homeUrgentPanelHtml(){
   const urgentPlayers = players.filter(p => p.status === 'urgent').sort((a,b)=>a.name.localeCompare(b.name));
+  const VISIBLE_LIMIT = 10;
+  const showAll = urgentPanelExpanded || urgentPlayers.length <= VISIBLE_LIMIT;
+  const visiblePlayers = showAll ? urgentPlayers : urgentPlayers.slice(0, VISIBLE_LIMIT);
+  const hiddenCount = urgentPlayers.length - visiblePlayers.length;
   const rows = urgentPlayers.length === 0
     ? `<div class="urgent-empty">Nenhum jogador em Observação com Urgência.</div>`
-    : urgentPlayers.map(p => {
+    : visiblePlayers.map(p => {
         const pos = posInfo(p.position);
         const club = clubInfo(p.clubId);
         return `
@@ -699,12 +731,15 @@ function homeUrgentPanelHtml(){
           <div class="urgent-avatar">${p.photo ? `<img src="${p.photo}" alt="">` : `<span>${escapeHtml(initials(p.name))}</span>`}</div>
           <div class="urgent-info">
             <div class="urgent-name">${escapeHtml(p.name)}</div>
-            <div class="urgent-sub">${club ? escapeHtml(club.name) : 'Sem clube'}</div>
+            <div class="urgent-sub">${club ? escapeHtml(club.name) : 'Sem clube'}<span class="dot">·</span><span class="urgent-time">${timeAgo(p.statusChangedAt)}</span></div>
           </div>
           <div class="urgent-pos">${pos.v}</div>
           <div class="urgent-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
         </button>`;
       }).join('');
+  const toggleBtn = urgentPlayers.length > VISIBLE_LIMIT
+    ? `<button type="button" class="urgent-toggle" onclick="toggleUrgentPanel()">${urgentPanelExpanded ? 'Mostrar menos ▴' : `Mostrar mais (${hiddenCount}) ▾`}</button>`
+    : '';
   return `
     <div class="urgent-panel">
       <div class="urgent-panel-head">
@@ -713,6 +748,7 @@ function homeUrgentPanelHtml(){
         <div class="urgent-panel-count">${urgentPlayers.length} jogador${urgentPlayers.length===1?'':'es'}</div>
       </div>
       ${rows}
+      ${toggleBtn}
     </div>`;
 }
 function renderMainShell(){
@@ -1207,6 +1243,7 @@ async function submitNewPlayer(){
     ...fields,
     photo,
     status: 'follow',
+    statusChangedAt: Date.now(),
     rating: 0,
     notes: [],
     createdAt: Date.now(),
@@ -1993,7 +2030,11 @@ function renderDossier(){
 
 /* ---------------- mutations ---------------- */
 async function updateStatus(id, v){
-  const p = players.find(x=>x.id===id); p.status=v; await saveData(); render();
+  const p = players.find(x=>x.id===id);
+  if(p.status !== v) p.statusChangedAt = Date.now();
+  p.status=v;
+  await saveData();
+  render();
 }
 async function updateRating(id, v){
   const p = players.find(x=>x.id===id); p.rating = (p.rating===v ? 0 : v); await saveData(); render();
