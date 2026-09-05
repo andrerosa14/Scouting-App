@@ -145,6 +145,8 @@
   .insight-tag.neutral{color:var(--muted);border-color:var(--line-soft);}
   .insight-tag.gold{color:var(--gold);border-color:var(--gold-dim);}
   .insight-empty{padding:16px 18px;color:var(--muted);font-size:13px;}
+  .insight-check-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--line-soft);background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .insight-check-btn:hover{border-color:var(--status-approved);color:var(--status-approved);background:rgba(95,146,96,.12);}
 
   @media (max-width:720px){
     .insights-grid{grid-template-columns:1fr;}
@@ -340,23 +342,44 @@
   .shortlist-detail-title{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 16px;}
 
   /* ---------- shadow teams (pitch graphic) ---------- */
-  .pitch-wrap{position:relative;background:linear-gradient(180deg, #17331f 0%, #143221 50%, #17331f 100%);border:1px solid var(--line);border-radius:var(--radius);padding:36px 20px;overflow:hidden;}
-  .pitch-lines{position:absolute;inset:0;opacity:.35;pointer-events:none;}
-  .pitch-rows{position:relative;display:flex;flex-direction:column;gap:34px;}
-  .pitch-row{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;}
-  .pitch-player{position:relative;width:148px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 10px 12px;text-align:center;}
-  .pitch-player-remove{position:absolute;top:2px;right:4px;background:none;border:none;color:var(--muted);font-size:16px;line-height:1;padding:4px;}
-  .pitch-player-remove:hover{color:var(--chalk);}
-  .pitch-crest{width:34px;height:34px;border-radius:50%;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);overflow:hidden;}
+  .pitch-wrap{position:relative;background:#d9e8d3;border:1px solid #bcd4b3;border-radius:var(--radius);padding:28px 16px;overflow:hidden;}
+  .pitch-lines{position:absolute;inset:0;opacity:.5;pointer-events:none;}
+  .pitch-grid{position:relative;display:grid;grid-template-columns:repeat(5, 1fr);gap:16px;}
+  .pitch-slot{background:var(--pitch-panel);border:1px dashed var(--line-soft);border-radius:var(--radius);padding:8px;min-width:0;}
+  .ps-ee{grid-column:1;grid-row:1;} .ps-pl{grid-column:3;grid-row:1;} .ps-ed{grid-column:5;grid-row:1;}
+  .ps-sa{grid-column:3;grid-row:2;}
+  .ps-mc{grid-column:2;grid-row:3;} .ps-moc{grid-column:4;grid-row:3;}
+  .ps-mdc{grid-column:3;grid-row:4;}
+  .ps-de{grid-column:1;grid-row:5;} .ps-dce{grid-column:2;grid-row:5;} .ps-dcd{grid-column:4;grid-row:5;} .ps-dd{grid-column:5;grid-row:5;}
+  .ps-gr{grid-column:3;grid-row:6;}
+  @media (max-width:900px){
+    .pitch-grid{grid-template-columns:repeat(5, minmax(110px,1fr));overflow-x:auto;}
+  }
+  .pitch-slot-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--line-soft);}
+  .pitch-slot-pos{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.03em;color:var(--gold);}
+  .pitch-slot-count{font-size:10.5px;color:var(--muted);}
+  .pitch-slot-empty{font-size:11.5px;color:var(--muted);text-align:center;padding:14px 4px;}
+
+  .pitch-player-row{display:flex;align-items:flex-start;gap:6px;padding:5px 4px;border-bottom:1px solid var(--line-soft);border-left:3px solid transparent;border-radius:2px;}
+  .pitch-player-row:last-child{border-bottom:none;}
+  .pitch-player-row.cat-first{background:rgba(95,146,96,.24);border-left-color:var(--status-approved);}
+  .pitch-player-row.cat-second{background:rgba(143,193,127,.22);border-left-color:var(--status-urgent);}
+  .pitch-player-row.cat-squad{background:rgba(215,178,60,.22);border-left-color:var(--status-follow);}
+  .pitch-crest{width:22px;height:22px;border-radius:50%;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:var(--muted);overflow:hidden;flex-shrink:0;margin-top:1px;}
   .pitch-crest img{width:100%;height:100%;object-fit:cover;}
-  .pitch-name{font-weight:600;font-size:13px;margin-bottom:2px;}
-  .pitch-club{font-size:11px;color:var(--muted);margin-bottom:10px;}
-  .pitch-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
-  .pitch-status-btn{font-size:10px;font-weight:600;padding:4px 2px;border-radius:3px;border:1px solid var(--line-soft);background:transparent;color:var(--muted);line-height:1.2;}
-  .pitch-status-btn.active-approved{background:var(--status-approved);border-color:var(--status-approved);color:#0d1f10;}
-  .pitch-status-btn.active-urgent{background:var(--status-urgent);border-color:var(--status-urgent);color:#0d1f10;}
-  .pitch-status-btn.active-follow{background:var(--status-follow);border-color:var(--status-follow);color:#2a2005;}
-  .pitch-status-btn.active-rejected{background:var(--status-rejected);border-color:var(--status-rejected);color:#2a0d0a;}
+  .ppr-body{flex:1;min-width:0;}
+  .ppr-top{display:flex;align-items:center;gap:5px;}
+  .ppr-rank{color:var(--gold);font-size:9.5px;font-weight:700;flex-shrink:0;}
+  .ppr-name{font-weight:600;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+  .ppr-bottom{display:flex;align-items:center;gap:5px;margin-top:3px;}
+  .ppr-club{font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+  .ppr-cat-select{flex-shrink:0;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);color:var(--chalk);font-size:9px;padding:1px 2px;border-radius:3px;max-width:64px;}
+  .pitch-rank-controls{display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+  .pitch-rank-btn{width:13px;height:10px;border-radius:2px;border:1px solid var(--line-soft);background:transparent;color:var(--muted);font-size:6.5px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;}
+  .pitch-rank-btn:hover{color:var(--chalk);border-color:var(--gold-dim);}
+  .pitch-rank-btn:disabled{opacity:.25;cursor:default;}
+  .pitch-player-remove{background:none;border:none;color:var(--muted);font-size:14px;line-height:1;padding:2px;flex-shrink:0;}
+  .pitch-player-remove:hover{color:var(--chalk);}
 
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--terracotta);color:#2a120a;padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:60;max-width:90vw;text-align:center;}
   footer{max-width:1100px;margin:0 auto;padding:0 24px 40px;display:flex;justify-content:flex-end;gap:18px;}
@@ -674,13 +697,15 @@ async function fetchDataFromGitHub(){
     migratePositions(parsed);
     return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: []}; // formato antigo (só jogadores)
   }
+  // normalização: shadow teams antigas não tinham categorização de jogadores (1ª Linha/2ª Linha/Composição)
+  const normShadowTeams = (arr) => (arr || []).map(st => ({playerCategories: {}, ...st}));
   if(parsed && typeof parsed === 'object'){
     const outPlayers = parsed.players || [];
     const outGames = normGames(parsed.games);
     migrateLegacyGameNotes(outPlayers, outGames);
     migrateStatuses(outPlayers);
     migratePositions(outPlayers);
-    return {players: outPlayers, clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: outGames, shadowTeams: parsed.shadowTeams || []};
+    return {players: outPlayers, clubs: parsed.clubs || [], shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams)};
   }
   return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[]};
 }
@@ -848,7 +873,7 @@ function gameHasNotes(gameId){
 }
 function homeGamesToObserveData(){
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-  const list = games.filter(g => g.date && !gameHasNotes(g.id))
+  const list = games.filter(g => g.date && !g.observed && !gameHasNotes(g.id))
     .slice()
     .sort((a,b)=> new Date(a.date) - new Date(b.date));
   const rows = list.length === 0
@@ -864,9 +889,19 @@ function homeGamesToObserveData(){
             <div class="ii-sub">${fmtDateOnly(g.date)}${overdue?' · já passou':''}</div>
           </div>
           <div class="insight-tag ${overdue?'overdue':'gold'}">${overdue?'Atrasado':'Por observar'}</div>
+          <button class="insight-check-btn" title="Marcar como observado" onclick="markGameObserved('${g.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
         </div>`;
       }).join('');
   return {rows, count:list.length};
+}
+async function markGameObserved(gameId){
+  const g = games.find(x=>x.id===gameId);
+  if(!g) return;
+  g.observed = true;
+  await saveData();
+  renderMainShell();
 }
 function homeContractsExpiringData(){
   const LIMIT_DAYS = 180;
@@ -2055,22 +2090,37 @@ function openShadowTeamDetail(id){
   renderTabContent();
 }
 
-function pitchPlayerCardHtml(st, p){
+function pitchPlayerRowHtml(st, p, rank, isFirst, isLast){
   const club = clubInfo(p.clubId);
+  const cat = (st.playerCategories && st.playerCategories[p.id]) || '';
+  const catClass = cat === 'first' ? 'cat-first' : cat === 'second' ? 'cat-second' : cat === 'squad' ? 'cat-squad' : '';
   return `
-  <div class="pitch-player">
-    <button type="button" class="pitch-player-remove" title="Remover da Shadow Team" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderTabContent);">×</button>
+  <div class="pitch-player-row ${catClass}">
     <div class="pitch-crest">${club && club.logo ? `<img src="${club.logo}" alt="">` : escapeHtml(club?initials(club.name):'—')}</div>
-    <div class="pitch-name">${escapeHtml(p.name)}</div>
-    <div class="pitch-club">${club?escapeHtml(club.name):'Sem clube'}</div>
-    <div class="pitch-status-grid">
-      ${STATUSES.map(s=>`<button type="button" class="pitch-status-btn ${p.status===s.v?'active-'+s.v:''}" onclick="updateStatus('${p.id}','${s.v}')">${s.short}</button>`).join('')}
+    <div class="ppr-body">
+      <div class="ppr-top">
+        <span class="ppr-rank">${rank}</span>
+        <span class="ppr-name">${escapeHtml(p.name)}</span>
+        <button type="button" class="pitch-player-remove" title="Remover da Shadow Team" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderTabContent);">×</button>
+      </div>
+      <div class="ppr-bottom">
+        <span class="ppr-club">${club?escapeHtml(club.name):'Sem clube'}</span>
+        <select class="ppr-cat-select" onchange="setShadowPlayerCategory('${st.id}','${p.id}', this.value)">
+          <option value="" ${cat===''?'selected':''}>—</option>
+          <option value="first" ${cat==='first'?'selected':''}>1ª Linha</option>
+          <option value="second" ${cat==='second'?'selected':''}>2ª Linha</option>
+          <option value="squad" ${cat==='squad'?'selected':''}>Composição</option>
+        </select>
+        <div class="pitch-rank-controls">
+          <button type="button" class="pitch-rank-btn" ${isFirst?'disabled':''} onclick="moveShadowPlayerRank('${st.id}','${p.id}',-1)">▲</button>
+          <button type="button" class="pitch-rank-btn" ${isLast?'disabled':''} onclick="moveShadowPlayerRank('${st.id}','${p.id}',1)">▼</button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
 
 function renderShadowTeamDetailHtml(st){
-  const list = players.filter(p=>st.playerIds.includes(p.id));
   const headHtml = `
     <div class="shortlist-detail-head">
       <button class="btn btn-ghost" onclick="activeShadowTeamId=null; renderTabContent();">← Shadow Teams</button>
@@ -2081,30 +2131,48 @@ function renderShadowTeamDetailHtml(st){
     </div>
     <h2 class="shortlist-detail-title">${escapeHtml(st.name)}</h2>
   `;
-  if(list.length === 0){
-    return headHtml + `<div class="empty"><h2>Ainda sem jogadores</h2><p>Adiciona jogadores a esta Shadow Team a partir da ficha de cada um (secção "Shadow Teams").</p></div>`;
-  }
-  // agrupar por linha, dispostos como uma formação: ataque em cima, guarda-redes em baixo
-  const byLine = {AV:[], MC:[], DF:[], GR:[]};
-  list.forEach(p=>{
-    const line = posInfo(p.position).line;
-    (byLine[line] || byLine.MC).push(p);
+  // agrupar jogadores pela posição exata da ficha, mantendo a ordem de st.playerIds (define o ranking dentro de cada posição)
+  const byPos = {};
+  POSITIONS.forEach(pos=>{ byPos[pos.v] = []; });
+  st.playerIds.forEach(pid=>{
+    const p = players.find(x=>x.id===pid);
+    if(!p) return;
+    if(!byPos[p.position]) byPos[p.position] = [];
+    byPos[p.position].push(p);
   });
-  const rowHtml = (arr) => arr.length === 0 ? '' : `<div class="pitch-row">${arr.map(p=>pitchPlayerCardHtml(st, p)).join('')}</div>`;
+  const slotHtml = (posCode, cssClass) => {
+    const list = byPos[posCode] || [];
+    const body = list.length === 0
+      ? `<div class="pitch-slot-empty">Sem jogadores</div>`
+      : list.map((p,i)=>pitchPlayerRowHtml(st, p, i+1, i===0, i===list.length-1)).join('');
+    return `
+      <div class="pitch-slot ${cssClass}">
+        <div class="pitch-slot-head"><span class="pitch-slot-pos">${posCode}</span><span class="pitch-slot-count">${list.length}</span></div>
+        ${body}
+      </div>`;
+  };
   return headHtml + `
     <div class="pitch-wrap">
       <svg class="pitch-lines" viewBox="0 0 1000 600" preserveAspectRatio="none">
-        <line x1="0" y1="300" x2="1000" y2="300" stroke="var(--chalk)" stroke-width="2"/>
-        <circle cx="500" cy="300" r="90" fill="none" stroke="var(--chalk)" stroke-width="2"/>
-        <circle cx="500" cy="300" r="3" fill="var(--chalk)"/>
-        <rect x="350" y="0" width="300" height="90" fill="none" stroke="var(--chalk)" stroke-width="2"/>
-        <rect x="350" y="510" width="300" height="90" fill="none" stroke="var(--chalk)" stroke-width="2"/>
+        <line x1="0" y1="300" x2="1000" y2="300" stroke="#7fa377" stroke-width="2"/>
+        <circle cx="500" cy="300" r="90" fill="none" stroke="#7fa377" stroke-width="2"/>
+        <circle cx="500" cy="300" r="3" fill="#7fa377"/>
+        <rect x="350" y="0" width="300" height="90" fill="none" stroke="#7fa377" stroke-width="2"/>
+        <rect x="350" y="510" width="300" height="90" fill="none" stroke="#7fa377" stroke-width="2"/>
       </svg>
-      <div class="pitch-rows">
-        ${rowHtml(byLine.AV)}
-        ${rowHtml(byLine.MC)}
-        ${rowHtml(byLine.DF)}
-        ${rowHtml(byLine.GR)}
+      <div class="pitch-grid">
+        ${slotHtml('EE','ps-ee')}
+        ${slotHtml('PL','ps-pl')}
+        ${slotHtml('ED','ps-ed')}
+        ${slotHtml('SA','ps-sa')}
+        ${slotHtml('MC','ps-mc')}
+        ${slotHtml('MOC','ps-moc')}
+        ${slotHtml('MDC','ps-mdc')}
+        ${slotHtml('DE','ps-de')}
+        ${slotHtml('DCE','ps-dce')}
+        ${slotHtml('DCD','ps-dcd')}
+        ${slotHtml('DD','ps-dd')}
+        ${slotHtml('GR','ps-gr')}
       </div>
     </div>
   `;
@@ -2115,7 +2183,37 @@ async function toggleShadowTeamPlayer(shadowTeamId, playerId){
   if(!st) return;
   const idx = st.playerIds.indexOf(playerId);
   if(idx === -1) st.playerIds.push(playerId); else st.playerIds.splice(idx,1);
+  if(st.playerCategories) delete st.playerCategories[playerId];
   await saveData();
+}
+
+async function setShadowPlayerCategory(shadowTeamId, playerId, cat){
+  const st = shadowTeams.find(s=>s.id===shadowTeamId);
+  if(!st) return;
+  if(!st.playerCategories) st.playerCategories = {};
+  if(cat){ st.playerCategories[playerId] = cat; } else { delete st.playerCategories[playerId]; }
+  await saveData();
+  renderTabContent();
+}
+
+async function moveShadowPlayerRank(shadowTeamId, playerId, direction){
+  const st = shadowTeams.find(s=>s.id===shadowTeamId);
+  if(!st) return;
+  const p = players.find(x=>x.id===playerId);
+  if(!p) return;
+  // ranking é relativo apenas aos outros jogadores na mesma posição exata
+  const samePos = st.playerIds.filter(id=>{
+    const pp = players.find(x=>x.id===id);
+    return pp && pp.position === p.position;
+  });
+  const posIdx = samePos.indexOf(playerId);
+  const swapWith = samePos[posIdx + direction];
+  if(swapWith === undefined) return;
+  const iA = st.playerIds.indexOf(playerId);
+  const iB = st.playerIds.indexOf(swapWith);
+  [st.playerIds[iA], st.playerIds[iB]] = [st.playerIds[iB], st.playerIds[iA]];
+  await saveData();
+  renderTabContent();
 }
 
 function openShadowTeamFormModal(editId, addPlayerId){
@@ -2141,7 +2239,7 @@ async function submitShadowTeamForm(editId, addPlayerId){
     const st = shadowTeams.find(s=>s.id===editId);
     if(st) st.name = name;
   } else {
-    shadowTeams.push({id: uid(), name, playerIds: addPlayerId ? [addPlayerId] : [], createdAt: Date.now()});
+    shadowTeams.push({id: uid(), name, playerIds: addPlayerId ? [addPlayerId] : [], playerCategories: {}, createdAt: Date.now()});
   }
   await saveData();
   closeModal();
