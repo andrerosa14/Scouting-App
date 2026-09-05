@@ -26,6 +26,7 @@
     --status-urgent:#8fc17f;
     --status-follow:#d7b23c;
     --status-rejected:#c1453f;
+    --st-cat-second:#bfe0a8;
     --radius:4px;
     --font-display:'Oswald',sans-serif;
     --font-body:'Inter',sans-serif;
@@ -363,7 +364,7 @@
   .pitch-player-row{display:flex;align-items:flex-start;gap:6px;padding:5px 4px;border-bottom:1px solid var(--line-soft);border-left:3px solid transparent;border-radius:2px;}
   .pitch-player-row:last-child{border-bottom:none;}
   .pitch-player-row.cat-first{background:rgba(95,146,96,.24);border-left-color:var(--status-approved);}
-  .pitch-player-row.cat-second{background:rgba(143,193,127,.22);border-left-color:var(--status-urgent);}
+  .pitch-player-row.cat-second{background:rgba(191,224,168,.28);border-left-color:var(--st-cat-second);}
   .pitch-player-row.cat-squad{background:rgba(215,178,60,.22);border-left-color:var(--status-follow);}
   .pitch-crest{width:22px;height:22px;border-radius:50%;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:var(--muted);overflow:hidden;flex-shrink:0;margin-top:1px;}
   .pitch-crest img{width:100%;height:100%;object-fit:cover;}
@@ -380,6 +381,21 @@
   .pitch-rank-btn:disabled{opacity:.25;cursor:default;}
   .pitch-player-remove{background:none;border:none;color:var(--muted);font-size:14px;line-height:1;padding:2px;flex-shrink:0;}
   .pitch-player-remove:hover{color:var(--chalk);}
+
+  /* ---------- shadow team: pesquisar e adicionar jogador ---------- */
+  .st-add-player{position:relative;max-width:420px;margin-bottom:18px;}
+  .st-add-player input{width:100%;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px 10px 34px;color:var(--chalk);font-size:14px;}
+  .st-add-player input::placeholder{color:var(--muted);}
+  .st-add-player svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.6;pointer-events:none;}
+  .st-add-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:30;max-height:320px;overflow-y:auto;}
+  .stad-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;}
+  .stad-item:hover{background:var(--pitch-panel);}
+  .stad-badge{width:28px;height:28px;border-radius:var(--radius);background:var(--pitch-panel);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--muted);flex-shrink:0;overflow:hidden;}
+  .stad-badge img{width:100%;height:100%;object-fit:cover;}
+  .stad-name{font-weight:600;font-size:13px;}
+  .stad-sub{font-size:12px;color:var(--muted);}
+  .stad-pos-tag{margin-left:auto;font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--gold);flex-shrink:0;}
+  .stad-empty{padding:12px 14px;font-size:13px;color:var(--muted);}
 
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--terracotta);color:#2a120a;padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:60;max-width:90vw;text-align:center;}
   footer{max-width:1100px;margin:0 auto;padding:0 24px 40px;display:flex;justify-content:flex-end;gap:18px;}
@@ -463,6 +479,7 @@ let activeShadowTeamId = null;
 let activeClubId = null;
 let urgentPanelExpanded = false;
 let expandedNoteIds = new Set();
+let shadowAddSearch = '';
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS.find(p=>p.v==='MC') || POSITIONS[0]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
@@ -2087,6 +2104,7 @@ function renderShadowTeamsTabHtml(){
 
 function openShadowTeamDetail(id){
   activeShadowTeamId = id;
+  shadowAddSearch = '';
   renderTabContent();
 }
 
@@ -2151,7 +2169,14 @@ function renderShadowTeamDetailHtml(st){
         ${body}
       </div>`;
   };
-  return headHtml + `
+  const addPlayerHtml = `
+    <div class="st-add-player">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="stAddInput" placeholder="Procurar jogador para adicionar..." value="${escapeHtml(shadowAddSearch)}" oninput="onShadowAddSearch('${st.id}', this.value)">
+      <div class="st-add-dropdown" id="stAddDropdown"></div>
+    </div>
+  `;
+  return headHtml + addPlayerHtml + `
     <div class="pitch-wrap">
       <svg class="pitch-lines" viewBox="0 0 1000 600" preserveAspectRatio="none">
         <line x1="0" y1="300" x2="1000" y2="300" stroke="#7fa377" stroke-width="2"/>
@@ -2176,6 +2201,45 @@ function renderShadowTeamDetailHtml(st){
       </div>
     </div>
   `;
+}
+
+function onShadowAddSearch(shadowTeamId, value){
+  shadowAddSearch = value;
+  renderShadowAddDropdown(shadowTeamId);
+}
+
+function renderShadowAddDropdown(shadowTeamId){
+  const el = document.getElementById('stAddDropdown');
+  if(!el) return;
+  const st = shadowTeams.find(s=>s.id===shadowTeamId);
+  const q = shadowAddSearch.trim().toLowerCase();
+  if(!st || !q){ el.innerHTML=''; el.style.display='none'; return; }
+  const matches = players.filter(p=>{
+    if(st.playerIds.includes(p.id)) return false;
+    const clubName = (clubInfo(p.clubId)||{}).name || '';
+    return p.name.toLowerCase().includes(q) || clubName.toLowerCase().includes(q);
+  }).slice(0,8);
+  if(matches.length === 0){
+    el.innerHTML = `<div class="stad-empty">Sem resultados para "${escapeHtml(shadowAddSearch.trim())}".</div>`;
+    el.style.display='block';
+    return;
+  }
+  el.innerHTML = matches.map(p=>{
+    const club = clubInfo(p.clubId);
+    return `
+    <div class="stad-item" onclick="addPlayerToShadowTeamViaSearch('${st.id}','${p.id}')">
+      <div class="stad-badge">${club && club.logo ? `<img src="${club.logo}" alt="">` : escapeHtml(initials(p.name))}</div>
+      <div><div class="stad-name">${escapeHtml(p.name)}</div><div class="stad-sub">${club?escapeHtml(club.name):'Sem clube'}</div></div>
+      <span class="stad-pos-tag">${escapeHtml(p.position)}</span>
+    </div>`;
+  }).join('');
+  el.style.display='block';
+}
+
+async function addPlayerToShadowTeamViaSearch(shadowTeamId, playerId){
+  await toggleShadowTeamPlayer(shadowTeamId, playerId);
+  shadowAddSearch = '';
+  renderTabContent();
 }
 
 async function toggleShadowTeamPlayer(shadowTeamId, playerId){
