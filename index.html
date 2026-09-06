@@ -495,6 +495,25 @@ const NATIONAL_TEAM_SEEDS = [
 ];
 // escalões disponíveis ao registar um jogo, tanto de clubes como de seleções
 const GAME_LEVELS = ['Equipa A','U21','U20','U19','U18','U17','U16'];
+// clubes das primeiras divisões de Espanha, Bélgica, Brasil, Argentina, Suécia, Dinamarca, França e Croácia, para pré-preencher com um clique
+const CLUB_SEEDS = [
+  // Espanha — La Liga
+  'Alavés','Athletic Bilbao','Atlético Madrid','Barcelona','Celta Vigo','Deportivo La Coruña','Elche','Espanyol','Getafe','Levante','Málaga','Osasuna','Racing Santander','Rayo Vallecano','Real Betis','Real Madrid','Real Sociedad','Sevilla','Valencia','Villarreal',
+  // Bélgica — Pro League
+  'Anderlecht','Antwerp','Beveren','Cercle Brugge','Charleroi','Club Brugge','Genk','Gent','Kortrijk','La Louvière','Lommel','Mechelen','OH Leuven','Sint-Truiden','Standard Liège','Union SG','Westerlo','Zulte Waregem',
+  // Brasil — Série A
+  'Athletico Paranaense','Atlético Mineiro','Bahia','Botafogo','Chapecoense','Corinthians','Coritiba','Cruzeiro','Flamengo','Fluminense','Grêmio','Internacional','Mirassol','Palmeiras','Red Bull Bragantino','Remo','Santos','São Paulo','Vasco da Gama','Vitória',
+  // Argentina — Primera División
+  'Aldosivi','Argentinos Juniors','Atlético Tucumán','Banfield','Barracas Central','Belgrano','Boca Juniors','Central Córdoba (SdE)','Defensa y Justicia','Deportivo Riestra','Estudiantes de La Plata','Estudiantes de Río Cuarto','Gimnasia y Esgrima La Plata','Gimnasia y Esgrima de Mendoza','Huracán','Independiente','Independiente Rivadavia','Instituto','Lanús',"Newell's Old Boys",'Platense','Racing Club','River Plate','Rosario Central','San Lorenzo','Sarmiento de Junín','Talleres de Córdoba','Tigre','Unión (Santa Fe)','Vélez Sarsfield',
+  // Suécia — Allsvenskan
+  'AIK','BK Häcken','Degerfors IF','Djurgårdens IF','GAIS','Halmstads BK','Hammarby IF','IF Brommapojkarna','IF Elfsborg','IFK Göteborg','IK Sirius','Kalmar FF','Malmö FF','Mjällby AIF','Örgryte IS','Västerås SK',
+  // Dinamarca — Superliga
+  'AGF Aarhus','Brøndby','FC København','FC Midtjylland','AC Horsens','Lyngby','Nordsjælland','OB','Randers','Silkeborg','SønderjyskE','Viborg',
+  // França — Ligue 1
+  'Angers','Auxerre','Brest','Le Havre','Le Mans','Lens','Lille','Lorient','Lyon','Marseille','Monaco','Nice','Paris FC','Paris Saint-Germain','Rennes','Strasbourg','Toulouse','Troyes',
+  // Croácia — HNL
+  'Dinamo Zagreb','Hajduk Split','Rijeka','Osijek','Gorica','Varaždin','Slaven Belupo','Istra 1961','Lokomotiva','Rudeš',
+];
 
 let players = [];
 let clubs = [];
@@ -848,7 +867,7 @@ const TABS = [
   {v:'shadowteams', label:'Shadow Teams', icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.4" fill="currentColor" stroke="none"/>'},
 ];
 function headerPrimaryButtonHtml(){
-  if(activeTab==='clubs') return `<button class="btn btn-ghost" onclick="seedNationalTeams()">+ Seleções principais</button><button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
+  if(activeTab==='clubs') return `<button class="btn btn-ghost" onclick="seedTopDivisionClubs()">+ Clubes principais</button><button class="btn btn-ghost" onclick="seedNationalTeams()">+ Seleções principais</button><button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
   if(activeTab==='shortlists') return `<button class="btn btn-primary" onclick="openShortlistFormModal()">+ Nova Shortlist</button>`;
   if(activeTab==='games') return `<button class="btn btn-primary" onclick="openGameFormModal()">+ Novo Jogo</button>`;
   if(activeTab==='shadowteams') return `<button class="btn btn-primary" onclick="openShadowTeamFormModal()">+ Nova Shadow Team</button>`;
@@ -1886,6 +1905,17 @@ async function seedNationalTeams(){
   showToast(`${missing.length} seleções adicionadas.`);
 }
 
+async function seedTopDivisionClubs(){
+  const existing = new Set(clubs.map(c=>c.name.trim().toLowerCase()));
+  const missing = CLUB_SEEDS.filter(name => !existing.has(name.toLowerCase()));
+  if(missing.length === 0){ showToast('Já tens todos estes clubes criados.'); return; }
+  if(!confirm(`Adicionar ${missing.length} clubes (1ªs divisões de Espanha, Bélgica, Brasil, Argentina, Suécia, Dinamarca, França e Croácia)?`)) return;
+  missing.forEach(name => clubs.push({id: uid(), name, logo: null, type: 'clube', createdAt: Date.now()}));
+  await saveData();
+  render();
+  showToast(`${missing.length} clubes adicionados.`);
+}
+
 async function removeClub(id){
   const c = clubs.find(x=>x.id===id);
   if(!c) return;
@@ -2599,6 +2629,7 @@ function renderDossier(){
                     <span class="note-type-pill t-${nt.v}">${nt.label}</span>
                     <span class="note-date">${fmtDate(n.date)}</span>
                     ${ng ? `<span class="tag">Jogo: ${gaClub?escapeHtml(gaClub.name):'—'} vs ${gbClub?escapeHtml(gbClub.name):'—'}</span>` : ''}
+                    ${ng && (ng.competition || ng.level) ? `<span class="tag">${ng.competition?escapeHtml(ng.competition):'Sem competição'}${ng.level?' · '+escapeHtml(ng.level):''}</span>` : ''}
                   </div>
                   <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
                 </div>
