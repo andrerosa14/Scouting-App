@@ -353,6 +353,8 @@
   .player-card-meta .sep{opacity:.5;}
   .player-card-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-left:auto;flex-shrink:0;}
   .player-card-count{font-size:12px;color:var(--muted);}
+  .player-card-status-row{margin-bottom:14px;}
+  .player-card-status-label{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:6px;}
 
   /* ---------- clubs tab / shortlists ---------- */
   .club-list-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px;}
@@ -2116,6 +2118,12 @@ function renderGameDetailHtml(g){
             <div class="player-card-actions">
               <div class="player-card-count">${notesForPlayer.length} nota${notesForPlayer.length===1?'':'s'}</div>
               <button type="button" class="btn-ghost" style="padding:2px;" onclick="toggleGamePlayer('${g.id}','${p.id}').then(renderTabContent);">Remover do jogo</button>
+            </div>
+          </div>
+          <div class="player-card-status-row">
+            <div class="player-card-status-label">Estado</div>
+            <div class="status-select-row">
+              ${STATUSES.map(s=>`<button class="chip ${s.cls} ${p.status===s.v?'active':''}" onclick="updateStatus('${p.id}','${s.v}')">${s.label}</button>`).join('')}
             </div>
           </div>
           <div class="note-form">
