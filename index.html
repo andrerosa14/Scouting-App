@@ -484,6 +484,14 @@ const NOTE_TYPES = [
   {v:'nota', label:'Nota'},
   {v:'final', label:'Avaliação Final'},
 ];
+// lista de seleções nacionais para pré-preencher com um clique (Europa, América do Sul, África)
+const NATIONAL_TEAM_SEEDS = [
+  'Portugal','Espanha','França','Alemanha','Itália','Inglaterra','Países Baixos','Bélgica',
+  'Croácia','Sérvia','Polónia','Suíça','Áustria','Dinamarca','Suécia','Ucrânia','Turquia',
+  'Escócia','República Checa','Hungria',
+  'Brasil','Argentina','Uruguai','Colômbia','Chile','Equador','Paraguai','Peru','Venezuela','Bolívia',
+  'Marrocos','Senegal','Nigéria','Egito','Argélia','Tunísia','Costa do Marfim','Camarões','Gana','África do Sul','Mali','Cabo Verde',
+];
 
 let players = [];
 let clubs = [];
@@ -813,7 +821,7 @@ const TABS = [
   {v:'shadowteams', label:'Shadow Teams', icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.4" fill="currentColor" stroke="none"/>'},
 ];
 function headerPrimaryButtonHtml(){
-  if(activeTab==='clubs') return `<button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
+  if(activeTab==='clubs') return `<button class="btn btn-ghost" onclick="seedNationalTeams()">+ Seleções principais</button><button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
   if(activeTab==='shortlists') return `<button class="btn btn-primary" onclick="openShortlistFormModal()">+ Nova Shortlist</button>`;
   if(activeTab==='games') return `<button class="btn btn-primary" onclick="openGameFormModal()">+ Novo Jogo</button>`;
   if(activeTab==='shadowteams') return `<button class="btn btn-primary" onclick="openShadowTeamFormModal()">+ Nova Shadow Team</button>`;
@@ -1829,6 +1837,17 @@ async function submitClubForm(editId){
   await saveData();
   closeModal();
   render();
+}
+
+async function seedNationalTeams(){
+  const existing = new Set(clubs.map(c=>c.name.trim().toLowerCase()));
+  const missing = NATIONAL_TEAM_SEEDS.filter(name => !existing.has(name.toLowerCase()));
+  if(missing.length === 0){ showToast('Já tens todas as seleções principais criadas.'); return; }
+  if(!confirm(`Adicionar ${missing.length} seleções nacionais (Europa, América do Sul e África)?`)) return;
+  missing.forEach(name => clubs.push({id: uid(), name, logo: null, type: 'selecao', createdAt: Date.now()}));
+  await saveData();
+  render();
+  showToast(`${missing.length} seleções adicionadas.`);
 }
 
 async function removeClub(id){
