@@ -108,6 +108,7 @@
   .urgent-info{flex:1;min-width:0;}
   .urgent-name{font-weight:600;font-size:14px;}
   .urgent-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+  .urgent-birth{font-size:11.5px;color:var(--muted);margin-top:2px;opacity:.85;}
   .urgent-pos{background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:2px 7px;font-weight:600;color:var(--chalk);font-size:11px;flex-shrink:0;}
   .urgent-arrow{color:var(--muted);flex-shrink:0;}
   .urgent-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
@@ -177,7 +178,7 @@
 
   /* ---------- list ---------- */
   .list{display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);}
-  .row{display:grid;grid-template-columns:44px 1.6fr 1fr 64px 110px 96px;gap:14px;align-items:center;background:var(--pitch-panel);padding:12px 14px;text-align:left;border:none;width:100%;}
+  .row{display:grid;grid-template-columns:44px 1.6fr 1fr 64px 150px 96px;gap:14px;align-items:center;background:var(--pitch-panel);padding:12px 14px;text-align:left;border:none;width:100%;}
   .row:hover{background:var(--pitch-panel-raise);}
   .badge{width:38px;height:38px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:14px;color:#12271f;}
   .b-GR{background:var(--gold);} .b-DF{background:var(--blue);} .b-MC{background:var(--olive);} .b-AV{background:var(--terracotta);color:#2a120a;}
@@ -924,12 +925,14 @@ function homeUrgentPanelHtml(){
     : visiblePlayers.map(p => {
         const pos = posInfo(p.position);
         const club = clubInfo(p.clubId);
+        const age = calcAge(p.birthDate);
         return `
         <button class="urgent-row" onclick="goHome(); openDossier('${p.id}');">
           <div class="urgent-avatar">${p.photo ? `<img src="${p.photo}" alt="">` : `<span>${escapeHtml(initials(p.name))}</span>`}</div>
           <div class="urgent-info">
             <div class="urgent-name">${escapeHtml(p.name)}</div>
             <div class="urgent-sub">${club ? escapeHtml(club.name) : 'Sem clube'}<span class="dot">·</span><span class="urgent-time">${timeAgo(p.statusChangedAt)}</span></div>
+            <div class="urgent-birth">${p.birthDate ? `${fmtDateOnly(p.birthDate)}${age!==null?` (${age} anos)`:''}` : '—'}</div>
           </div>
           <div class="urgent-pos">${pos.v}</div>
           <div class="urgent-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
@@ -1515,7 +1518,7 @@ function renderList(){
         <div class="name">${escapeHtml(p.name)}</div>
         <div class="club">${club && club.logo ? `<img src="${club.logo}" class="club-logo-mini" alt="">` : ''}<span>${club ? escapeHtml(club.name) : '—'}</span></div>
         <div class="pos-tag">${pos.v}</div>
-        <div class="age num">${age !== null ? age+' anos' : '—'}</div>
+        <div class="age num">${p.birthDate ? `${fmtDateOnly(p.birthDate)}${age!==null?` (${age} anos)`:''}` : '—'}</div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
           ${starsHtml(p.rating)}
           <span class="status-pill ${st.cls}">${st.label}</span>
