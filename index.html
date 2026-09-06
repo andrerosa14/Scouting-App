@@ -304,6 +304,7 @@
   .type-toggle input{display:none;}
   .type-toggle input:checked + span{color:var(--chalk);}
   .type-toggle label:has(input:checked){border-color:var(--gold-dim);background:rgba(201,154,68,.12);}
+  .field-hint{font-size:11.5px;color:var(--muted);margin-top:4px;}
 
   /* ---------- club detail page ---------- */
   .club-hero{display:flex;align-items:center;gap:18px;margin-bottom:28px;}
@@ -492,6 +493,8 @@ const NATIONAL_TEAM_SEEDS = [
   'Brasil','Argentina','Uruguai','Colômbia','Chile','Equador','Paraguai','Peru','Venezuela','Bolívia',
   'Marrocos','Senegal','Nigéria','Egito','Argélia','Tunísia','Costa do Marfim','Camarões','Gana','África do Sul','Mali','Cabo Verde',
 ];
+// escalões disponíveis ao registar um jogo, tanto de clubes como de seleções
+const GAME_LEVELS = ['Equipa A','U21','U20','U19','U18','U17','U16'];
 
 let players = [];
 let clubs = [];
@@ -626,6 +629,19 @@ function clubOptionsHtml(selectedId){
   return `<option value="">Sem clube</option>` +
     clubs.filter(c=>c.type!=='selecao').slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}" ${selectedId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
 }
+function nationalTeamOptionsHtml(selectedId){
+  // nacionalidade do jogador: escolhida de entre as seleções já criadas
+  return `<option value="">Sem seleção definida</option>` +
+    clubs.filter(c=>c.type==='selecao').slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}" ${selectedId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+}
+function eligiblePlayersForTeams(clubAId, clubBId){
+  // num jogo de seleções, "quem esteve em campo" é definido pela nacionalidade do jogador, não pelo clube
+  const a = clubInfo(clubAId), b = clubInfo(clubBId);
+  const isNatl = (a && a.type==='selecao') || (b && b.type==='selecao');
+  return isNatl
+    ? players.filter(p => p.nationalTeamId === clubAId || p.nationalTeamId === clubBId)
+    : players.filter(p => p.clubId === clubAId || p.clubId === clubBId);
+}
 function toggleInlineClubForm(forceHide){
   const el = document.getElementById('inlineClubForm');
   if(!el) return;
@@ -695,7 +711,7 @@ async function fetchDataFromGitHub(){
   const json = b64ToUtf8(data.content);
   let parsed = null;
   try{ parsed = JSON.parse(json); }catch(e){ parsed = null; }
-  const normGames = (arr) => (arr || []).map(g => ({playerIds: [], ...g}));
+  const normGames = (arr) => (arr || []).map(g => ({playerIds: [], level: 'Equipa A', ...g}));
   // migração: versões antigas guardavam as notas por jogador dentro do próprio jogo (game.playerNotes);
   // agora vivem na ficha do jogador (player.notes), com uma referência gameId
   const migrateLegacyGameNotes = (playersArr, gamesArr) => {
@@ -748,13 +764,24 @@ async function fetchDataFromGitHub(){
   const normShadowTeams = (arr) => (arr || []).map(st => ({playerCategories: {}, ...st}));
   // normalização: clubes antigos não tinham "tipo" (clube vs seleção nacional)
   const normClubs = (arr) => (arr || []).map(c => ({type: 'clube', ...c}));
+  // migração: a nacionalidade era texto livre; se o texto corresponder ao nome de uma seleção já criada, liga-se automaticamente
+  const migrateNationality = (playersArr, clubsArr) => {
+    (playersArr || []).forEach(p => {
+      if(!p.nationalTeamId && p.nationality){
+        const match = (clubsArr || []).find(c => c.type==='selecao' && c.name.trim().toLowerCase() === p.nationality.trim().toLowerCase());
+        if(match) p.nationalTeamId = match.id;
+      }
+    });
+  };
   if(parsed && typeof parsed === 'object'){
     const outPlayers = parsed.players || [];
+    const outClubs = normClubs(parsed.clubs);
     const outGames = normGames(parsed.games);
     migrateLegacyGameNotes(outPlayers, outGames);
     migrateStatuses(outPlayers);
     migratePositions(outPlayers);
-    return {players: outPlayers, clubs: normClubs(parsed.clubs), shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams)};
+    migrateNationality(outPlayers, outClubs);
+    return {players: outPlayers, clubs: outClubs, shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams)};
   }
   return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[]};
 }
@@ -1145,8 +1172,8 @@ function renderTabContent(){
     if(activeGame){
       inner = renderGameDetailHtml(activeGame);
     } else if(games.length === 0){
-      inner = clubs.length < 2
-        ? emptyStateHtml('Precisas de clubes primeiro', 'Cria pelo menos dois clubes para poderes registar um jogo entre eles.', "openClubFormModal()", '+ Novo Clube')
+      inner = (gameFormTeamsOfType('clube').length < 2 && gameFormTeamsOfType('selecao').length < 2)
+        ? emptyStateHtml('Precisas de equipas primeiro', 'Cria pelo menos dois clubes ou duas seleções para poderes registar um jogo entre eles.', "openClubFormModal()", '+ Novo Clube')
         : emptyStateHtml('Ainda não tens jogos', 'Regista os jogos que foste ver, com as duas equipas, a competição e a data.', "openGameFormModal()", '+ Novo Jogo');
     } else {
       inner = `<div class="club-list-panel">${gamesListHtml()}</div>`;
@@ -1391,7 +1418,16 @@ function searchGoToPlayer(id){
 
 function searchGoToClub(id){
   state.search = '';
-  switchTab('clubs');
+  const dd = document.getElementById('searchDropdown');
+  if(dd){ dd.innerHTML=''; dd.style.display='none'; }
+  const input = document.getElementById('searchInput');
+  if(input) input.value = '';
+  activeTab = 'clubs';
+  activeClubId = id;
+  activeShortlistId = null;
+  activeGameId = null;
+  activeShadowTeamId = null;
+  renderMainShell();
 }
 
 /* ---------------- rendering: list ---------------- */
@@ -1500,7 +1536,7 @@ function playerFormFields(p){
           <div class="field"><label>Altura (cm)</label><input id="f_height" type="number" min="130" max="220" placeholder="ex: 181" value="${p.height||''}"></div>
         </div>
         <div class="field-row">
-          <div class="field"><label>Nacionalidade</label><input id="f_nat" type="text" placeholder="ex: Portugal" value="${p.nationality?escapeHtml(p.nationality):''}"></div>
+          <div class="field"><label>Nacionalidade (seleção)</label><select id="f_nat">${nationalTeamOptionsHtml(p.nationalTeamId||null)}</select></div>
           <div class="field"><label>Pé preferido</label>
             <select id="f_foot">
               <option value="Direito" ${p.foot==='Direito'?'selected':''}>Direito</option>
@@ -1543,7 +1579,7 @@ function readPlayerForm(){
     birthDate: document.getElementById('f_birth').value || null,
     contractUntil: document.getElementById('f_contract').value || null,
     height: Number(document.getElementById('f_height').value) || null,
-    nationality: document.getElementById('f_nat').value.trim(),
+    nationalTeamId: document.getElementById('f_nat').value || null,
     foot: document.getElementById('f_foot').value,
   };
 }
@@ -1727,7 +1763,7 @@ function renderClubDetailHtml(c){
             <div class="game-row-avatar">${opponent && opponent.logo ? `<img src="${opponent.logo}" alt="">` : escapeHtml(opponent?initials(opponent.name):'?')}</div>
             <div class="game-row-info">
               <div class="game-row-name">${a?escapeHtml(a.name):'—'} vs ${b?escapeHtml(b.name):'—'}</div>
-              <div class="game-row-sub">${g.competition?escapeHtml(g.competition):'Sem competição'} · ${g.date?fmtDateOnly(g.date):'Sem data'} · ${count} jogador${count===1?'':'es'} observado${count===1?'':'s'}</div>
+              <div class="game-row-sub">${g.competition?escapeHtml(g.competition):'Sem competição'}${g.level?' · '+escapeHtml(g.level):''} · ${g.date?fmtDateOnly(g.date):'Sem data'} · ${count} jogador${count===1?'':'es'} observado${count===1?'':'s'}</div>
             </div>
           </button>`;
         }).join('');
@@ -1880,7 +1916,7 @@ function gamesListHtml(){
       <div class="club-row-avatar">${a && a.logo ? `<img src="${a.logo}" alt="">` : `<span>${a?escapeHtml(initials(a.name)):'?'}</span>`}</div>
       <div class="club-row-info">
         <div class="club-row-name">${a?escapeHtml(a.name):'Clube removido'} <span style="color:var(--muted);font-weight:400;">vs</span> ${b?escapeHtml(b.name):'Clube removido'}</div>
-        <div class="club-row-count">${g.competition?escapeHtml(g.competition):'Sem competição'} · ${g.date?fmtDateOnly(g.date):'Sem data'} · ${count} jogador${count===1?'':'es'} observado${count===1?'':'s'}</div>
+        <div class="club-row-count">${g.competition?escapeHtml(g.competition):'Sem competição'}${g.level?' · '+escapeHtml(g.level):''} · ${g.date?fmtDateOnly(g.date):'Sem data'} · ${count} jogador${count===1?'':'es'} observado${count===1?'':'s'}</div>
       </div>
       <button class="btn-ghost" onclick="event.stopPropagation(); openGameFormModal('${g.id}')">Editar</button>
       <button class="btn-ghost" onclick="event.stopPropagation(); removeGame('${g.id}')">Eliminar</button>
@@ -1888,35 +1924,60 @@ function gamesListHtml(){
   }).join('');
 }
 
+function gameFormTeamsOfType(type){
+  return clubs.filter(c => type==='selecao' ? c.type==='selecao' : c.type!=='selecao').slice().sort((a,b)=>a.name.localeCompare(b.name));
+}
+function gameFormTeamOptionsHtml(type, selectedId){
+  return gameFormTeamsOfType(type).map(c=>`<option value="${c.id}" ${selectedId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+}
+function onGameTypeChange(type){
+  const list = gameFormTeamsOfType(type);
+  const selA = document.getElementById('g_clubA');
+  const selB = document.getElementById('g_clubB');
+  if(selA) selA.innerHTML = gameFormTeamOptionsHtml(type, list[0] && list[0].id);
+  if(selB) selB.innerHTML = gameFormTeamOptionsHtml(type, list[1] && list[1].id);
+}
 function openGameFormModal(editId){
-  if(clubs.length < 2){
-    showToast('Precisas de ter pelo menos dois clubes criados para registares um jogo.');
+  const realClubs = gameFormTeamsOfType('clube');
+  const natlTeams = gameFormTeamsOfType('selecao');
+  if(realClubs.length < 2 && natlTeams.length < 2){
+    showToast('Precisas de ter pelo menos duas equipas do mesmo tipo (clubes ou seleções) para registares um jogo.');
     return;
   }
   const editing = editId ? games.find(g=>g.id===editId) : null;
-  const clubOptions = clubs.slice().sort((a,b)=>a.name.localeCompare(b.name));
-  // equipas agrupadas por tipo, para não misturar seleções e clubes na mesma lista
-  const groupedTeamOptions = (selectedId) => {
-    const natl = clubOptions.filter(c=>c.type==='selecao');
-    const real = clubOptions.filter(c=>c.type!=='selecao');
-    const opt = c => `<option value="${c.id}" ${selectedId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`;
-    return `${natl.length?`<optgroup label="Seleções">${natl.map(opt).join('')}</optgroup>`:''}${real.length?`<optgroup label="Clubes">${real.map(opt).join('')}</optgroup>`:''}`;
-  };
+  const editingType = editing ? ((clubInfo(editing.clubAId)||{}).type === 'selecao' ? 'selecao' : 'clube') : null;
+  const currentType = editingType || (realClubs.length >= 2 ? 'clube' : 'selecao');
+  const currentList = gameFormTeamsOfType(currentType);
   document.getElementById('modalRoot').innerHTML = `
     <div class="overlay" onclick="if(event.target===this) closeModal()">
       <div class="modal">
         <h2>${editing ? 'Editar Jogo' : 'Novo Jogo'}</h2>
+        <div class="field">
+          <label>Tipo de jogo</label>
+          <div class="type-toggle">
+            <label style="${realClubs.length<2?'opacity:.4;':''}"><input type="radio" name="g_type" value="clube" ${currentType==='clube'?'checked':''} ${realClubs.length<2?'disabled':''} onchange="onGameTypeChange('clube')"><span>⚽ Clubes</span></label>
+            <label style="${natlTeams.length<2?'opacity:.4;':''}"><input type="radio" name="g_type" value="selecao" ${currentType==='selecao'?'checked':''} ${natlTeams.length<2?'disabled':''} onchange="onGameTypeChange('selecao')"><span>🏳️ Seleções</span></label>
+          </div>
+          ${realClubs.length<2 ? `<div class="field-hint">Precisas de pelo menos dois clubes criados para escolher esta opção.</div>` : ''}
+          ${natlTeams.length<2 ? `<div class="field-hint">Precisas de pelo menos duas seleções criadas para escolher esta opção.</div>` : ''}
+        </div>
         <div class="field-row">
           <div class="field">
             <label>Equipa 1</label>
-            <select id="g_clubA">${groupedTeamOptions(editing?editing.clubAId:(clubOptions[0]&&clubOptions[0].id))}</select>
+            <select id="g_clubA">${gameFormTeamOptionsHtml(currentType, editing?editing.clubAId:(currentList[0]&&currentList[0].id))}</select>
           </div>
           <div class="field">
             <label>Equipa 2</label>
-            <select id="g_clubB">${groupedTeamOptions(editing?editing.clubBId:(clubOptions[1]&&clubOptions[1].id))}</select>
+            <select id="g_clubB">${gameFormTeamOptionsHtml(currentType, editing?editing.clubBId:(currentList[1]&&currentList[1].id))}</select>
           </div>
         </div>
-        <div class="field"><label>Competição</label><input id="g_competition" type="text" placeholder="ex: Liga Portugal" value="${editing?escapeHtml(editing.competition||''):''}"></div>
+        <div class="field-row">
+          <div class="field"><label>Competição</label><input id="g_competition" type="text" placeholder="ex: Liga Portugal" value="${editing?escapeHtml(editing.competition||''):''}"></div>
+          <div class="field">
+            <label>Escalão</label>
+            <select id="g_level">${GAME_LEVELS.map(l=>`<option value="${l}" ${(editing?(editing.level||'Equipa A'):'Equipa A')===l?'selected':''}>${l}</option>`).join('')}</select>
+          </div>
+        </div>
         <div class="field"><label>Data</label><input id="g_date" type="date" value="${editing&&editing.date?editing.date:''}"></div>
         <div class="modal-actions">
           <button class="btn" onclick="closeModal()">Cancelar</button>
@@ -1930,6 +1991,7 @@ async function submitGameForm(editId){
   const clubAId = document.getElementById('g_clubA').value;
   const clubBId = document.getElementById('g_clubB').value;
   const competition = document.getElementById('g_competition').value.trim();
+  const level = document.getElementById('g_level').value;
   const date = document.getElementById('g_date').value;
   if(!clubAId || !clubBId){ showToast('Seleciona as duas equipas.'); return; }
   if(clubAId === clubBId){ showToast('As duas equipas têm de ser diferentes.'); return; }
@@ -1938,15 +2000,13 @@ async function submitGameForm(editId){
   if(editId){
     const g = games.find(x=>x.id===editId);
     if(!g){ closeModal(); return; }
-    g.clubAId = clubAId; g.clubBId = clubBId; g.competition = competition; g.date = date;
+    g.clubAId = clubAId; g.clubBId = clubBId; g.competition = competition; g.date = date; g.level = level;
     if(!g.playerIds) g.playerIds = [];
-    // se a equipa mudou, só mantém jogadores que continuam associados a uma das duas equipas do jogo
-    g.playerIds = g.playerIds.filter(pid => {
-      const p = players.find(x=>x.id===pid);
-      return p && (p.clubId === clubAId || p.clubId === clubBId);
-    });
+    // se a equipa mudou, só mantém jogadores que continuam elegíveis (por clube ou por nacionalidade, consoante o tipo)
+    const eligible = eligiblePlayersForTeams(clubAId, clubBId);
+    g.playerIds = g.playerIds.filter(pid => eligible.some(p=>p.id===pid));
   } else {
-    games.push({id: uid(), clubAId, clubBId, competition, date, playerIds: [], createdAt: Date.now()});
+    games.push({id: uid(), clubAId, clubBId, competition, date, level, playerIds: [], createdAt: Date.now()});
   }
   await saveData();
   closeModal();
@@ -1971,8 +2031,12 @@ function openGameDetail(id){
 function renderGameDetailHtml(g){
   const a = clubInfo(g.clubAId);
   const b = clubInfo(g.clubBId);
-  const eligiblePlayers = players.filter(p => p.clubId === g.clubAId || p.clubId === g.clubBId);
+  const isNatl = (a && a.type==='selecao') || (b && b.type==='selecao');
+  const eligiblePlayers = eligiblePlayersForTeams(g.clubAId, g.clubBId);
   const selectedIds = (g.playerIds || []).filter(pid => eligiblePlayers.some(p=>p.id===pid));
+  const emptyMsg = isNatl
+    ? `Nenhuma das duas seleções tem jogadores associados ainda. Define "${a?escapeHtml(a.name):'uma das seleções'}" ou "${b?escapeHtml(b.name):'a outra seleção'}" como nacionalidade na ficha do jogador para os poderes selecionar aqui.`
+    : `Nenhum dos dois clubes tem jogadores associados ainda. Associa jogadores a "${a?escapeHtml(a.name):'uma das equipas'}" ou "${b?escapeHtml(b.name):'outra equipa'}" para os poderes selecionar aqui.`;
   return `
     <div class="shortlist-detail-head">
       <button class="btn btn-ghost" onclick="activeGameId=null; renderTabContent();">← Jogos</button>
@@ -1984,12 +2048,13 @@ function renderGameDetailHtml(g){
     <h2 class="shortlist-detail-title">${a?escapeHtml(a.name):'Clube removido'} <span style="color:var(--muted);font-weight:400;">vs</span> ${b?escapeHtml(b.name):'Clube removido'}</h2>
     <div class="tag-row" style="margin:-10px 0 20px;">
       ${g.competition ? `<span class="tag">${escapeHtml(g.competition)}</span>` : ''}
+      ${g.level ? `<span class="tag">${escapeHtml(g.level)}</span>` : ''}
       ${g.date ? `<span class="tag">${fmtDateOnly(g.date)}</span>` : ''}
     </div>
 
     <div class="section" style="margin-top:0;padding-top:0;border-top:none;">
       <h3>Jogadores observados</h3>
-      ${eligiblePlayers.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Nenhum dos dois clubes tem jogadores associados ainda. Associa jogadores a "${a?escapeHtml(a.name):'uma das equipas'}" ou "${b?escapeHtml(b.name):'outra equipa'}" para os poderes selecionar aqui.</p>` :
+      ${eligiblePlayers.length === 0 ? `<p style="color:var(--muted);font-size:13px;">${emptyMsg}</p>` :
       `<div class="chip-group">
         ${eligiblePlayers.slice().sort((x,y)=>x.name.localeCompare(y.name)).map(p=>`<button class="chip ${selectedIds.includes(p.id)?'active':''}" onclick="toggleGamePlayer('${g.id}','${p.id}').then(renderTabContent);">${escapeHtml(p.name)}</button>`).join('')}
       </div>`}
@@ -2487,7 +2552,7 @@ function renderDossier(){
             <div><dt>Data de nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
             <div><dt>Idade</dt><dd>${age !== null ? age+' anos' : '—'}</dd></div>
             <div><dt>Altura</dt><dd>${p.height ? p.height+' cm' : '—'}</dd></div>
-            <div><dt>Nacionalidade</dt><dd>${escapeHtml(p.nationality || '—')}</dd></div>
+            <div><dt>Nacionalidade</dt><dd>${(() => { const nt = p.nationalTeamId ? clubInfo(p.nationalTeamId) : null; return nt ? escapeHtml(nt.name) : escapeHtml(p.nationality || '—'); })()}</dd></div>
             <div><dt>Pé preferido</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
             <div><dt>Contrato até</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ` <span class="status-pill ${cStatus.cls}">${cStatus.label}</span>` : ''}</dd></div>
           </dl>
