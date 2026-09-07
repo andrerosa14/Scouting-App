@@ -2673,6 +2673,19 @@ function renderDossier(){
         </div>
 
         <div class="section">
+          <h3>Nível de Urgência de Observação</h3>
+          <div class="lvl-row">
+            ${URGENCY_LEVELS.map(l=>`<button class="lvl-chip ${l.cls} ${currentUrgencyLevel(p)===l.v?'active':''}" onclick="updateUrgencyLevel('${p.id}','${l.v}',null)">${l.v}</button>`).join('')}
+          </div>
+          <div class="player-card-status-hint">${(() => {
+            const cur = currentUrgencyLevel(p);
+            if(!cur) return 'Ainda sem nível atribuído.';
+            if(cur === 'A') return 'Nível atual: A — está na lista "Observação com Urgência" da página inicial.';
+            return `Nível atual: ${cur}.`;
+          })()}</div>
+        </div>
+
+        <div class="section">
           <h3>Notas e Avaliação Final</h3>
           <div class="note-form">
             <div class="chip-group" id="noteTypeGroup">
@@ -2702,7 +2715,7 @@ function renderDossier(){
                   </div>
                   <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
                 </div>
-                ${nt.v==='nivel' ? `<div class="note-body"><p>Nível de urgência de observação atribuído neste jogo: <strong>${escapeHtml(n.level||'—')}</strong>.</p></div>` :
+                ${nt.v==='nivel' ? `<div class="note-body"><p>${ng ? 'Nível de urgência de observação atribuído neste jogo' : 'Nível de urgência de observação atribuído manualmente na ficha do jogador'}: <strong>${escapeHtml(n.level||'—')}</strong>.</p></div>` :
                   nt.v==='final' ? (() => {
                   const isOpen = expandedNoteIds.has(n.id);
                   return `
@@ -2780,7 +2793,7 @@ function playerReportHtml(p){
             <span class="report-note-date">${fmtDate(n.date)}</span>
             ${gameTagParts.length ? `<span class="report-note-tag">· ${gameTagParts.join(' · ')}</span>` : ''}
           </div>
-          <p>${ntype.v==='nivel' ? `Nível de urgência de observação atribuído neste jogo: ${escapeHtml(n.level||'—')}.` : escapeHtml(n.text)}</p>
+          <p>${ntype.v==='nivel' ? `${ng ? 'Nível de urgência de observação atribuído neste jogo' : 'Nível de urgência de observação atribuído manualmente na ficha do jogador'}: ${escapeHtml(n.level||'—')}.` : escapeHtml(n.text)}</p>
         </div>`;
       }).join('');
   const statusClsMap = {approved:'ok', urgent:'urgent', follow:'follow', rejected:'rejected'};
