@@ -251,6 +251,12 @@
   .note-type-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;border:1px solid;white-space:nowrap;}
   .note-type-pill.t-nota{color:var(--muted);border-color:var(--line-soft);}
   .note-type-pill.t-final{color:var(--gold);border-color:var(--gold-dim);}
+  .note.t-nivel.lvl-a{border-color:var(--status-approved);}
+  .note.t-nivel.lvl-b{border-color:var(--status-urgent);}
+  .note.t-nivel.lvl-c{border-color:var(--status-follow);}
+  .note-type-pill.t-nivel.lvl-a{color:var(--status-approved);border-color:var(--status-approved);}
+  .note-type-pill.t-nivel.lvl-b{color:var(--status-urgent);border-color:var(--status-urgent);}
+  .note-type-pill.t-nivel.lvl-c{color:var(--status-follow);border-color:var(--status-follow);}
   .note p{margin:0;font-size:14px;white-space:pre-wrap;}
   .note-form textarea{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:10px;font-size:14px;min-height:70px;resize:vertical;margin-top:10px;}
   .note-form{margin-bottom:14px;}
@@ -500,6 +506,8 @@ const NOTE_TYPES = [
   {v:'nota', label:'Nota'},
   {v:'final', label:'Avaliação Final'},
 ];
+// tipo de nota especial, criado automaticamente quando se atribui um Nível de urgência de observação num relatório de jogo
+const LEVEL_NOTE_TYPE = {v:'nivel', label:'Nível de Urgência'};
 // nível de urgência de observação, atribuído a partir do relatório de jogo — nível A entra na lista "Observação com Urgência" da página inicial
 const URGENCY_LEVELS = [
   {v:'A', cls:'lvl-a'},
@@ -555,7 +563,22 @@ let shadowAddSearch = '';
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS.find(p=>p.v==='MC') || POSITIONS[0]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
-function noteTypeInfo(v){ return NOTE_TYPES.find(t=>t.v===v) || NOTE_TYPES[0]; }
+function noteTypeInfo(v){ if(v===LEVEL_NOTE_TYPE.v) return LEVEL_NOTE_TYPE; return NOTE_TYPES.find(t=>t.v===v) || NOTE_TYPES[0]; }
+// devolve a nota de nível de urgência mais recente do jogador (a que define o nível atual)
+function latestLevelNote(p){
+  const levelNotes = (p.notes||[]).filter(n=>n.type==='nivel');
+  if(!levelNotes.length) return null;
+  return levelNotes.slice().sort((a,b)=>b.date-a.date)[0];
+}
+function currentUrgencyLevel(p){
+  const n = latestLevelNote(p);
+  return n ? n.level : null;
+}
+// nível de urgência atribuído a este jogador especificamente num dado jogo (pode ser diferente do nível atual, se houver um jogo mais recente)
+function levelForGame(p, gameId){
+  const n = (p.notes||[]).find(x=>x.type==='nivel' && x.gameId===gameId);
+  return n ? n.level : null;
+}
 function clubInfo(id){ return clubs.find(c=>c.id===id) || null; }
 function initials(name){
   return name.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
@@ -813,6 +836,16 @@ async function fetchDataFromGitHub(){
       }
     });
   };
+  // migração: o nível de urgência de observação vivia num campo único (player.urgencyLevel); agora é derivado
+  // do histórico de notas de tipo "nivel" (uma por jogo), para se ver o histórico completo na ficha do jogador
+  const migrateUrgencyLevelToNotes = (playersArr) => {
+    (playersArr || []).forEach(p => {
+      if(p.urgencyLevel && !(p.notes||[]).some(n=>n.type==='nivel')){
+        if(!p.notes) p.notes = [];
+        p.notes.push({id: uid(), date: p.urgencyLevelChangedAt || p.createdAt || Date.now(), type:'nivel', level: p.urgencyLevel, gameId: null});
+      }
+    });
+  };
   if(parsed && typeof parsed === 'object'){
     const outPlayers = parsed.players || [];
     const outClubs = normClubs(parsed.clubs);
@@ -821,6 +854,7 @@ async function fetchDataFromGitHub(){
     migrateStatuses(outPlayers);
     migratePositions(outPlayers);
     migrateNationality(outPlayers, outClubs);
+    migrateUrgencyLevelToNotes(outPlayers);
     return {players: outPlayers, clubs: outClubs, shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams)};
   }
   return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[]};
@@ -931,7 +965,7 @@ function toggleUrgentPanel(){
   renderMainShell();
 }
 function homeUrgentPanelHtml(){
-  const urgentPlayers = players.filter(p => p.urgencyLevel === 'A').sort((a,b)=>a.name.localeCompare(b.name));
+  const urgentPlayers = players.filter(p => currentUrgencyLevel(p) === 'A').sort((a,b)=>a.name.localeCompare(b.name));
   const VISIBLE_LIMIT = 10;
   const showAll = urgentPanelExpanded || urgentPlayers.length <= VISIBLE_LIMIT;
   const visiblePlayers = showAll ? urgentPlayers : urgentPlayers.slice(0, VISIBLE_LIMIT);
@@ -947,7 +981,7 @@ function homeUrgentPanelHtml(){
           <div class="urgent-avatar">${p.photo ? `<img src="${p.photo}" alt="">` : `<span>${escapeHtml(initials(p.name))}</span>`}</div>
           <div class="urgent-info">
             <div class="urgent-name">${escapeHtml(p.name)}</div>
-            <div class="urgent-sub">${club ? escapeHtml(club.name) : 'Sem clube'}<span class="dot">·</span><span class="urgent-time">${timeAgo(p.urgencyLevelChangedAt)}</span></div>
+            <div class="urgent-sub">${club ? escapeHtml(club.name) : 'Sem clube'}<span class="dot">·</span><span class="urgent-time">${timeAgo(latestLevelNote(p) ? latestLevelNote(p).date : null)}</span></div>
             <div class="urgent-birth">${p.birthDate ? `${fmtDateOnly(p.birthDate)}${age!==null?` (${age} anos)`:''}` : '—'}</div>
           </div>
           <div class="urgent-lvl-badge lvl-a">A</div>
@@ -1061,7 +1095,7 @@ function homeRecentActivityData(){
     ? `<div class="insight-empty">Sem atividade recente.</div>`
     : top.map(({p,n})=>{
         const nt = noteTypeInfo(n.type);
-        const label = nt.v==='final' ? 'Avaliação Final' : 'Nota adicionada';
+        const label = nt.v==='final' ? 'Avaliação Final' : nt.v==='nivel' ? `Nível de Urgência: ${n.level||'—'}` : 'Nota adicionada';
         return `
         <div class="insight-row">
           <div class="ii-main">
@@ -1642,8 +1676,6 @@ async function submitNewPlayer(){
     photo,
     status: 'follow',
     statusChangedAt: Date.now(),
-    urgencyLevel: null,
-    urgencyLevelChangedAt: null,
     rating: 0,
     notes: [],
     createdAt: Date.now(),
@@ -2122,7 +2154,7 @@ function renderGameDetailHtml(g){
       players.filter(p=>selectedIds.includes(p.id)).slice().sort((x,y)=>x.name.localeCompare(y.name)).map(p=>{
         const pos = posInfo(p.position);
         const club = clubInfo(p.clubId);
-        const notesForPlayer = (p.notes || []).filter(n=>n.gameId===g.id);
+        const notesForPlayer = (p.notes || []).filter(n=>n.gameId===g.id && n.type!=='nivel');
         return `
         <div class="player-report-card">
           <div class="player-card-head">
@@ -2145,9 +2177,14 @@ function renderGameDetailHtml(g){
           <div class="player-card-status-row">
             <div class="player-card-status-label">Nível de urgência de observação</div>
             <div class="lvl-row">
-              ${URGENCY_LEVELS.map(l=>`<button class="lvl-chip ${l.cls} ${p.urgencyLevel===l.v?'active':''}" onclick="updateUrgencyLevel('${p.id}','${l.v}')">${l.v}</button>`).join('')}
+              ${URGENCY_LEVELS.map(l=>`<button class="lvl-chip ${l.cls} ${levelForGame(p,g.id)===l.v?'active':''}" onclick="updateUrgencyLevel('${p.id}','${l.v}','${g.id}')">${l.v}</button>`).join('')}
             </div>
-            <div class="player-card-status-hint">${p.urgencyLevel ? 'Jogadores com nível A aparecem na lista "Observação com Urgência" da página inicial.' : 'Ainda sem nível atribuído.'}</div>
+            <div class="player-card-status-hint">${(() => {
+              const cur = currentUrgencyLevel(p);
+              if(!cur) return 'Ainda sem nível atribuído.';
+              if(cur === 'A') return 'Nível atual: A — está na lista "Observação com Urgência" da página inicial.';
+              return `Nível atual: ${cur}.`;
+            })()}</div>
           </div>
           <div class="note-form">
             <textarea id="gpn_${p.id}" placeholder="Escreve as tuas notas sobre ${escapeHtml(p.name)} neste jogo..."></textarea>
@@ -2651,23 +2688,26 @@ function renderDossier(){
             </div>
           </div>
           ${p.notes.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Sem notas nem avaliações ainda.</p>` :
-            p.notes.slice().sort((a,b)=>b.date-a.date).map(n=>{
+            (() => { const curLevelNoteId = (latestLevelNote(p)||{}).id; return p.notes.slice().sort((a,b)=>b.date-a.date).map(n=>{
               const nt = noteTypeInfo(n.type);
               const ng = n.gameId ? games.find(x=>x.id===n.gameId) : null;
               const gaClub = ng ? clubInfo(ng.clubAId) : null;
               const gbClub = ng ? clubInfo(ng.clubBId) : null;
+              const lvlCls = nt.v==='nivel' ? ` lvl-${(n.level||'').toLowerCase()}` : '';
               return `
-              <div class="note t-${nt.v}">
+              <div class="note t-${nt.v}${lvlCls}">
                 <div class="note-head">
                   <div class="note-head-left">
-                    <span class="note-type-pill t-${nt.v}">${nt.label}</span>
+                    <span class="note-type-pill t-${nt.v}${lvlCls}">${nt.v==='nivel' ? `${nt.label}: ${escapeHtml(n.level||'—')}` : nt.label}</span>
+                    ${nt.v==='nivel' && n.id===curLevelNoteId ? `<span class="tag">Nível atual</span>` : ''}
                     <span class="note-date">${fmtDate(n.date)}</span>
                     ${ng ? `<span class="tag">Jogo: ${gaClub?escapeHtml(gaClub.name):'—'} vs ${gbClub?escapeHtml(gbClub.name):'—'}</span>` : ''}
                     ${ng && (ng.competition || ng.level) ? `<span class="tag">${ng.competition?escapeHtml(ng.competition):'Sem competição'}${ng.level?' · '+escapeHtml(ng.level):''}</span>` : ''}
                   </div>
                   <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
                 </div>
-                ${nt.v==='final' ? (() => {
+                ${nt.v==='nivel' ? `<div class="note-body"><p>Nível de urgência de observação atribuído neste jogo: <strong>${escapeHtml(n.level||'—')}</strong>.</p></div>` :
+                  nt.v==='final' ? (() => {
                   const isOpen = expandedNoteIds.has(n.id);
                   return `
                 <div class="note-body ${isOpen?'':'collapsed'}" onclick="toggleNoteExpanded('${n.id}')"><p>${escapeHtml(n.text)}</p></div>
@@ -2677,7 +2717,7 @@ function renderDossier(){
                 </button>`;
                 })() : `<div class="note-body"><p>${escapeHtml(n.text)}</p></div>`}
               </div>`;
-            }).join('')
+            }).join(''); })()
           }
         </div>
 
@@ -2740,11 +2780,11 @@ function playerReportHtml(p){
         return `
         <div class="report-note">
           <div class="report-note-head">
-            <span class="report-note-type">${escapeHtml(ntype.label)}</span>
+            <span class="report-note-type">${ntype.v==='nivel' ? `${escapeHtml(ntype.label)}: ${escapeHtml(n.level||'—')}` : escapeHtml(ntype.label)}</span>
             <span class="report-note-date">${fmtDate(n.date)}</span>
             ${gameTagParts.length ? `<span class="report-note-tag">· ${gameTagParts.join(' · ')}</span>` : ''}
           </div>
-          <p>${escapeHtml(n.text)}</p>
+          <p>${ntype.v==='nivel' ? `Nível de urgência de observação atribuído neste jogo: ${escapeHtml(n.level||'—')}.` : escapeHtml(n.text)}</p>
         </div>`;
       }).join('');
   const statusClsMap = {approved:'ok', urgent:'urgent', follow:'follow', rejected:'rejected'};
@@ -2860,11 +2900,18 @@ async function updateStatus(id, v){
   await saveData();
   render();
 }
-async function updateUrgencyLevel(id, v){
+async function updateUrgencyLevel(id, v, gameId){
   const p = players.find(x=>x.id===id);
   if(!p) return;
-  if(p.urgencyLevel !== v) p.urgencyLevelChangedAt = Date.now();
-  p.urgencyLevel = v;
+  if(!p.notes) p.notes = [];
+  // um jogo só tem uma nota de nível por jogador — voltar a escolher outro nível no mesmo relatório atualiza-a em vez de duplicar
+  let note = p.notes.find(n => n.type==='nivel' && n.gameId === (gameId || null));
+  if(note){
+    note.level = v;
+    note.date = Date.now();
+  } else {
+    p.notes.push({id: uid(), date: Date.now(), type:'nivel', level: v, gameId: gameId || null});
+  }
   await saveData();
   render();
 }
