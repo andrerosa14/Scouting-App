@@ -560,6 +560,9 @@ let activeClubId = null;
 let urgentPanelExpanded = false;
 let expandedNoteIds = new Set();
 let shadowAddSearch = '';
+// rascunhos das notas de relatório de jogo ainda por guardar, para não se perderem quando o ecrã é re-desenhado
+// (ex: ao mudar o nível de urgência de observação a meio de escrever a nota) — chave: "<gameId>_<playerId>"
+let gameNoteDrafts = {};
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS.find(p=>p.v==='MC') || POSITIONS[0]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
@@ -2187,7 +2190,7 @@ function renderGameDetailHtml(g){
             })()}</div>
           </div>
           <div class="note-form">
-            <textarea id="gpn_${p.id}" placeholder="Escreve as tuas notas sobre ${escapeHtml(p.name)} neste jogo..."></textarea>
+            <textarea id="gpn_${p.id}" oninput="gameNoteDrafts['${g.id}_${p.id}']=this.value" placeholder="Escreve as tuas notas sobre ${escapeHtml(p.name)} neste jogo...">${escapeHtml(gameNoteDrafts[g.id+'_'+p.id] || '')}</textarea>
             <div class="note-form-actions">
               <button class="btn btn-primary" onclick="addGamePlayerNote('${g.id}','${p.id}')">Adicionar</button>
             </div>
@@ -2226,6 +2229,7 @@ async function addGamePlayerNote(gameId, playerId){
   if(!p.notes) p.notes = [];
   // as notas criadas a partir de um jogo ficam guardadas na ficha do jogador (tipo "Nota"), com referência ao jogo
   p.notes.push({id: uid(), date: Date.now(), text, type: 'nota', gameId});
+  delete gameNoteDrafts[gameId+'_'+playerId];
   await saveData();
   renderTabContent();
 }
