@@ -116,6 +116,32 @@
   .urgent-toggle{display:block;width:100%;text-align:center;padding:12px 20px;background:var(--pitch-panel-raise);border:none;border-top:1px solid var(--line-soft);color:var(--gold);font-size:13px;font-weight:600;}
   .urgent-toggle:hover{background:var(--line-soft);}
 
+  /* ---------- Nível de Urgência tab ---------- */
+  .lvltab-panel{width:100%;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .lvltab-filter-row{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap;}
+  .lvltab-filter-label{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-right:4px;}
+  .lvltab-filter-btn{border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 16px;border-radius:var(--radius);font-family:var(--font-display);font-weight:600;font-size:13px;}
+  .lvltab-filter-btn.active{background:var(--pitch-panel-raise);border-color:var(--gold-dim);color:var(--chalk);}
+  .lvltab-filter-btn.lvl-a.active{border-color:var(--status-approved);color:var(--status-approved);}
+  .lvltab-filter-btn.lvl-b.active{border-color:var(--status-urgent);color:var(--status-urgent);}
+  .lvltab-filter-btn.lvl-c.active{border-color:var(--status-follow);color:var(--status-follow);}
+  .lvltab-grid{display:grid;grid-template-columns:repeat(5, 1fr);gap:1px;background:var(--line-soft);}
+  .lvltab-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:16px 10px;background:var(--pitch-panel);border:none;cursor:pointer;color:inherit;font:inherit;}
+  .lvltab-card:hover{background:var(--pitch-panel-raise);}
+  .lvltab-card-avatar{width:48px;height:48px;border-radius:6px;background:var(--pitch-panel-raise);border:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--muted);overflow:hidden;}
+  .lvltab-card-avatar img{width:100%;height:100%;object-fit:cover;}
+  .lvltab-card-name{font-weight:600;font-size:13px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .lvltab-card-club{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+  .lvltab-card-birth{font-size:10px;color:var(--muted);opacity:.85;white-space:nowrap;}
+  .lvltab-card-meta{display:flex;align-items:center;gap:5px;margin-top:2px;}
+  .lvltab-card-lvl{width:18px;height:18px;border-radius:4px;color:#0d1f10;font-family:var(--font-display);font-weight:700;font-size:10.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .lvltab-card-lvl.lvl-a{background:var(--status-approved);}
+  .lvltab-card-lvl.lvl-b{background:var(--status-urgent);}
+  .lvltab-card-lvl.lvl-c{background:var(--status-follow);color:#2a2005;}
+  .lvltab-card-pos{background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:1px 5px;font-weight:600;color:var(--chalk);font-size:10px;}
+  .lvltab-card-time{font-size:10px;color:var(--muted);margin-top:1px;}
+  .lvltab-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
+
   /* ---------- home stats strip ---------- */
   .home-stats-wrap{max-width:1100px;margin:34px auto 0;padding:0 24px;}
   .home-stats-strip{display:flex;flex-wrap:wrap;gap:14px;}
@@ -556,6 +582,7 @@ let activeGameId = null;
 let activeShadowTeamId = null;
 let activeClubId = null;
 let urgentPanelExpanded = false;
+let urgencyLevelFilter = 'all'; // 'all' | 'A' | 'B' | 'C' — filtro do separador "Nível de Urgência"
 let expandedNoteIds = new Set();
 let shadowAddSearch = '';
 // rascunhos das notas de relatório de jogo ainda por guardar, para não se perderem quando o ecrã é re-desenhado
@@ -921,12 +948,14 @@ const TABS = [
   {v:'shortlists', label:'Shortlists', icon:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'},
   {v:'games', label:'Jogos', icon:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
   {v:'shadowteams', label:'Shadow Teams', icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.4" fill="currentColor" stroke="none"/>'},
+  {v:'urgencia', label:'Nível de Urgência', icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'},
 ];
 function headerPrimaryButtonHtml(){
   if(activeTab==='clubs') return `<button class="btn btn-ghost" onclick="seedTopDivisionClubs()">+ Clubes principais</button><button class="btn btn-ghost" onclick="seedNationalTeams()">+ Seleções principais</button><button class="btn btn-primary" onclick="openClubFormModal()">+ Novo Clube</button>`;
   if(activeTab==='shortlists') return `<button class="btn btn-primary" onclick="openShortlistFormModal()">+ Nova Shortlist</button>`;
   if(activeTab==='games') return `<button class="btn btn-primary" onclick="openGameFormModal()">+ Novo Jogo</button>`;
   if(activeTab==='shadowteams') return `<button class="btn btn-primary" onclick="openShadowTeamFormModal()">+ Nova Shadow Team</button>`;
+  if(activeTab==='urgencia') return '';
   return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
 }
 function switchTab(tab){
@@ -935,6 +964,7 @@ function switchTab(tab){
   activeGameId = null;
   activeShadowTeamId = null;
   activeClubId = null;
+  urgencyLevelFilter = 'all';
   renderMainShell();
 }
 function goHome(){
@@ -951,6 +981,7 @@ function tileCountLabel(tab){
   if(tab==='shortlists') return `${shortlists.length} lista${shortlists.length===1?'':'s'}`;
   if(tab==='games') return `${games.length} jogo${games.length===1?'':'s'}`;
   if(tab==='shadowteams') return `${shadowTeams.length} equipa${shadowTeams.length===1?'':'s'}`;
+  if(tab==='urgencia'){ const n = players.filter(p=>currentUrgencyLevel(p)).length; return `${n} jogador${n===1?'':'es'}`; }
   return '';
 }
 function homeTilesHtml(){
@@ -999,6 +1030,44 @@ function homeUrgentPanelHtml(){
       </div>
       ${cards}
       ${toggleBtn}
+    </div>`;
+}
+
+function setUrgencyLevelFilter(v){
+  urgencyLevelFilter = v;
+  renderTabContent();
+}
+// separador "Nível de Urgência" — todos os jogadores com A, B ou C atribuído, filtrável pelos três níveis
+function renderUrgencyLevelTabHtml(){
+  const allLeveled = players.filter(p => currentUrgencyLevel(p)).sort((a,b)=>a.name.localeCompare(b.name));
+  const shown = urgencyLevelFilter === 'all' ? allLeveled : allLeveled.filter(p => currentUrgencyLevel(p) === urgencyLevelFilter);
+  const filterBtns = [{v:'all', label:'Todos', cls:''}, {v:'A', label:'A', cls:'lvl-a'}, {v:'B', label:'B', cls:'lvl-b'}, {v:'C', label:'C', cls:'lvl-c'}]
+    .map(f=>`<button type="button" class="lvltab-filter-btn ${f.cls} ${urgencyLevelFilter===f.v?'active':''}" onclick="setUrgencyLevelFilter('${f.v}')">${f.label}</button>`).join('');
+  const grid = shown.length === 0
+    ? `<div class="lvltab-empty">${allLeveled.length===0 ? 'Ainda não há jogadores com nível de urgência atribuído.' : 'Nenhum jogador com este nível.'}</div>`
+    : `<div class="lvltab-grid">${shown.map(p => {
+        const pos = posInfo(p.position);
+        const club = clubInfo(p.clubId);
+        const age = calcAge(p.birthDate);
+        const lvl = currentUrgencyLevel(p);
+        const lvlCls = 'lvl-'+lvl.toLowerCase();
+        return `
+        <button class="lvltab-card" onclick="switchTab('players'); openDossier('${p.id}');">
+          <div class="lvltab-card-avatar">${p.photo ? `<img src="${p.photo}" alt="">` : `<span>${escapeHtml(initials(p.name))}</span>`}</div>
+          <div class="lvltab-card-name">${escapeHtml(p.name)}</div>
+          <div class="lvltab-card-club">${club ? escapeHtml(club.name) : 'Sem clube'}</div>
+          <div class="lvltab-card-birth">${p.birthDate ? `${fmtDateOnly(p.birthDate)}${age!==null?` (${age} anos)`:''}` : '—'}</div>
+          <div class="lvltab-card-meta"><span class="lvltab-card-lvl ${lvlCls}">${lvl}</span><span class="lvltab-card-pos">${pos.v}</span></div>
+          <div class="lvltab-card-time">${timeAgo(latestLevelNote(p) ? latestLevelNote(p).date : null)}</div>
+        </button>`;
+      }).join('')}</div>`;
+  return `
+    <div class="lvltab-panel">
+      <div class="lvltab-filter-row">
+        <span class="lvltab-filter-label">Filtrar:</span>
+        ${filterBtns}
+      </div>
+      ${grid}
     </div>`;
 }
 
@@ -1257,6 +1326,8 @@ function renderTabContent(){
     const activeShadowTeam = activeShadowTeamId ? shadowTeams.find(x=>x.id===activeShadowTeamId) : null;
     if(activeShadowTeamId && !activeShadowTeam) activeShadowTeamId = null;
     inner = activeShadowTeam ? renderShadowTeamDetailHtml(activeShadowTeam) : renderShadowTeamsTabHtml();
+  } else if(activeTab === 'urgencia'){
+    inner = renderUrgencyLevelTabHtml();
   } else {
     inner = `<div class="filters" id="filtersBar"></div><div id="listContainer"></div>`;
   }
