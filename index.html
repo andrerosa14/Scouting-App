@@ -155,16 +155,17 @@
   .ts-detail-sub{font-size:12px;color:var(--muted);margin-top:2px;}
   .ts-formation-tag{background:var(--pitch-panel-raise);border:1px solid var(--gold-dim);color:var(--gold);border-radius:12px;padding:3px 12px;font-size:12px;font-weight:600;font-family:var(--font-display);white-space:nowrap;}
 
-  .ts-teams-wrap{display:flex;gap:32px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
-  .ts-team-row{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
-  .ts-pitch-col{width:460px;flex-shrink:0;}
+  /* nowrap + scroll horizontal: as equipas ficam SEMPRE lado a lado, mesmo em ecrãs mais estreitos (nunca voltam a empilhar) */
+  .ts-teams-wrap{display:flex;gap:22px;align-items:flex-start;flex-wrap:nowrap;overflow-x:auto;overflow-y:visible;padding-bottom:26px;}
+  .ts-team-row{display:flex;gap:14px;align-items:flex-start;flex-wrap:nowrap;flex-shrink:0;}
+  .ts-pitch-col{width:400px;flex-shrink:0;}
   .ts-pitch-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
   .ts-pitch-col-title{font-family:var(--font-display);font-weight:600;font-size:15px;}
 
-  .ts-pitch-wrap{position:relative;width:100%;aspect-ratio:3/5;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .ts-pitch-wrap{position:relative;width:100%;aspect-ratio:3/5;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:visible;}
   .ts-pitch-lines{position:absolute;inset:0;width:100%;height:100%;}
-  .ts-slot{position:absolute;transform:translate(-50%,-50%);width:86px;display:flex;flex-direction:column;align-items:center;gap:2px;}
-  .ts-slot-badge{width:34px;height:34px;border-radius:50%;background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--chalk);}
+  .ts-slot{position:absolute;transform:translate(-50%,-50%);width:76px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .ts-slot-badge{width:30px;height:30px;border-radius:50%;background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--chalk);}
   .ts-slot.filled .ts-slot-badge{border-color:var(--status-approved);background:var(--status-approved);color:#0d1f10;}
   .ts-slot.oldest .ts-slot-badge{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
   .ts-slot.oldest .ts-slot-year{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
@@ -185,7 +186,7 @@
   .ts-slot.placeable .ts-slot-badge{border-style:dashed;border-color:var(--gold);animation:tsPulse 1.1s ease-in-out infinite;}
   @keyframes tsPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,154,68,.45);}50%{box-shadow:0 0 0 5px rgba(201,154,68,0);}}
 
-  .ts-pending-panel{width:240px;flex-shrink:0;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;align-self:stretch;display:flex;flex-direction:column;}
+  .ts-pending-panel{width:200px;flex-shrink:0;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;align-self:stretch;display:flex;flex-direction:column;}
   .ts-pending-title{font-family:var(--font-display);font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .ts-pending-count{font-size:11px;color:var(--gold);border:1px solid var(--gold-dim);border-radius:10px;padding:1px 8px;flex-shrink:0;}
   .ts-pending-paste{margin-bottom:10px;}
@@ -255,7 +256,7 @@
 
   /* ---------- shell / filters ---------- */
   .shell{max-width:1100px;margin:0 auto;padding:20px 24px 80px;}
-  .shell.shell-wide{max-width:1560px;}
+  .shell.shell-wide{max-width:1320px;}
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;padding:14px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);}
   .filters .label{font-size:12px;color:var(--muted);margin-right:2px;}
   .chip-group{display:flex;gap:6px;flex-wrap:wrap;}
