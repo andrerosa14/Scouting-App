@@ -158,22 +158,22 @@
   /* nowrap + scroll horizontal: as equipas ficam SEMPRE lado a lado, mesmo em ecrãs mais estreitos (nunca voltam a empilhar) */
   .ts-teams-wrap{display:flex;gap:22px;align-items:flex-start;flex-wrap:nowrap;overflow-x:auto;overflow-y:visible;padding-bottom:26px;}
   .ts-team-row{display:flex;gap:14px;align-items:flex-start;flex-wrap:nowrap;flex-shrink:0;}
-  .ts-pitch-col{width:400px;flex-shrink:0;}
+  .ts-pitch-col{width:520px;flex-shrink:0;}
   .ts-pitch-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
   .ts-pitch-col-title{font-family:var(--font-display);font-weight:600;font-size:15px;}
 
-  .ts-pitch-wrap{position:relative;width:100%;aspect-ratio:3/5;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:visible;}
+  .ts-pitch-wrap{position:relative;width:100%;aspect-ratio:3/5.6;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:visible;}
   .ts-pitch-lines{position:absolute;inset:0;width:100%;height:100%;}
-  .ts-slot{position:absolute;transform:translate(-50%,-50%);width:76px;display:flex;flex-direction:column;align-items:center;gap:2px;}
-  .ts-slot-badge{width:30px;height:30px;border-radius:50%;background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:var(--chalk);}
+  .ts-slot{position:absolute;transform:translate(-50%,-50%);width:92px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .ts-slot-badge{width:34px;height:34px;border-radius:50%;background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--chalk);}
   .ts-slot.filled .ts-slot-badge{border-color:var(--status-approved);background:var(--status-approved);color:#0d1f10;}
   .ts-slot.oldest .ts-slot-badge{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
   .ts-slot.oldest .ts-slot-year{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
-  .ts-slot-pos{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
-  .ts-slot-year{font-size:11px;font-weight:700;color:var(--chalk);background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:0 6px;line-height:17px;min-width:16px;text-align:center;}
+  .ts-slot-pos{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .ts-slot-year{font-size:12px;font-weight:700;color:var(--chalk);background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:0 7px;line-height:18px;min-width:18px;text-align:center;}
   .ts-slot-inputs{display:flex;gap:3px;margin-top:1px;}
-  .ts-slot-inputs input{width:32px;background:rgba(18,39,31,.9);border:1px solid var(--line);border-radius:3px;color:var(--chalk);font-size:11.5px;text-align:center;padding:2px 1px;}
-  .ts-slot-inputs input.ts-year-input{width:40px;}
+  .ts-slot-inputs input{width:36px;background:rgba(18,39,31,.9);border:1px solid var(--line);border-radius:3px;color:var(--chalk);font-size:12.5px;text-align:center;padding:2px 1px;}
+  .ts-slot-inputs input.ts-year-input{width:44px;}
   .ts-slot-actions{display:flex;align-items:center;gap:6px;margin-top:1px;}
   .ts-slot-note-btn{font-size:9.5px;color:var(--gold);background:none;border:none;padding:1px 3px;}
   .ts-slot-star-btn{font-size:11px;color:var(--gold-dim);background:none;border:none;padding:0 3px;line-height:1;}
@@ -256,7 +256,7 @@
 
   /* ---------- shell / filters ---------- */
   .shell{max-width:1100px;margin:0 auto;padding:20px 24px 80px;}
-  .shell.shell-wide{max-width:1320px;}
+  .shell.shell-wide{max-width:1560px;}
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;padding:14px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);}
   .filters .label{font-size:12px;color:var(--muted);margin-right:2px;}
   .chip-group{display:flex;gap:6px;flex-wrap:wrap;}
@@ -626,8 +626,8 @@ const TACTICAL_FORMATIONS = {
   ]},
   '352': {label:'3-5-2', slots:[
     {key:'gr', label:'GR', x:50, y:96}, {key:'dc1', label:'DC', x:70, y:76}, {key:'dc2', label:'DC', x:50, y:78},
-    {key:'dc3', label:'DC', x:30, y:76}, {key:'dd', label:'DD', x:90, y:50}, {key:'mc1', label:'MC', x:65, y:54},
-    {key:'mdc', label:'MDC', x:50, y:58}, {key:'mc2', label:'MC', x:35, y:54}, {key:'de', label:'DE', x:10, y:50},
+    {key:'dc3', label:'DC', x:30, y:76}, {key:'dd', label:'DD', x:90, y:50}, {key:'mc1', label:'MC', x:69, y:54},
+    {key:'mdc', label:'MDC', x:50, y:60}, {key:'mc2', label:'MC', x:31, y:54}, {key:'de', label:'DE', x:10, y:50},
     {key:'pl1', label:'PL', x:38, y:20}, {key:'pl2', label:'PL', x:62, y:20},
   ]},
   '343': {label:'3-4-3', slots:[
