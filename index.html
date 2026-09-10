@@ -157,25 +157,28 @@
 
   .ts-team-row{display:flex;gap:24px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
   .ts-team-row:last-of-type{margin-bottom:0;}
-  .ts-pitch-col{width:320px;flex-shrink:0;}
+  .ts-pitch-col{width:460px;flex-shrink:0;}
   .ts-pitch-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
   .ts-pitch-col-title{font-family:var(--font-display);font-weight:600;font-size:15px;}
 
-  .ts-pitch-wrap{position:relative;width:100%;aspect-ratio:2/3;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .ts-pitch-wrap{position:relative;width:100%;aspect-ratio:3/5;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
   .ts-pitch-lines{position:absolute;inset:0;width:100%;height:100%;}
-  .ts-slot{position:absolute;transform:translate(-50%,-50%);width:70px;display:flex;flex-direction:column;align-items:center;gap:2px;}
-  .ts-slot-badge{width:28px;height:28px;border-radius:50%;background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:11.5px;color:var(--chalk);}
+  .ts-slot{position:absolute;transform:translate(-50%,-50%);width:86px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .ts-slot-badge{width:34px;height:34px;border-radius:50%;background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--chalk);}
   .ts-slot.filled .ts-slot-badge{border-color:var(--status-approved);background:var(--status-approved);color:#0d1f10;}
   .ts-slot.oldest .ts-slot-badge{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
   .ts-slot.oldest .ts-slot-year{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
-  .ts-slot-pos{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
-  .ts-slot-year{font-size:9.5px;font-weight:700;color:var(--chalk);background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:0 5px;line-height:14px;min-width:14px;text-align:center;}
+  .ts-slot-pos{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .ts-slot-year{font-size:11px;font-weight:700;color:var(--chalk);background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:0 6px;line-height:17px;min-width:16px;text-align:center;}
   .ts-slot-inputs{display:flex;gap:3px;margin-top:1px;}
-  .ts-slot-inputs input{width:26px;background:rgba(18,39,31,.9);border:1px solid var(--line);border-radius:3px;color:var(--chalk);font-size:10.5px;text-align:center;padding:2px 1px;}
-  .ts-slot-inputs input.ts-year-input{width:34px;}
-  .ts-slot-note-btn{font-size:8.5px;color:var(--gold);background:none;border:none;padding:1px 4px;}
-  .ts-slot-note-box{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;width:130px;background:var(--pitch-panel-raise);border:1px solid var(--gold-dim);border-radius:4px;padding:6px;z-index:5;}
-  .ts-slot-note-box textarea{width:100%;height:46px;background:rgba(18,39,31,.9);border:1px solid var(--line);border-radius:3px;color:var(--chalk);font-size:10.5px;padding:4px;resize:none;}
+  .ts-slot-inputs input{width:32px;background:rgba(18,39,31,.9);border:1px solid var(--line);border-radius:3px;color:var(--chalk);font-size:11.5px;text-align:center;padding:2px 1px;}
+  .ts-slot-inputs input.ts-year-input{width:40px;}
+  .ts-slot-actions{display:flex;align-items:center;gap:6px;margin-top:1px;}
+  .ts-slot-note-btn{font-size:9.5px;color:var(--gold);background:none;border:none;padding:1px 3px;}
+  .ts-slot-star-btn{font-size:11px;color:var(--gold-dim);background:none;border:none;padding:0 3px;line-height:1;}
+  .ts-slot-star-btn.active{color:var(--status-follow);}
+  .ts-slot-note-box{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;width:140px;background:var(--pitch-panel-raise);border:1px solid var(--gold-dim);border-radius:4px;padding:6px;z-index:5;}
+  .ts-slot-note-box textarea{width:100%;height:48px;background:rgba(18,39,31,.9);border:1px solid var(--line);border-radius:3px;color:var(--chalk);font-size:11px;padding:4px;resize:none;}
   .ts-slot-note-has{color:var(--gold);}
   /* modo de colocação: quando há um jogador selecionado na lista "por colocar", as posições vazias ficam com contorno tracejado a pulsar */
   .ts-slot.placeable{cursor:pointer;}
@@ -602,38 +605,38 @@ const URGENCY_LEVELS = [
 // desenhado na vertical (y:92 perto da própria baliza, y:14-22 perto da baliza contrária)
 const TACTICAL_FORMATIONS = {
   '442': {label:'4-4-2', slots:[
-    {key:'gr', label:'GR', x:50, y:92}, {key:'dd', label:'DD', x:85, y:78}, {key:'dc1', label:'DC', x:62, y:80},
-    {key:'dc2', label:'DC', x:38, y:80}, {key:'de', label:'DE', x:15, y:78}, {key:'ed', label:'ME', x:85, y:52},
+    {key:'gr', label:'GR', x:50, y:96}, {key:'dd', label:'DD', x:85, y:74}, {key:'dc1', label:'DC', x:62, y:76},
+    {key:'dc2', label:'DC', x:38, y:76}, {key:'de', label:'DE', x:15, y:74}, {key:'ed', label:'ME', x:85, y:52},
     {key:'mc1', label:'MC', x:62, y:54}, {key:'mc2', label:'MC', x:38, y:54}, {key:'ee', label:'ME', x:15, y:52},
     {key:'pl1', label:'PL', x:38, y:20}, {key:'pl2', label:'PL', x:62, y:20},
   ]},
   '433': {label:'4-3-3', slots:[
-    {key:'gr', label:'GR', x:50, y:92}, {key:'dd', label:'DD', x:85, y:78}, {key:'dc1', label:'DC', x:62, y:80},
-    {key:'dc2', label:'DC', x:38, y:80}, {key:'de', label:'DE', x:15, y:78}, {key:'mdc', label:'MDC', x:50, y:58},
+    {key:'gr', label:'GR', x:50, y:96}, {key:'dd', label:'DD', x:85, y:74}, {key:'dc1', label:'DC', x:62, y:76},
+    {key:'dc2', label:'DC', x:38, y:76}, {key:'de', label:'DE', x:15, y:74}, {key:'mdc', label:'MDC', x:50, y:58},
     {key:'mc1', label:'MC', x:30, y:52}, {key:'mc2', label:'MC', x:70, y:52}, {key:'ee', label:'EE', x:15, y:22},
     {key:'pl', label:'PL', x:50, y:16}, {key:'ed', label:'ED', x:85, y:22},
   ]},
   '4231': {label:'4-2-3-1', slots:[
-    {key:'gr', label:'GR', x:50, y:92}, {key:'dd', label:'DD', x:85, y:78}, {key:'dc1', label:'DC', x:62, y:80},
-    {key:'dc2', label:'DC', x:38, y:80}, {key:'de', label:'DE', x:15, y:78}, {key:'mdc1', label:'MDC', x:38, y:60},
+    {key:'gr', label:'GR', x:50, y:96}, {key:'dd', label:'DD', x:85, y:74}, {key:'dc1', label:'DC', x:62, y:76},
+    {key:'dc2', label:'DC', x:38, y:76}, {key:'de', label:'DE', x:15, y:74}, {key:'mdc1', label:'MDC', x:38, y:60},
     {key:'mdc2', label:'MDC', x:62, y:60}, {key:'ee', label:'EE', x:15, y:36}, {key:'moc', label:'MOC', x:50, y:34},
     {key:'ed', label:'ED', x:85, y:36}, {key:'pl', label:'PL', x:50, y:14},
   ]},
   '352': {label:'3-5-2', slots:[
-    {key:'gr', label:'GR', x:50, y:92}, {key:'dc1', label:'DC', x:70, y:80}, {key:'dc2', label:'DC', x:50, y:82},
-    {key:'dc3', label:'DC', x:30, y:80}, {key:'dd', label:'DD', x:90, y:54}, {key:'mc1', label:'MC', x:65, y:54},
-    {key:'mdc', label:'MDC', x:50, y:58}, {key:'mc2', label:'MC', x:35, y:54}, {key:'de', label:'DE', x:10, y:54},
+    {key:'gr', label:'GR', x:50, y:96}, {key:'dc1', label:'DC', x:70, y:76}, {key:'dc2', label:'DC', x:50, y:78},
+    {key:'dc3', label:'DC', x:30, y:76}, {key:'dd', label:'DD', x:90, y:50}, {key:'mc1', label:'MC', x:65, y:54},
+    {key:'mdc', label:'MDC', x:50, y:58}, {key:'mc2', label:'MC', x:35, y:54}, {key:'de', label:'DE', x:10, y:50},
     {key:'pl1', label:'PL', x:38, y:20}, {key:'pl2', label:'PL', x:62, y:20},
   ]},
   '343': {label:'3-4-3', slots:[
-    {key:'gr', label:'GR', x:50, y:92}, {key:'dc1', label:'DC', x:70, y:80}, {key:'dc2', label:'DC', x:50, y:82},
-    {key:'dc3', label:'DC', x:30, y:80}, {key:'dd', label:'DD', x:88, y:54}, {key:'mc1', label:'MC', x:60, y:54},
-    {key:'mc2', label:'MC', x:40, y:54}, {key:'de', label:'DE', x:12, y:54}, {key:'ee', label:'EE', x:15, y:22},
+    {key:'gr', label:'GR', x:50, y:96}, {key:'dc1', label:'DC', x:70, y:76}, {key:'dc2', label:'DC', x:50, y:78},
+    {key:'dc3', label:'DC', x:30, y:76}, {key:'dd', label:'DD', x:88, y:50}, {key:'mc1', label:'MC', x:60, y:54},
+    {key:'mc2', label:'MC', x:40, y:54}, {key:'de', label:'DE', x:12, y:50}, {key:'ee', label:'EE', x:15, y:22},
     {key:'pl', label:'PL', x:50, y:16}, {key:'ed', label:'ED', x:85, y:22},
   ]},
   '532': {label:'5-3-2', slots:[
-    {key:'gr', label:'GR', x:50, y:92}, {key:'dd', label:'DD', x:90, y:76}, {key:'dc1', label:'DC', x:68, y:80},
-    {key:'dc2', label:'DC', x:50, y:82}, {key:'dc3', label:'DC', x:32, y:80}, {key:'de', label:'DE', x:10, y:76},
+    {key:'gr', label:'GR', x:50, y:96}, {key:'dd', label:'DD', x:90, y:72}, {key:'dc1', label:'DC', x:68, y:76},
+    {key:'dc2', label:'DC', x:50, y:78}, {key:'dc3', label:'DC', x:32, y:76}, {key:'de', label:'DE', x:10, y:72},
     {key:'mc1', label:'MC', x:30, y:52}, {key:'mdc', label:'MDC', x:50, y:56}, {key:'mc2', label:'MC', x:70, y:52},
     {key:'pl1', label:'PL', x:38, y:20}, {key:'pl2', label:'PL', x:62, y:20},
   ]},
@@ -2937,7 +2940,7 @@ function slotDomId(sheetId, teamIdx, slotKey){ return `tsslot_${sheetId}_${teamI
 function getOrCreateTacticalSlot(sheet, teamIdx, slotKey){
   const team = sheet.teams[teamIdx];
   if(!team.slots) team.slots = {};
-  if(!team.slots[slotKey]) team.slots[slotKey] = {number:'', birthYear:'', notes:''};
+  if(!team.slots[slotKey]) team.slots[slotKey] = {number:'', birthYear:'', notes:'', highlight:false};
   return team.slots[slotKey];
 }
 
@@ -2957,14 +2960,16 @@ function tacticalTeamMinYear(team){
 
 function tacticalSlotHtml(sheet, teamIdx, slotDef, minYear){
   const team = sheet.teams[teamIdx];
-  const slot = (team.slots||{})[slotDef.key] || {number:'', birthYear:'', notes:''};
+  const slot = (team.slots||{})[slotDef.key] || {number:'', birthYear:'', notes:'', highlight:false};
   const number = slot.number || '';
   const birthYear = slot.birthYear || '';
   const numTrim = number.trim();
   const yearTrim = birthYear.trim();
   const isFilled = !!(numTrim || yearTrim);
   const yNum = yearTrim ? parseInt(yearTrim, 10) : NaN;
-  const isOldest = minYear !== null && !isNaN(yNum) && yNum === minYear;
+  const isAutoOldest = minYear !== null && !isNaN(yNum) && yNum === minYear;
+  const isManualHighlight = !!slot.highlight;
+  const isHighlighted = isAutoOldest || isManualHighlight;
   const noteKey = `${sheet.id}_${teamIdx}_${slotDef.key}`;
   const noteOpen = tacticalNoteOpen.has(noteKey);
   const draftNotes = (noteKey in tacticalNoteDrafts) ? tacticalNoteDrafts[noteKey] : (slot.notes || '');
@@ -2972,7 +2977,7 @@ function tacticalSlotHtml(sheet, teamIdx, slotDef, minYear){
   // modo de colocação: se há um jogador selecionado na lista "por colocar" desta equipa, as posições vazias ficam clicáveis
   const isPlaceable = !isFilled && tacticalSelectedPending && tacticalSelectedPending.sheetId===sheet.id && tacticalSelectedPending.teamIdx===teamIdx;
   return `
-    <div class="ts-slot ${isFilled?'filled':''} ${isOldest?'oldest':''} ${isPlaceable?'placeable':''}" id="${slotDomId(sheet.id, teamIdx, slotDef.key)}" style="left:${slotDef.x}%;top:${slotDef.y}%;" onclick="tacticalSlotClick('${sheet.id}',${teamIdx},'${slotDef.key}')">
+    <div class="ts-slot ${isFilled?'filled':''} ${isHighlighted?'oldest':''} ${isPlaceable?'placeable':''}" id="${slotDomId(sheet.id, teamIdx, slotDef.key)}" style="left:${slotDef.x}%;top:${slotDef.y}%;" onclick="tacticalSlotClick('${sheet.id}',${teamIdx},'${slotDef.key}')">
       <div class="ts-slot-badge">${numTrim ? escapeHtml(numTrim) : '–'}</div>
       <div class="ts-slot-pos">${slotDef.label}</div>
       ${yearTrim ? `<div class="ts-slot-year">${escapeHtml(yearTrim)}</div>` : ''}
@@ -2980,9 +2985,21 @@ function tacticalSlotHtml(sheet, teamIdx, slotDef, minYear){
         <input type="text" placeholder="Nº" value="${escapeHtml(number)}" oninput="tacticalSlotUpdateNumber('${sheet.id}',${teamIdx},'${slotDef.key}',this.value)" onblur="saveData()">
         <input type="text" class="ts-year-input" placeholder="Ano" value="${escapeHtml(birthYear)}" oninput="tacticalSlotUpdateYear('${sheet.id}',${teamIdx},'${slotDef.key}',this.value)" onblur="saveData()">
       </div>
-      <button type="button" class="ts-slot-note-btn ${hasNotes?'ts-slot-note-has':''}" onclick="event.stopPropagation(); toggleTacticalNote('${sheet.id}',${teamIdx},'${slotDef.key}')">${hasNotes?'notas ✓':'+ nota'}</button>
+      <div class="ts-slot-actions">
+        <button type="button" class="ts-slot-note-btn ${hasNotes?'ts-slot-note-has':''}" onclick="event.stopPropagation(); toggleTacticalNote('${sheet.id}',${teamIdx},'${slotDef.key}')">${hasNotes?'notas ✓':'+ nota'}</button>
+        <button type="button" class="ts-slot-star-btn ${isManualHighlight?'active':''}" title="Destacar manualmente a amarelo" onclick="event.stopPropagation(); toggleTacticalManualHighlight('${sheet.id}',${teamIdx},'${slotDef.key}')">${isManualHighlight?'★':'☆'}</button>
+      </div>
       ${noteOpen ? `<div class="ts-slot-note-box" onclick="event.stopPropagation()"><textarea placeholder="Notas sobre este jogador..." oninput="tacticalNoteDrafts['${noteKey}']=this.value" onblur="tacticalSlotCommitNotes('${sheet.id}',${teamIdx},'${slotDef.key}')">${escapeHtml(draftNotes)}</textarea></div>` : ''}
     </div>`;
+}
+
+async function toggleTacticalManualHighlight(sheetId, teamIdx, slotKey){
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(!sheet) return;
+  const slot = getOrCreateTacticalSlot(sheet, teamIdx, slotKey);
+  slot.highlight = !slot.highlight;
+  await saveData();
+  renderTabContent();
 }
 
 /* ---- lista lateral "por colocar": jogadores com número+ano ainda não atribuídos a uma posição (ex: extraídos de uma foto) ---- */
@@ -3055,7 +3072,7 @@ function renderTacticalSheetDetailHtml(sheet){
     <div class="ts-legend">
       <span><span class="ts-legend-dot" style="background:var(--status-approved);"></span> posição preenchida</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);"></span> por preencher</span>
-      <span><span class="ts-legend-dot" style="background:var(--status-follow);"></span> ano de nascimento mais baixo (nesta equipa)</span>
+      <span><span class="ts-legend-dot" style="background:var(--status-follow);"></span> ano de nascimento mais baixo, ou destacado manualmente (☆)</span>
     </div>
   `;
 }
@@ -3179,9 +3196,10 @@ function refreshTacticalOldestHighlight(sheetId, teamIdx){
     const slot = (team.slots||{})[slotDef.key];
     const raw = slot && slot.birthYear ? slot.birthYear.trim() : '';
     const y = raw ? parseInt(raw, 10) : NaN;
-    const isOldest = minYear !== null && !isNaN(y) && y === minYear;
+    const isAutoOldest = minYear !== null && !isNaN(y) && y === minYear;
+    const isHighlighted = isAutoOldest || !!(slot && slot.highlight);
     const slotEl = document.getElementById(slotDomId(sheetId, teamIdx, slotDef.key));
-    if(slotEl) slotEl.classList.toggle('oldest', isOldest);
+    if(slotEl) slotEl.classList.toggle('oldest', isHighlighted);
   });
 }
 
