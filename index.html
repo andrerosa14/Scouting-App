@@ -2946,21 +2946,21 @@ function getOrCreateTacticalSlot(sheet, teamIdx, slotKey){
   return team.slots[slotKey];
 }
 
-// ano de nascimento mais baixo (jogador mais velho) desta equipa, calculado de forma independente por equipa/campo
-function tacticalTeamMinYear(team){
+// ano de nascimento mais alto (jogador mais novo) desta equipa, calculado de forma independente por equipa/campo
+function tacticalTeamMaxYear(team){
   const formation = TACTICAL_FORMATIONS[team.formation];
   if(!formation) return null;
-  let minYear = null;
+  let maxYear = null;
   formation.slots.forEach(slotDef=>{
     const slot = (team.slots||{})[slotDef.key];
     const raw = slot && slot.birthYear ? slot.birthYear.trim() : '';
     const y = raw ? parseInt(raw, 10) : NaN;
-    if(!isNaN(y) && (minYear === null || y < minYear)) minYear = y;
+    if(!isNaN(y) && (maxYear === null || y > maxYear)) maxYear = y;
   });
-  return minYear;
+  return maxYear;
 }
 
-function tacticalSlotHtml(sheet, teamIdx, slotDef, minYear){
+function tacticalSlotHtml(sheet, teamIdx, slotDef, maxYear){
   const team = sheet.teams[teamIdx];
   const slot = (team.slots||{})[slotDef.key] || {number:'', birthYear:'', notes:'', highlight:false};
   const number = slot.number || '';
@@ -2969,7 +2969,7 @@ function tacticalSlotHtml(sheet, teamIdx, slotDef, minYear){
   const yearTrim = birthYear.trim();
   const isFilled = !!(numTrim || yearTrim);
   const yNum = yearTrim ? parseInt(yearTrim, 10) : NaN;
-  const isAutoOldest = minYear !== null && !isNaN(yNum) && yNum === minYear;
+  const isAutoOldest = maxYear !== null && !isNaN(yNum) && yNum === maxYear;
   const isManualHighlight = !!slot.highlight;
   const isHighlighted = isAutoOldest || isManualHighlight;
   const noteKey = `${sheet.id}_${teamIdx}_${slotDef.key}`;
@@ -3031,7 +3031,7 @@ function tacticalPendingPanelHtml(sheet, team, teamIdx){
 
 function tacticalPitchColHtml(sheet, team, teamIdx){
   const formation = TACTICAL_FORMATIONS[team.formation] || TACTICAL_FORMATIONS['433'];
-  const minYear = tacticalTeamMinYear(team);
+  const maxYear = tacticalTeamMaxYear(team);
   return `
     <div class="ts-pitch-col">
       <div class="ts-pitch-col-head">
@@ -3048,7 +3048,7 @@ function tacticalPitchColHtml(sheet, team, teamIdx){
           <rect x="110" y="540" width="180" height="60" fill="none" stroke="#3a5c48" stroke-width="2"/>
           <rect x="0" y="0" width="400" height="600" fill="none" stroke="#3a5c48" stroke-width="2"/>
         </svg>
-        ${formation.slots.map(slotDef=>tacticalSlotHtml(sheet, teamIdx, slotDef, minYear)).join('')}
+        ${formation.slots.map(slotDef=>tacticalSlotHtml(sheet, teamIdx, slotDef, maxYear)).join('')}
       </div>
     </div>`;
 }
@@ -3076,7 +3076,7 @@ function renderTacticalSheetDetailHtml(sheet){
     <div class="ts-legend">
       <span><span class="ts-legend-dot" style="background:var(--status-approved);"></span> posição preenchida</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);"></span> por preencher</span>
-      <span><span class="ts-legend-dot" style="background:var(--status-follow);"></span> ano de nascimento mais baixo, ou destacado manualmente (☆)</span>
+      <span><span class="ts-legend-dot" style="background:var(--status-follow);"></span> ano de nascimento mais alto (jogador mais novo), ou destacado manualmente (☆)</span>
     </div>
   `;
 }
@@ -3195,12 +3195,12 @@ function refreshTacticalOldestHighlight(sheetId, teamIdx){
   if(!team) return;
   const formation = TACTICAL_FORMATIONS[team.formation];
   if(!formation) return;
-  const minYear = tacticalTeamMinYear(team);
+  const maxYear = tacticalTeamMaxYear(team);
   formation.slots.forEach(slotDef=>{
     const slot = (team.slots||{})[slotDef.key];
     const raw = slot && slot.birthYear ? slot.birthYear.trim() : '';
     const y = raw ? parseInt(raw, 10) : NaN;
-    const isAutoOldest = minYear !== null && !isNaN(y) && y === minYear;
+    const isAutoOldest = maxYear !== null && !isNaN(y) && y === maxYear;
     const isHighlighted = isAutoOldest || !!(slot && slot.highlight);
     const slotEl = document.getElementById(slotDomId(sheetId, teamIdx, slotDef.key));
     if(slotEl) slotEl.classList.toggle('oldest', isHighlighted);
