@@ -155,8 +155,8 @@
   .ts-detail-sub{font-size:12px;color:var(--muted);margin-top:2px;}
   .ts-formation-tag{background:var(--pitch-panel-raise);border:1px solid var(--gold-dim);color:var(--gold);border-radius:12px;padding:3px 12px;font-size:12px;font-weight:600;font-family:var(--font-display);white-space:nowrap;}
 
-  .ts-team-row{display:flex;gap:24px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-bottom:28px;}
-  .ts-team-row:last-of-type{margin-bottom:0;}
+  .ts-teams-wrap{display:flex;gap:32px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+  .ts-team-row{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
   .ts-pitch-col{width:460px;flex-shrink:0;}
   .ts-pitch-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
   .ts-pitch-col-title{font-family:var(--font-display);font-weight:600;font-size:15px;}
@@ -255,6 +255,7 @@
 
   /* ---------- shell / filters ---------- */
   .shell{max-width:1100px;margin:0 auto;padding:20px 24px 80px;}
+  .shell.shell-wide{max-width:1560px;}
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;padding:14px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);}
   .filters .label{font-size:12px;color:var(--muted);margin-right:2px;}
   .chip-group{display:flex;gap:6px;flex-wrap:wrap;}
@@ -1396,7 +1397,7 @@ function renderMainShell(){
     <div class="section-back-bar">
       <button class="btn btn-ghost" onclick="goHome()">← Início</button>
     </div>
-    <div class="shell">
+    <div class="shell ${activeTab==='tatico' ? 'shell-wide' : ''}">
       <div id="tabContent" class="tab-fade"></div>
     </div>` : `
     <div class="home-wrap tab-fade">
@@ -3064,11 +3065,13 @@ function renderTacticalSheetDetailHtml(sheet){
         <button class="btn btn-ghost" onclick="removeTacticalSheet('${sheet.id}')">Eliminar</button>
       </div>
     </div>
-    ${sheet.teams.map((t,idx)=>`
-    <div class="ts-team-row">
-      ${tacticalPitchColHtml(sheet,t,idx)}
-      ${tacticalPendingPanelHtml(sheet,t,idx)}
-    </div>`).join('')}
+    <div class="ts-teams-wrap">
+      ${sheet.teams.map((t,idx)=>`
+      <div class="ts-team-row">
+        ${tacticalPitchColHtml(sheet,t,idx)}
+        ${tacticalPendingPanelHtml(sheet,t,idx)}
+      </div>`).join('')}
+    </div>
     <div class="ts-legend">
       <span><span class="ts-legend-dot" style="background:var(--status-approved);"></span> posição preenchida</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);"></span> por preencher</span>
