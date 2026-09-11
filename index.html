@@ -186,7 +186,7 @@
   .ts-slot.placeable .ts-slot-badge{border-style:dashed;border-color:var(--gold);animation:tsPulse 1.1s ease-in-out infinite;}
   @keyframes tsPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,154,68,.45);}50%{box-shadow:0 0 0 5px rgba(201,154,68,0);}}
 
-  .ts-pending-panel{width:200px;flex-shrink:0;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;align-self:stretch;display:flex;flex-direction:column;}
+  .ts-pending-panel{width:230px;flex-shrink:0;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;align-self:stretch;display:flex;flex-direction:column;}
   .ts-pending-title{font-family:var(--font-display);font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .ts-pending-count{font-size:11px;color:var(--gold);border:1px solid var(--gold-dim);border-radius:10px;padding:1px 8px;flex-shrink:0;}
   .ts-pending-paste{margin-bottom:10px;}
@@ -194,11 +194,21 @@
   .ts-pending-paste-hint{font-size:10.5px;color:var(--muted);margin:4px 0 8px;}
   .ts-pending-paste-btn{width:100%;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);border-radius:var(--radius);padding:7px;font-size:12px;font-weight:600;}
   .ts-pending-paste-btn:hover{background:var(--pitch-panel-raise);}
-  .ts-pending-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
-  .ts-pending-chip{display:flex;align-items:center;gap:6px;background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:14px;padding:5px 6px 5px 10px;font-size:12px;font-weight:600;cursor:pointer;}
+  /* cada suplente/jogador por colocar é agora um pequeno cartão (não só um pill), para caber nota + destaque manual */
+  .ts-pending-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+  .ts-pending-chip{background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:8px;padding:7px 8px;}
   .ts-pending-chip:hover{border-color:var(--gold-dim);}
-  .ts-pending-chip.selected{background:var(--gold);border-color:var(--gold);color:#241a06;}
-  .ts-pending-chip-x{width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;}
+  .ts-pending-chip.selected{background:var(--gold);border-color:var(--gold);}
+  .ts-pending-chip.selected .ts-pending-chip-num,.ts-pending-chip.selected .ts-pending-chip-year{color:#241a06;}
+  .ts-pending-chip-main{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;}
+  .ts-pending-chip-id{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;}
+  .ts-pending-chip-num{color:var(--chalk);}
+  .ts-pending-chip-year{font-size:11px;font-weight:700;color:var(--chalk);background:var(--pitch-panel);border:1px solid var(--line-soft);border-radius:3px;padding:1px 6px;}
+  .ts-pending-chip.highlighted .ts-pending-chip-year{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
+  .ts-pending-chip-x{width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0;}
+  .ts-pending-chip-actions{display:flex;align-items:center;gap:8px;margin-top:5px;}
+  .ts-pending-note-box{margin-top:6px;}
+  .ts-pending-note-box textarea{width:100%;height:64px;background:rgba(18,39,31,.9);border:1px solid var(--line);border-radius:3px;color:var(--chalk);font-size:11.5px;padding:5px;resize:vertical;}
   .ts-pending-empty{font-size:11.5px;color:var(--muted);text-align:center;padding:14px 4px;}
   .ts-pending-hint{margin-top:12px;background:rgba(201,154,68,.12);border:1px solid var(--gold-dim);border-radius:var(--radius);padding:8px 10px;font-size:11.5px;color:var(--gold);}
 
@@ -647,7 +657,7 @@ const TACTICAL_FORMATIONS = {
 const NATIONAL_TEAM_SEEDS = [
   'Portugal','Espanha','França','Alemanha','Itália','Inglaterra','Países Baixos','Bélgica',
   'Croácia','Sérvia','Polónia','Suíça','Áustria','Dinamarca','Suécia','Ucrânia','Turquia',
-  'Escócia','República Checa','Hungria',
+  'Escócia','República Checa','Hungria','Eslovénia',
   'Brasil','Argentina','Uruguai','Colômbia','Chile','Equador','Paraguai','Peru','Venezuela','Bolívia',
   'Marrocos','Senegal','Nigéria','Egito','Argélia','Tunísia','Costa do Marfim','Camarões','Gana','África do Sul','Mali','Cabo Verde',
 ];
@@ -705,6 +715,10 @@ let tacticalNoteDrafts = {};
 // jogador da lista "por colocar" atualmente selecionado numa folha tática (à espera de um clique numa posição vazia)
 // {sheetId, teamIdx, pendingId} ou null
 let tacticalSelectedPending = null;
+// jogadores da lista "por colocar"/suplentes com a caixa de nota aberta — chave "sheetId_teamIdx_pendingId"
+let tacticalPendingNoteOpen = new Set();
+// rascunhos das notas dos suplentes ainda por guardar, para não se perderem em re-renders — mesma chave
+let tacticalPendingNoteDrafts = {};
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS.find(p=>p.v==='MC') || POSITIONS[0]; }
 function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
@@ -2932,6 +2946,8 @@ async function removeTacticalSheet(id){
   const prefix = id+'_';
   Object.keys(tacticalNoteDrafts).forEach(k=>{ if(k.startsWith(prefix)) delete tacticalNoteDrafts[k]; });
   Array.from(tacticalNoteOpen).forEach(k=>{ if(k.startsWith(prefix)) tacticalNoteOpen.delete(k); });
+  Object.keys(tacticalPendingNoteDrafts).forEach(k=>{ if(k.startsWith(prefix)) delete tacticalPendingNoteDrafts[k]; });
+  Array.from(tacticalPendingNoteOpen).forEach(k=>{ if(k.startsWith(prefix)) tacticalPendingNoteOpen.delete(k); });
   await saveData();
   renderMainShell();
 }
@@ -3009,7 +3025,22 @@ function tacticalPendingPanelHtml(sheet, team, teamIdx){
   const pending = team.pending || [];
   const chipsHtml = pending.map(p=>{
     const isSelected = !!(tacticalSelectedPending && tacticalSelectedPending.sheetId===sheet.id && tacticalSelectedPending.teamIdx===teamIdx && tacticalSelectedPending.pendingId===p.id);
-    return `<div class="ts-pending-chip ${isSelected?'selected':''}" onclick="selectTacticalPending('${sheet.id}',${teamIdx},'${p.id}')">${escapeHtml(p.number)} · ${escapeHtml(p.birthYear)}<span class="ts-pending-chip-x" onclick="event.stopPropagation(); removeTacticalPendingChip('${sheet.id}',${teamIdx},'${p.id}')">×</span></div>`;
+    const isHighlighted = !!p.highlight;
+    const hasNotes = !!(p.notes && p.notes.trim());
+    const noteKey = `${sheet.id}_${teamIdx}_${p.id}`;
+    const noteOpen = tacticalPendingNoteOpen.has(noteKey);
+    const draftNotes = (noteKey in tacticalPendingNoteDrafts) ? tacticalPendingNoteDrafts[noteKey] : (p.notes || '');
+    return `<div class="ts-pending-chip ${isSelected?'selected':''} ${isHighlighted?'highlighted':''}" data-pending-id="${p.id}">
+      <div class="ts-pending-chip-main" onclick="selectTacticalPending('${sheet.id}',${teamIdx},'${p.id}')">
+        <div class="ts-pending-chip-id"><span class="ts-pending-chip-num">${escapeHtml(p.number)}</span><span class="ts-pending-chip-year">${escapeHtml(p.birthYear)}</span></div>
+        <span class="ts-pending-chip-x" onclick="event.stopPropagation(); removeTacticalPendingChip('${sheet.id}',${teamIdx},'${p.id}')">×</span>
+      </div>
+      <div class="ts-pending-chip-actions">
+        <button type="button" class="ts-slot-note-btn ${hasNotes?'ts-slot-note-has':''}" onclick="event.stopPropagation(); toggleTacticalPendingNote('${sheet.id}',${teamIdx},'${p.id}')">${hasNotes?'notas ✓':'+ nota'}</button>
+        <button type="button" class="ts-slot-star-btn ${isHighlighted?'active':''}" title="Destacar manualmente a amarelo" onclick="event.stopPropagation(); toggleTacticalPendingHighlight('${sheet.id}',${teamIdx},'${p.id}')">${isHighlighted?'★':'☆'}</button>
+      </div>
+      ${noteOpen ? `<div class="ts-pending-note-box" onclick="event.stopPropagation()"><textarea placeholder="Notas sobre este suplente..." oninput="tacticalPendingNoteDrafts['${noteKey}']=this.value" onblur="tacticalPendingCommitNotes('${sheet.id}',${teamIdx},'${p.id}')">${escapeHtml(draftNotes)}</textarea></div>` : ''}
+    </div>`;
   }).join('');
   const selectedHere = (tacticalSelectedPending && tacticalSelectedPending.sheetId===sheet.id && tacticalSelectedPending.teamIdx===teamIdx)
     ? pending.find(p=>p.id===tacticalSelectedPending.pendingId) : null;
@@ -3095,7 +3126,7 @@ async function parseTacticalPendingList(sheetId, teamIdx){
     // aceita formatos como "22 2007", "22-2007", "22, 2007", "22 · 2007"
     const m = line.match(/(\d+)\D+(\d{4})/);
     if(m){
-      team.pending.push({id: uid(), number: m[1], birthYear: m[2]});
+      team.pending.push({id: uid(), number: m[1], birthYear: m[2], notes:'', highlight:false});
       added++;
     }
   });
@@ -3122,6 +3153,41 @@ async function removeTacticalPendingChip(sheetId, teamIdx, pendingId){
   if(tacticalSelectedPending && tacticalSelectedPending.sheetId===sheetId && tacticalSelectedPending.teamIdx===teamIdx && tacticalSelectedPending.pendingId===pendingId){
     tacticalSelectedPending = null;
   }
+  const noteKey = `${sheetId}_${teamIdx}_${pendingId}`;
+  delete tacticalPendingNoteDrafts[noteKey];
+  tacticalPendingNoteOpen.delete(noteKey);
+  await saveData();
+  renderTabContent();
+}
+
+function toggleTacticalPendingNote(sheetId, teamIdx, pendingId){
+  const key = `${sheetId}_${teamIdx}_${pendingId}`;
+  if(tacticalPendingNoteOpen.has(key)) tacticalPendingNoteOpen.delete(key); else tacticalPendingNoteOpen.add(key);
+  renderTabContent();
+}
+
+async function tacticalPendingCommitNotes(sheetId, teamIdx, pendingId){
+  const key = `${sheetId}_${teamIdx}_${pendingId}`;
+  if(!(key in tacticalPendingNoteDrafts)) return;
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  const p = sheet && sheet.teams[teamIdx] && (sheet.teams[teamIdx].pending||[]).find(x=>x.id===pendingId);
+  if(p) p.notes = tacticalPendingNoteDrafts[key];
+  delete tacticalPendingNoteDrafts[key];
+  const btn = document.querySelector(`[data-pending-id="${pendingId}"] .ts-slot-note-btn`);
+  if(btn && p){
+    const has = p.notes && p.notes.trim();
+    btn.textContent = has ? 'notas ✓' : '+ nota';
+    btn.classList.toggle('ts-slot-note-has', !!has);
+  }
+  await saveData();
+}
+
+async function toggleTacticalPendingHighlight(sheetId, teamIdx, pendingId){
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(!sheet) return;
+  const p = (sheet.teams[teamIdx] && sheet.teams[teamIdx].pending || []).find(x=>x.id===pendingId);
+  if(!p) return;
+  p.highlight = !p.highlight;
   await saveData();
   renderTabContent();
 }
