@@ -168,6 +168,9 @@
   .ts-slot-badge{width:34px;height:34px;border-radius:50%;background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:13.5px;color:var(--chalk);}
   .ts-slot.filled .ts-slot-badge{border-color:var(--status-approved);background:var(--status-approved);color:#0d1f10;}
   .ts-slot.oldest .ts-slot-badge{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
+  /* jogador com notas escritas: anel verde fluorescente à volta do número da camisola (funciona em conjunto com qualquer outro estado do slot) */
+  .ts-slot-badge.has-notes{box-shadow:0 0 0 3px #39ff14, 0 0 8px 1px rgba(57,255,20,.65);}
+  .ts-pending-chip-num.has-notes{border-radius:10px;padding:1px 6px;box-shadow:0 0 0 2px #39ff14, 0 0 6px 1px rgba(57,255,20,.65);}
   .ts-slot.oldest .ts-slot-year{border-color:var(--status-follow);background:var(--status-follow);color:#2a2005;}
   .ts-slot-pos{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
   .ts-slot-year{font-size:12px;font-weight:700;color:var(--chalk);background:var(--pitch-panel-raise);border:1px solid var(--line-soft);border-radius:3px;padding:0 7px;line-height:18px;min-width:18px;text-align:center;}
@@ -192,8 +195,9 @@
   .ts-pending-paste{margin-bottom:10px;}
   .ts-pending-paste textarea{width:100%;height:56px;background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);color:var(--chalk);font-size:12px;padding:7px 8px;resize:none;}
   .ts-pending-paste-hint{font-size:10.5px;color:var(--muted);margin:4px 0 8px;}
-  .ts-pending-paste-btn{width:100%;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);border-radius:var(--radius);padding:7px;font-size:12px;font-weight:600;}
+  .ts-pending-paste-btn{width:100%;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);border-radius:var(--radius);padding:7px;font-size:12px;font-weight:600;margin-bottom:4px;}
   .ts-pending-paste-btn:hover{background:var(--pitch-panel-raise);}
+  .ts-pending-paste-btn-alt{border-style:dashed;}
   /* cada suplente/jogador por colocar é agora um pequeno cartão (não só um pill), para caber nota + destaque manual */
   .ts-pending-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
   .ts-pending-chip{background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:8px;padding:7px 8px;}
@@ -2996,7 +3000,7 @@ function tacticalSlotHtml(sheet, teamIdx, slotDef, maxYear){
   const isPlaceable = !isFilled && tacticalSelectedPending && tacticalSelectedPending.sheetId===sheet.id && tacticalSelectedPending.teamIdx===teamIdx;
   return `
     <div class="ts-slot ${isFilled?'filled':''} ${isHighlighted?'oldest':''} ${isPlaceable?'placeable':''}" id="${slotDomId(sheet.id, teamIdx, slotDef.key)}" style="left:${slotDef.x}%;top:${slotDef.y}%;" onclick="tacticalSlotClick('${sheet.id}',${teamIdx},'${slotDef.key}')">
-      <div class="ts-slot-badge">${numTrim ? escapeHtml(numTrim) : '–'}</div>
+      <div class="ts-slot-badge ${hasNotes?'has-notes':''}">${numTrim ? escapeHtml(numTrim) : '–'}</div>
       <div class="ts-slot-pos">${slotDef.label}</div>
       ${yearTrim ? `<div class="ts-slot-year">${escapeHtml(yearTrim)}</div>` : ''}
       <div class="ts-slot-inputs">
@@ -3032,7 +3036,7 @@ function tacticalPendingPanelHtml(sheet, team, teamIdx){
     const draftNotes = (noteKey in tacticalPendingNoteDrafts) ? tacticalPendingNoteDrafts[noteKey] : (p.notes || '');
     return `<div class="ts-pending-chip ${isSelected?'selected':''} ${isHighlighted?'highlighted':''}" data-pending-id="${p.id}">
       <div class="ts-pending-chip-main" onclick="selectTacticalPending('${sheet.id}',${teamIdx},'${p.id}')">
-        <div class="ts-pending-chip-id"><span class="ts-pending-chip-num">${escapeHtml(p.number)}</span><span class="ts-pending-chip-year">${escapeHtml(p.birthYear)}</span></div>
+        <div class="ts-pending-chip-id"><span class="ts-pending-chip-num ${hasNotes?'has-notes':''}">${escapeHtml(p.number)}</span><span class="ts-pending-chip-year">${escapeHtml(p.birthYear)}</span></div>
         <span class="ts-pending-chip-x" onclick="event.stopPropagation(); removeTacticalPendingChip('${sheet.id}',${teamIdx},'${p.id}')">×</span>
       </div>
       <div class="ts-pending-chip-actions">
@@ -3052,6 +3056,8 @@ function tacticalPendingPanelHtml(sheet, team, teamIdx){
         <textarea id="tsPendingPaste_${sheet.id}_${teamIdx}" placeholder="Cola aqui a lista (um por linha: número e ano)&#10;ex: 22 2007&#10;2 2006"></textarea>
         <div class="ts-pending-paste-hint">Um jogador por linha: número, espaço, ano.</div>
         <button type="button" class="ts-pending-paste-btn" onclick="parseTacticalPendingList('${sheet.id}',${teamIdx})">Processar lista</button>
+        <button type="button" class="ts-pending-paste-btn ts-pending-paste-btn-alt" onclick="placeTacticalPendingByFormationOrder('${sheet.id}',${teamIdx})">Colocar pela ordem da formação</button>
+        <div class="ts-pending-paste-hint">"Colocar pela ordem da formação": a 1ª linha vai para o GR, e as seguintes pela ordem do sistema tático (defesas → médios → avançados). O que sobrar fica aqui como suplente.</div>
       </div>
       ${pending.length === 0
         ? `<div class="ts-pending-empty">Sem jogadores por colocar. Cola a lista acima (ex: a partir de uma foto da ficha de equipa) e clica em "Processar lista".</div>`
@@ -3108,6 +3114,7 @@ function renderTacticalSheetDetailHtml(sheet){
       <span><span class="ts-legend-dot" style="background:var(--status-approved);"></span> posição preenchida</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);"></span> por preencher</span>
       <span><span class="ts-legend-dot" style="background:var(--status-follow);"></span> ano de nascimento mais alto (jogador mais novo), ou destacado manualmente (☆)</span>
+      <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid #39ff14;box-shadow:0 0 4px 1px rgba(57,255,20,.65);"></span> jogador com notas escritas</span>
     </div>
   `;
 }
@@ -3133,6 +3140,58 @@ async function parseTacticalPendingList(sheetId, teamIdx){
   if(added === 0){ showToast('Não consegui reconhecer nenhuma linha. Usa o formato "número ano", um jogador por linha.'); return; }
   await saveData();
   renderTabContent();
+}
+
+// cola uma lista já pela ordem do sistema tático (1ª linha = GR, seguintes pela ordem de TACTICAL_FORMATIONS: defesas, médios, avançados)
+// e coloca cada jogador diretamente na posição certa do campo, sem precisar de clique manual; o que sobrar (ex: suplentes) vai para "por colocar"
+async function placeTacticalPendingByFormationOrder(sheetId, teamIdx){
+  const ta = document.getElementById(`tsPendingPaste_${sheetId}_${teamIdx}`);
+  if(!ta) return;
+  const lines = ta.value.split('\n').map(l=>l.trim()).filter(Boolean);
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(!sheet) return;
+  const team = sheet.teams[teamIdx];
+  if(!team) return;
+  const formation = TACTICAL_FORMATIONS[team.formation];
+  if(!formation) return;
+  const parsed = [];
+  lines.forEach(line=>{
+    // aceita formatos como "1 GR B. hall ('07)", "22 2007", "22-2007" — usa só o primeiro número e o ano de 4 dígitos da linha
+    const m = line.match(/(\d+)\D+(\d{4}|'?\d{2})\b/);
+    if(m){
+      let year = m[2].replace("'", '');
+      if(year.length === 2) year = (parseInt(year,10) > 50 ? '19' : '20') + year;
+      parsed.push({number: m[1], birthYear: year});
+    }
+  });
+  if(parsed.length === 0){ showToast('Não consegui reconhecer nenhuma linha. Usa o formato "número ano" (ou "número posição nome (ano)"), um jogador por linha.'); return; }
+
+  if(!team.slots) team.slots = {};
+  const slotCount = formation.slots.length;
+  const toPlace = parsed.slice(0, slotCount);
+  const overflow = parsed.slice(slotCount);
+
+  const alreadyFilled = formation.slots.some((slotDef,i)=> i < toPlace.length && team.slots[slotDef.key] && (team.slots[slotDef.key].number||'').trim());
+  if(alreadyFilled && !confirm('Já há jogadores nalgumas posições desta equipa. Queres substituí-los pelos da lista colada (pela ordem da formação)?')) return;
+
+  formation.slots.forEach((slotDef, i)=>{
+    if(i >= toPlace.length) return;
+    const existing = team.slots[slotDef.key];
+    team.slots[slotDef.key] = {
+      number: toPlace[i].number,
+      birthYear: toPlace[i].birthYear,
+      notes: (existing && existing.notes) || '',
+      highlight: (existing && existing.highlight) || false,
+    };
+  });
+
+  if(!team.pending) team.pending = [];
+  overflow.forEach(p=>{ team.pending.push({id: uid(), number: p.number, birthYear: p.birthYear, notes:'', highlight:false}); });
+
+  tacticalSelectedPending = null;
+  await saveData();
+  renderTabContent();
+  showToast(`${toPlace.length} jogador(es) colocado(s) no campo${overflow.length ? `, ${overflow.length} suplente(s) adicionado(s)` : ''}.`);
 }
 
 function selectTacticalPending(sheetId, teamIdx, pendingId){
@@ -3173,11 +3232,14 @@ async function tacticalPendingCommitNotes(sheetId, teamIdx, pendingId){
   const p = sheet && sheet.teams[teamIdx] && (sheet.teams[teamIdx].pending||[]).find(x=>x.id===pendingId);
   if(p) p.notes = tacticalPendingNoteDrafts[key];
   delete tacticalPendingNoteDrafts[key];
-  const btn = document.querySelector(`[data-pending-id="${pendingId}"] .ts-slot-note-btn`);
+  const chipEl = document.querySelector(`[data-pending-id="${pendingId}"]`);
+  const btn = chipEl && chipEl.querySelector('.ts-slot-note-btn');
   if(btn && p){
     const has = p.notes && p.notes.trim();
     btn.textContent = has ? 'notas ✓' : '+ nota';
     btn.classList.toggle('ts-slot-note-has', !!has);
+    const numEl = chipEl.querySelector('.ts-pending-chip-num');
+    if(numEl) numEl.classList.toggle('has-notes', !!has);
   }
   await saveData();
 }
@@ -3288,11 +3350,14 @@ async function tacticalSlotCommitNotes(sheetId, teamIdx, slotKey){
     slot.notes = tacticalNoteDrafts[key];
   }
   delete tacticalNoteDrafts[key];
-  const btn = document.querySelector(`#${slotDomId(sheetId, teamIdx, slotKey)} .ts-slot-note-btn`);
+  const slotEl = document.getElementById(slotDomId(sheetId, teamIdx, slotKey));
+  const btn = slotEl && slotEl.querySelector('.ts-slot-note-btn');
   if(btn){
     const has = sheet && sheet.teams[teamIdx].slots[slotKey] && sheet.teams[teamIdx].slots[slotKey].notes.trim();
     btn.textContent = has ? 'notas ✓' : '+ nota';
     btn.classList.toggle('ts-slot-note-has', !!has);
+    const badgeEl = slotEl.querySelector('.ts-slot-badge');
+    if(badgeEl) badgeEl.classList.toggle('has-notes', !!has);
   }
   await saveData();
 }
