@@ -603,6 +603,19 @@
     .basic-grid{grid-template-columns:1fr 1fr;}
     .header-inner{align-items:flex-start;}
     .search-box input{width:150px;}
+    /* a caixa de nota dos suplentes fica ancorada ao cartão que a abre, o que em telemóvel a empurra
+       para fora do ecrã perto das margens; em ecrãs estreitos passa a abrir centrada e fixa */
+    .ts-pending-note-box{
+      position:fixed !important;
+      top:50% !important; left:50% !important; right:auto !important; bottom:auto !important;
+      transform:translate(-50%,-50%) !important;
+      margin-top:0 !important;
+      width:min(90vw, 320px) !important;
+      max-height:72vh;
+      overflow-y:auto;
+      z-index:30;
+      box-shadow:0 10px 34px rgba(0,0,0,.6);
+    }
   }
 </style>
 </head>
@@ -754,6 +767,10 @@ let tacticalNoteDrafts = {};
 let tacticalSelectedPending = null;
 // posição titular atualmente "levantada" para mover/trocar — {sheetId, teamIdx, slotKey} ou null
 let tacticalSelectedStarter = null;
+// em telemóvel, a nota de uma posição do campo abre num modal em vez da caixa ancorada ao próprio
+// campo (essa caixa fica presa ao elemento da posição, que tem "transform" para se centrar no
+// campo — isso impede-a de se posicionar fixa/centrada no ecrã, ficando cortada nas margens)
+let tsMobileNoteTarget = null; // {sheetId, teamIdx, slotKey} ou null
 // jogadores da lista "por colocar"/suplentes com a caixa de nota aberta — chave "sheetId_teamIdx_pendingId"
 let tacticalPendingNoteOpen = new Set();
 // rascunhos das notas dos suplentes ainda por guardar, para não se perderem em re-renders — mesma chave
@@ -1901,7 +1918,7 @@ function renderPlayerCardsHtml(list){
           <div class="pcard-age">${p.birthDate ? `${fmtDateOnly(p.birthDate)}${age!==null?` (${age} anos)`:''}` : 'Sem data de nascimento'}</div>
           <div class="pcard-foot">
             ${starsHtml(p.rating, 13)}
-            <span class="status-pill ${st.cls}">${st.label}</span>
+            <span class="status-pill ${st.cls}" title="${escapeHtml(st.label)}">${escapeHtml(st.short)}</span>
           </div>
         </div>
       </button>`;
@@ -3504,8 +3521,47 @@ function refreshTacticalOldestHighlight(sheetId, teamIdx){
 }
 
 function toggleTacticalNote(sheetId, teamIdx, slotKey){
+  if(window.innerWidth <= 720){ openTacticalNoteMobile(sheetId, teamIdx, slotKey); return; }
   const key = `${sheetId}_${teamIdx}_${slotKey}`;
   if(tacticalNoteOpen.has(key)) tacticalNoteOpen.delete(key); else tacticalNoteOpen.add(key);
+  renderTabContent();
+}
+
+// em telemóvel, a nota de uma posição do campo abre neste modal centrado (reaproveita #modalRoot/closeModal)
+// em vez da caixa ancorada à própria posição, que fica presa ao "transform" do campo e sai do ecrã
+function openTacticalNoteMobile(sheetId, teamIdx, slotKey){
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(!sheet) return;
+  const slot = getOrCreateTacticalSlot(sheet, teamIdx, slotKey);
+  tsMobileNoteTarget = {sheetId, teamIdx, slotKey};
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>Notas sobre este jogador</h2>
+        <div class="field">
+          <textarea id="tsMobileNoteTextarea" placeholder="Notas sobre este jogador..." style="width:100%;height:160px;background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);color:var(--chalk);padding:9px 10px;font-size:14px;resize:vertical;">${escapeHtml(slot.notes || '')}</textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" onclick="tsMobileNoteTarget=null; closeModal();">Cancelar</button>
+          <button class="btn btn-primary" onclick="saveTacticalNoteMobile()">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{ const ta = document.getElementById('tsMobileNoteTextarea'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } }, 30);
+}
+
+async function saveTacticalNoteMobile(){
+  if(!tsMobileNoteTarget) return;
+  const {sheetId, teamIdx, slotKey} = tsMobileNoteTarget;
+  const ta = document.getElementById('tsMobileNoteTextarea');
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(sheet){
+    const slot = getOrCreateTacticalSlot(sheet, teamIdx, slotKey);
+    slot.notes = ta ? ta.value : (slot.notes || '');
+  }
+  tsMobileNoteTarget = null;
+  closeModal();
+  await saveData();
   renderTabContent();
 }
 
