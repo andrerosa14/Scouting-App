@@ -508,6 +508,10 @@
   .lvl-chip.active.lvl-a{background:var(--status-approved);color:#0d1f10;}
   .lvl-chip.active.lvl-b{background:var(--status-urgent);color:#0d1f10;}
   .lvl-chip.active.lvl-c{background:var(--status-follow);color:#2a2005;}
+  .class-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .class-chip{border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 14px;border-radius:var(--radius);font-family:var(--font-display);font-weight:700;font-size:14px;}
+  .class-chip:hover{border-color:var(--gold-dim);color:var(--chalk);}
+  .class-chip.active{background:var(--gold);border-color:var(--gold);color:#1a1305;}
 
   /* ---------- clubs tab / shortlists ---------- */
   .club-list-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px;}
@@ -616,6 +620,32 @@
       z-index:30;
       box-shadow:0 10px 34px rgba(0,0,0,.6);
     }
+    /* folhas táticas em telemóvel: os DOIS campos ficam lado a lado, um ao lado do outro, logo no
+       topo — para ver as duas equipas de uma só vez, sem qualquer scroll (nem para o lado, nem para
+       baixo). ".ts-team-row" passa a "display:contents" para deixar de agrupar campo+suplentes por
+       equipa, e o "order" reagrupa: primeiro os dois campos (lado a lado), só depois as duas listas
+       de suplentes (essas sim, abaixo, alcançáveis com scroll normal — o que importa ver logo é os
+       campos). Cada campo encolhe para caber em metade da largura do ecrã; os inputs de número/ano
+       e os botões de nota/destaque/mover de cada posição, que não caberiam a este tamanho, ficam
+       escondidos e um toque na posição abre antes um modal de edição centrado (ver
+       tacticalSlotClick/openTacticalSlotMobileEditor) — evita repetir o problema já resolvido para
+       as notas (um elemento "fixed" dentro de uma posição com "transform" não se centra no ecrã, e
+       expandir a posição no próprio local arriscava empurrá-la para fora da largura do ecrã). */
+    .ts-teams-wrap{display:flex;flex-direction:row;flex-wrap:wrap;overflow-x:visible;padding-bottom:0;gap:8px;}
+    .ts-team-row{display:contents;}
+    .ts-pitch-col{order:1;flex:0 0 calc(50% - 4px);max-width:calc(50% - 4px);width:auto;margin:0;}
+    .ts-pending-panel{order:2;flex:0 0 100%;max-width:100%;width:auto;margin:0;}
+    .ts-pitch-col-head{gap:4px;margin-bottom:6px;}
+    .ts-pitch-col-title{font-size:11.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .ts-formation-tag{font-size:9.5px;padding:1px 6px;flex-shrink:0;}
+    .ts-slot{width:25px;}
+    .ts-slot-badge{width:16px;height:16px;font-size:6.5px;}
+    .ts-slot-pos{font-size:5.5px;}
+    .ts-slot-year{font-size:6px;padding:0 1px;line-height:9px;min-width:9px;}
+    /* inputs/ações in-line não cabem neste tamanho — edita-se tudo no modal aberto ao tocar na posição */
+    .ts-slot-inputs,.ts-slot-actions{display:none;}
+    /* anel a azul na posição cujo modal de edição está aberto neste momento */
+    .ts-slot.mobile-expanded .ts-slot-badge{box-shadow:0 0 0 2px var(--blue), 0 0 8px 1px rgba(115,150,168,.6);}
   }
 </style>
 </head>
@@ -663,6 +693,9 @@ const URGENCY_LEVELS = [
   {v:'B', cls:'lvl-b'},
   {v:'C', cls:'lvl-c'},
 ];
+// classificações de scouting: Projeção (potencial de evolução) e Enquadramento (nível/escalão onde já rende)
+const PROJECAO_OPTIONS = ['A', 'B'];
+const ENQUADRAMENTO_OPTIONS = ['A1', 'A2', 'B1', 'B2', 'U23', 'U19'];
 // sistemas táticos disponíveis nas Folhas Táticas: cada posição tem uma coordenada (x,y em %) no campo,
 // desenhado na vertical (y:92 perto da própria baliza, y:14-22 perto da baliza contrária)
 const TACTICAL_FORMATIONS = {
@@ -767,6 +800,9 @@ let tacticalNoteDrafts = {};
 let tacticalSelectedPending = null;
 // posição titular atualmente "levantada" para mover/trocar — {sheetId, teamIdx, slotKey} ou null
 let tacticalSelectedStarter = null;
+// em telemóvel (vista compacta lado a lado), a posição do campo cujo modal de edição rápida
+// (número/ano/notas/destaque/mover) está aberto — {sheetId, teamIdx, slotKey} ou null
+let tacticalMobileExpandedSlot = null;
 // em telemóvel, a nota de uma posição do campo abre num modal em vez da caixa ancorada ao próprio
 // campo (essa caixa fica presa ao elemento da posição, que tem "transform" para se centrar no
 // campo — isso impede-a de se posicionar fixa/centrada no ecrã, ficando cortada nas margens)
@@ -1186,6 +1222,7 @@ function switchTab(tab){
   activeTacticalSheetId = null;
   tacticalSelectedPending = null;
   tacticalSelectedStarter = null;
+  tacticalMobileExpandedSlot = null;
   urgencyLevelFilter = 'all';
   renderMainShell();
 }
@@ -1198,6 +1235,7 @@ function goHome(){
   activeTacticalSheetId = null;
   tacticalSelectedPending = null;
   tacticalSelectedStarter = null;
+  tacticalMobileExpandedSlot = null;
   renderMainShell();
 }
 function tileCountLabel(tab){
@@ -2965,6 +3003,7 @@ function openTacticalSheetDetail(id){
   activeTacticalSheetId = id;
   tacticalSelectedPending = null;
   tacticalSelectedStarter = null;
+  tacticalMobileExpandedSlot = null;
   renderMainShell();
 }
 
@@ -3072,6 +3111,7 @@ async function removeTacticalSheet(id){
   if(activeTacticalSheetId === id) activeTacticalSheetId = null;
   if(tacticalSelectedPending && tacticalSelectedPending.sheetId === id) tacticalSelectedPending = null;
   if(tacticalSelectedStarter && tacticalSelectedStarter.sheetId === id) tacticalSelectedStarter = null;
+  if(tacticalMobileExpandedSlot && tacticalMobileExpandedSlot.sheetId === id) tacticalMobileExpandedSlot = null;
   const prefix = id+'_';
   Object.keys(tacticalNoteDrafts).forEach(k=>{ if(k.startsWith(prefix)) delete tacticalNoteDrafts[k]; });
   Array.from(tacticalNoteOpen).forEach(k=>{ if(k.startsWith(prefix)) tacticalNoteOpen.delete(k); });
@@ -3126,8 +3166,12 @@ function tacticalSlotHtml(sheet, teamIdx, slotDef, maxYear){
   // modo de mover/trocar titular: uma posição preenchida foi "levantada" e as restantes desta equipa ficam clicáveis para receber o jogador
   const isSwapSource = !!(tacticalSelectedStarter && tacticalSelectedStarter.sheetId===sheet.id && tacticalSelectedStarter.teamIdx===teamIdx && tacticalSelectedStarter.slotKey===slotDef.key);
   const isSwapTarget = !!(tacticalSelectedStarter && tacticalSelectedStarter.sheetId===sheet.id && tacticalSelectedStarter.teamIdx===teamIdx && tacticalSelectedStarter.slotKey!==slotDef.key);
+  // em telemóvel, com as duas equipas lado a lado, os inputs/ações desta posição só aparecem quando
+  // é tocada (ver tacticalSlotClick) — evita que fiquem sempre visíveis e obriguem a encolher tudo
+  // ao ponto de deixar de caber as duas equipas sem scroll
+  const isMobileExpanded = !!(tacticalMobileExpandedSlot && tacticalMobileExpandedSlot.sheetId===sheet.id && tacticalMobileExpandedSlot.teamIdx===teamIdx && tacticalMobileExpandedSlot.slotKey===slotDef.key);
   return `
-    <div class="ts-slot ${isFilled?'filled':''} ${isHighlighted?'oldest':''} ${isPlaceable?'placeable':''} ${isSwapSource?'swap-source':''} ${isSwapTarget?'swap-target':''}" id="${slotDomId(sheet.id, teamIdx, slotDef.key)}" style="left:${slotDef.x}%;top:${slotDef.y}%;" onclick="tacticalSlotClick('${sheet.id}',${teamIdx},'${slotDef.key}')">
+    <div class="ts-slot ${isFilled?'filled':''} ${isHighlighted?'oldest':''} ${isPlaceable?'placeable':''} ${isSwapSource?'swap-source':''} ${isSwapTarget?'swap-target':''} ${isMobileExpanded?'mobile-expanded':''}" id="${slotDomId(sheet.id, teamIdx, slotDef.key)}" style="left:${slotDef.x}%;top:${slotDef.y}%;" onclick="tacticalSlotClick('${sheet.id}',${teamIdx},'${slotDef.key}')">
       <div class="ts-slot-badge ${hasNotes?'has-notes':''}">${numTrim ? escapeHtml(numTrim) : '–'}</div>
       <div class="ts-slot-pos">${slotDef.label}</div>
       ${yearTrim ? `<div class="ts-slot-year">${escapeHtml(yearTrim)}</div>` : ''}
@@ -3138,7 +3182,7 @@ function tacticalSlotHtml(sheet, teamIdx, slotDef, maxYear){
       <div class="ts-slot-actions">
         <button type="button" class="ts-slot-note-btn ${hasNotes?'ts-slot-note-has':''}" onclick="event.stopPropagation(); toggleTacticalNote('${sheet.id}',${teamIdx},'${slotDef.key}')">${hasNotes?'notas ✓':'+ nota'}</button>
         <button type="button" class="ts-slot-star-btn ${isManualHighlight?'active':''}" title="Destacar manualmente a amarelo" onclick="event.stopPropagation(); toggleTacticalManualHighlight('${sheet.id}',${teamIdx},'${slotDef.key}')">${isManualHighlight?'★':'☆'}</button>
-        ${isFilled ? `<button type="button" class="ts-slot-move-btn ${isSwapSource?'active':''}" title="Mover/trocar de posição" onclick="event.stopPropagation(); tacticalSlotClick('${sheet.id}',${teamIdx},'${slotDef.key}')">⇄</button>` : ''}
+        ${isFilled ? `<button type="button" class="ts-slot-move-btn ${isSwapSource?'active':''}" title="Mover/trocar de posição" onclick="event.stopPropagation(); tacticalSlotClick('${sheet.id}',${teamIdx},'${slotDef.key}',{forceAction:true})">⇄</button>` : ''}
       </div>
       ${noteOpen ? `<div class="ts-slot-note-box" onclick="event.stopPropagation()"><textarea placeholder="Notas sobre este jogador..." oninput="tacticalNoteDrafts['${noteKey}']=this.value; debounceAutosave('note_${noteKey}', () => tacticalSlotCommitNotes('${sheet.id}',${teamIdx},'${slotDef.key}'))" onblur="tacticalSlotCommitNotes('${sheet.id}',${teamIdx},'${slotDef.key}')">${escapeHtml(draftNotes)}</textarea></div>` : ''}
     </div>`;
@@ -3226,7 +3270,7 @@ function renderTacticalSheetDetailHtml(sheet){
   return `
     <div class="ts-detail-head">
       <div>
-        <button class="btn btn-ghost" onclick="activeTacticalSheetId=null; tacticalSelectedPending=null; tacticalSelectedStarter=null; renderMainShell();">← Sistemas Táticos</button>
+        <button class="btn btn-ghost" onclick="activeTacticalSheetId=null; tacticalSelectedPending=null; tacticalSelectedStarter=null; tacticalMobileExpandedSlot=null; renderMainShell();">← Sistemas Táticos</button>
         <div class="ts-detail-title" style="margin-top:8px;">${escapeHtml(sheet.name)}</div>
         <div class="ts-detail-sub">Criada a ${fmtDate(sheet.createdAt)}</div>
       </div>
@@ -3324,6 +3368,7 @@ async function placeTacticalPendingByFormationOrder(sheetId, teamIdx){
 
   tacticalSelectedPending = null;
   tacticalSelectedStarter = null;
+  tacticalMobileExpandedSlot = null;
   await saveData();
   renderTabContent();
   showToast(`${toPlace.length} jogador(es) colocado(s) no campo${overflow.length ? `, ${overflow.length} suplente(s) adicionado(s)` : ''}.`);
@@ -3331,6 +3376,7 @@ async function placeTacticalPendingByFormationOrder(sheetId, teamIdx){
 
 function selectTacticalPending(sheetId, teamIdx, pendingId){
   tacticalSelectedStarter = null;
+  tacticalMobileExpandedSlot = null;
   if(tacticalSelectedPending && tacticalSelectedPending.sheetId===sheetId && tacticalSelectedPending.teamIdx===teamIdx && tacticalSelectedPending.pendingId===pendingId){
     tacticalSelectedPending = null;
   } else {
@@ -3403,7 +3449,22 @@ async function toggleTacticalPendingSubbedIn(sheetId, teamIdx, pendingId){
 // clique numa posição do campo: tem dois modos, mutuamente exclusivos
 //  1) se houver um suplente selecionado na lista "por colocar" desta equipa e a posição estiver vazia, coloca-o lá
 //  2) caso contrário, permite "levantar" um titular já colocado e, com um segundo clique noutra posição, mover/trocar
-async function tacticalSlotClick(sheetId, teamIdx, slotKey){
+// em telemóvel, com as duas equipas lado a lado, os inputs/ações de cada posição ficam escondidos por
+// defeito (para caber tudo sem sobrepor nem precisar de scroll) — um toque simples na posição abre um
+// modal de edição em vez de os revelar in-line (evita repetir o problema já resolvido para as notas:
+// um elemento "fixed" dentro de uma posição com "transform" não se centra corretamente no ecrã).
+// Isto só se aplica quando NÃO está a decorrer uma colocação/troca nesta equipa — nesse caso o toque
+// continua a servir para colocar o suplente ou completar a troca diretamente na grelha compacta.
+async function tacticalSlotClick(sheetId, teamIdx, slotKey, opts){
+  if(!(opts && opts.forceAction) && window.innerWidth <= 720){
+    const sel0 = tacticalSelectedPending;
+    const mov0 = tacticalSelectedStarter;
+    const midSelection = (sel0 && sel0.sheetId===sheetId && sel0.teamIdx===teamIdx) || (mov0 && mov0.sheetId===sheetId && mov0.teamIdx===teamIdx);
+    if(!midSelection){
+      openTacticalSlotMobileEditor(sheetId, teamIdx, slotKey);
+      return;
+    }
+  }
   const sel = tacticalSelectedPending;
   if(sel && sel.sheetId === sheetId && sel.teamIdx === teamIdx){
     const sheet = tacticalSheets.find(s=>s.id===sheetId);
@@ -3420,6 +3481,7 @@ async function tacticalSlotClick(sheetId, teamIdx, slotKey){
     slot.birthYear = pendingItem.birthYear;
     team.pending = (team.pending||[]).filter(p=>p.id!==sel.pendingId);
     tacticalSelectedPending = null;
+    tacticalMobileExpandedSlot = null;
     await saveData();
     renderTabContent();
     return;
@@ -3436,6 +3498,7 @@ async function tacticalSlotClick(sheetId, teamIdx, slotKey){
   if(!tacticalSelectedStarter || tacticalSelectedStarter.sheetId !== sheetId || tacticalSelectedStarter.teamIdx !== teamIdx){
     if(!clickedFilled) return; // nada para levantar a partir de uma posição vazia
     tacticalSelectedStarter = {sheetId, teamIdx, slotKey};
+    tacticalMobileExpandedSlot = null;
     renderTabContent();
     return;
   }
@@ -3455,6 +3518,7 @@ async function tacticalSlotClick(sheetId, teamIdx, slotKey){
   team.slots[fromKey] = toData;
   team.slots[slotKey] = fromData;
   tacticalSelectedStarter = null;
+  tacticalMobileExpandedSlot = null;
   await saveData();
   renderTabContent();
 }
@@ -3560,6 +3624,118 @@ async function saveTacticalNoteMobile(){
     slot.notes = ta ? ta.value : (slot.notes || '');
   }
   tsMobileNoteTarget = null;
+  closeModal();
+  await saveData();
+  renderTabContent();
+}
+
+/* ---- edição rápida de uma posição em telemóvel (vista compacta lado a lado) ----
+   Com as duas equipas lado a lado, cada posição fica pequena demais para inputs/botões in-line, por
+   isso um toque abre este modal centrado (número, ano, notas, destaque, mover/trocar), reaproveitando
+   o mesmo #modalRoot/closeModal já usado para as notas. */
+function openTacticalSlotMobileEditor(sheetId, teamIdx, slotKey){
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(!sheet) return;
+  const team = sheet.teams[teamIdx];
+  if(!team) return;
+  const formation = TACTICAL_FORMATIONS[team.formation] || TACTICAL_FORMATIONS['433'];
+  const slotDef = formation.slots.find(s=>s.key===slotKey);
+  const slot = getOrCreateTacticalSlot(sheet, teamIdx, slotKey);
+  tacticalMobileExpandedSlot = {sheetId, teamIdx, slotKey};
+  const inputStyle = 'width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:var(--radius);color:var(--chalk);padding:9px 10px;font-size:14px;';
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeTacticalSlotMobileEditor()">
+      <div class="modal">
+        <h2>${escapeHtml(team.name)} — ${slotDef ? escapeHtml(slotDef.label) : ''}</h2>
+        <div class="field" style="display:flex;gap:10px;">
+          <div style="flex:1;">
+            <label>Número</label>
+            <input id="tsSlotEditNumber" type="text" placeholder="Nº" value="${escapeHtml(slot.number || '')}" style="${inputStyle}">
+          </div>
+          <div style="flex:1;">
+            <label>Ano de nascimento</label>
+            <input id="tsSlotEditYear" type="text" placeholder="Ano" value="${escapeHtml(slot.birthYear || '')}" style="${inputStyle}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Notas sobre este jogador</label>
+          <textarea id="tsSlotEditNotes" style="${inputStyle}height:120px;resize:vertical;">${escapeHtml(slot.notes || '')}</textarea>
+        </div>
+        <div class="modal-actions" style="flex-wrap:wrap;justify-content:space-between;">
+          <div style="display:flex;gap:6px;">
+            <button type="button" id="tsSlotEditHighlightBtn" class="btn ${slot.highlight?'btn-primary':''}" onclick="toggleTacticalSlotMobileHighlight()">${slot.highlight ? '★ Destacado' : '☆ Destacar'}</button>
+            ${(slot.number||'').trim() || (slot.birthYear||'').trim() ? `<button type="button" class="btn" onclick="startTacticalSlotMobileMove()">⇄ Mover/trocar</button>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn" onclick="closeTacticalSlotMobileEditor()">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="saveTacticalSlotMobileEditor()">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{ const inp = document.getElementById('tsSlotEditNumber'); if(inp) inp.focus(); }, 30);
+}
+
+function closeTacticalSlotMobileEditor(){
+  tacticalMobileExpandedSlot = null;
+  closeModal();
+  renderTabContent();
+}
+
+async function saveTacticalSlotMobileEditor(){
+  if(!tacticalMobileExpandedSlot) return;
+  const {sheetId, teamIdx, slotKey} = tacticalMobileExpandedSlot;
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(sheet){
+    const slot = getOrCreateTacticalSlot(sheet, teamIdx, slotKey);
+    const numEl = document.getElementById('tsSlotEditNumber');
+    const yearEl = document.getElementById('tsSlotEditYear');
+    const notesEl = document.getElementById('tsSlotEditNotes');
+    if(numEl) slot.number = numEl.value;
+    if(yearEl) slot.birthYear = yearEl.value;
+    if(notesEl) slot.notes = notesEl.value;
+  }
+  tacticalMobileExpandedSlot = null;
+  closeModal();
+  await saveData();
+  renderTabContent();
+}
+
+// altera só o destaque diretamente (sem reconstruir o modal), para não perder o que o utilizador já
+// tenha escrito nos campos de número/ano/notas antes de guardar
+async function toggleTacticalSlotMobileHighlight(){
+  if(!tacticalMobileExpandedSlot) return;
+  const {sheetId, teamIdx, slotKey} = tacticalMobileExpandedSlot;
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(!sheet) return;
+  const slot = getOrCreateTacticalSlot(sheet, teamIdx, slotKey);
+  slot.highlight = !slot.highlight;
+  const btn = document.getElementById('tsSlotEditHighlightBtn');
+  if(btn){
+    btn.textContent = slot.highlight ? '★ Destacado' : '☆ Destacar';
+    btn.classList.toggle('btn-primary', !!slot.highlight);
+  }
+  await saveData();
+}
+
+// guarda o que estiver nos campos, fecha o modal e entra em modo "mover/trocar": o utilizador toca
+// de seguida noutra posição da mesma equipa, já na grelha compacta, para completar a troca (tal
+// como no ecrã largo)
+async function startTacticalSlotMobileMove(){
+  if(!tacticalMobileExpandedSlot) return;
+  const {sheetId, teamIdx, slotKey} = tacticalMobileExpandedSlot;
+  const sheet = tacticalSheets.find(s=>s.id===sheetId);
+  if(sheet){
+    const slot = getOrCreateTacticalSlot(sheet, teamIdx, slotKey);
+    const numEl = document.getElementById('tsSlotEditNumber');
+    const yearEl = document.getElementById('tsSlotEditYear');
+    const notesEl = document.getElementById('tsSlotEditNotes');
+    if(numEl) slot.number = numEl.value;
+    if(yearEl) slot.birthYear = yearEl.value;
+    if(notesEl) slot.notes = notesEl.value;
+  }
+  tacticalSelectedStarter = {sheetId, teamIdx, slotKey};
+  tacticalMobileExpandedSlot = null;
   closeModal();
   await saveData();
   renderTabContent();
@@ -3672,6 +3848,20 @@ function renderDossier(){
           <h3>Estado</h3>
           <div class="status-select-row">
             ${STATUSES.map(s=>`<button class="chip ${s.cls} ${p.status===s.v?'active':''}" onclick="updateStatus('${p.id}','${s.v}')">${s.label}</button>`).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Projeção</h3>
+          <div class="class-row">
+            ${PROJECAO_OPTIONS.map(v=>`<button class="class-chip ${p.projecao===v?'active':''}" onclick="updateProjecao('${p.id}','${v}')">${v}</button>`).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Enquadramento</h3>
+          <div class="class-row">
+            ${ENQUADRAMENTO_OPTIONS.map(v=>`<button class="class-chip ${p.enquadramento===v?'active':''}" onclick="updateEnquadramento('${p.id}','${v}')">${v}</button>`).join('')}
           </div>
         </div>
 
@@ -3910,6 +4100,20 @@ async function updateStatus(id, v){
   const p = players.find(x=>x.id===id);
   if(p.status !== v) p.statusChangedAt = Date.now();
   p.status=v;
+  await saveData();
+  render();
+}
+async function updateProjecao(id, v){
+  const p = players.find(x=>x.id===id);
+  if(!p) return;
+  p.projecao = (p.projecao === v) ? null : v;
+  await saveData();
+  render();
+}
+async function updateEnquadramento(id, v){
+  const p = players.find(x=>x.id===id);
+  if(!p) return;
+  p.enquadramento = (p.enquadramento === v) ? null : v;
   await saveData();
   render();
 }
