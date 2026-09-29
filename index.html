@@ -825,6 +825,15 @@ function currentUrgencyLevel(p){
   const n = latestLevelNote(p);
   return n ? n.level : null;
 }
+// nº de dias desde a nota mais recente do jogador (qualquer tipo, incluindo atribuição/mudança de nível
+// — assumindo que isso também reflete que o jogador foi revisto); Infinity se nunca teve nenhuma nota
+const STALE_NOTE_DAYS = 60;
+function daysSinceLastNote(p){
+  const dates = (p.notes||[]).map(n=>n.date).filter(Boolean);
+  if(!dates.length) return Infinity;
+  const last = Math.max(...dates);
+  return Math.floor((Date.now() - last) / (1000*60*60*24));
+}
 // nível de urgência atribuído a este jogador especificamente num dado jogo (pode ser diferente do nível atual, se houver um jogo mais recente)
 function levelForGame(p, gameId){
   const n = (p.notes||[]).find(x=>x.type==='nivel' && x.gameId===gameId);
@@ -1437,25 +1446,24 @@ function homeRecentActivityData(){
       }).join('');
   return {rows, count: top.length};
 }
+// jogadores com nível de urgência A ou B cuja nota mais recente (de qualquer tipo, incluindo
+// atribuição/mudança de nível) tem 60+ dias, ou que nunca tiveram nenhuma nota — recalculado em
+// cada render do ecrã principal, por isso está sempre atualizado sem ação manual
 function homePlayersToReviewData(){
-  const STALE_DAYS = 20;
-  const list = players.filter(p=>p.status==='urgent' || p.status==='follow').map(p=>{
-      const noteDates = (p.notes||[]).map(n=>n.date);
-      const lastActivity = noteDates.length ? Math.max(...noteDates) : (p.statusChangedAt || p.createdAt || 0);
-      const days = Math.floor((Date.now()-lastActivity)/(1000*60*60*24));
-      return {p, days};
+  const list = players.filter(p=>['A','B'].includes(currentUrgencyLevel(p))).map(p=>{
+      return {p, days: daysSinceLastNote(p)};
     })
-    .filter(x=>x.days >= STALE_DAYS)
+    .filter(x=>x.days >= STALE_NOTE_DAYS)
     .sort((a,b)=>b.days-a.days);
   const rows = list.length===0
     ? `<div class="insight-empty">Nenhum jogador esquecido.</div>`
     : list.map(({p,days})=>{
-        const st = statusInfo(p.status);
+        const lvl = currentUrgencyLevel(p);
         return `
         <div class="insight-row">
           <div class="ii-main">
             <div class="ii-title">${escapeHtml(p.name)}</div>
-            <div class="ii-sub">${st.label} · sem nota há ${days} dias</div>
+            <div class="ii-sub">Nível ${lvl} · ${days===Infinity ? 'nunca teve nota' : `sem nota há ${days} dias`}</div>
           </div>
           <div class="insight-tag warn">Rever</div>
         </div>`;
