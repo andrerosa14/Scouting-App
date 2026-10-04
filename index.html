@@ -1063,9 +1063,24 @@ async function fetchDataFromGitHub(){
   if(!res.ok) throw new Error('HTTP_'+res.status);
   const data = await res.json();
   ghSha = data.sha;
-  const json = b64ToUtf8(data.content);
+  let json;
+  // o GitHub só devolve o conteúdo em base64 inline (data.content) para ficheiros até ~1MB; para
+  // ficheiros maiores a API devolve content vazio e encoding:"none" — se não tratarmos este caso,
+  // o ficheiro "parece" ter sido lido com sucesso mas vem vazio, e uma gravação seguinte apagaria
+  // os dados reais no GitHub. Nesse caso pedimos o conteúdo em bruto por outra via (sem limite de 1MB).
+  if(!data.content || data.encoding === 'none'){
+    const rawRes = await ghRequest(contentsPath(true), {headers: {'Accept': 'application/vnd.github.raw+json'}});
+    if(!rawRes.ok) throw new Error('HTTP_'+rawRes.status+'_RAW');
+    json = await rawRes.text();
+  } else {
+    json = b64ToUtf8(data.content);
+  }
   let parsed = null;
   try{ parsed = JSON.parse(json); }catch(e){ parsed = null; }
+  // nunca seguir em frente com uma base de dados vazia só porque o parse falhou — isso faria uma
+  // gravação seguinte apagar tudo no GitHub. Uma base de dados vazia só é legítima no caso já tratado
+  // acima (404, ficheiro ainda não existe); qualquer outra falha deve travar com um erro visível.
+  if(parsed === null) throw new Error('PARSE_FAILED');
   const normGames = (arr) => (arr || []).map(g => ({playerIds: [], level: 'Equipa A', ...g}));
   // migração: versões antigas guardavam as notas por jogador dentro do próprio jogo (game.playerNotes);
   // agora vivem na ficha do jogador (player.notes), com uma referência gameId
@@ -1155,7 +1170,9 @@ async function fetchDataFromGitHub(){
     migrateUrgencyLevelToNotes(outPlayers);
     return {players: outPlayers, clubs: outClubs, shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams), tacticalSheets: normTacticalSheets(parsed.tacticalSheets)};
   }
-  return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[], tacticalSheets:[]};
+  // o ficheiro foi lido e tinha JSON válido, mas não no formato esperado (nem array antigo, nem
+  // objeto com as listas) — mais vale travar com erro do que continuar com tudo vazio
+  throw new Error('INVALID_FORMAT');
 }
 
 async function getRemoteSha(){
@@ -1192,6 +1209,8 @@ function mapGhError(e){
   if(msg === 'AUTH') return 'O token não é válido ou expirou. Vai a Definições e atualiza-o.';
   if(msg === 'FORBIDDEN') return 'Sem permissão de escrita neste repositório. Confirma o token em Definições.';
   if(msg === 'HTTP_404') return 'Repositório não encontrado. Confirma o nome em Definições.';
+  if(msg === 'PARSE_FAILED' || msg === 'INVALID_FORMAT') return 'Os dados recebidos do GitHub não vieram completos ou legíveis. Por segurança, a app não carregou (para não arriscar substituir os teus dados reais por uma base vazia). Tenta novamente — se persistir, não faças mais alterações na app e fala comigo.';
+  if(msg.endsWith('_RAW')) return 'Não foi possível obter o conteúdo completo do ficheiro no GitHub (ficheiro grande). Tenta novamente.';
   return 'Não foi possível guardar no GitHub agora. Verifica a ligação e tenta novamente.';
 }
 
@@ -3171,17 +3190,23 @@ function getOrCreateTacticalSlot(sheet, teamIdx, slotKey){
   return team.slots[slotKey];
 }
 
-// ano de nascimento mais alto (jogador mais novo) desta equipa, calculado de forma independente por equipa/campo
+// ano de nascimento mais alto (jogador mais novo) desta equipa, calculado de forma independente por equipa/campo.
+// Se todos os titulares com ano preenchido (2 ou mais) são do mesmo ano, não há "mais novo" a destacar:
+// devolve null para que fiquem todos a verde (o amarelo fica reservado ao mais novo e a destaques manuais)
 function tacticalTeamMaxYear(team){
   const formation = TACTICAL_FORMATIONS[team.formation];
   if(!formation) return null;
-  let maxYear = null;
+  let maxYear = null, minYear = null, count = 0;
   formation.slots.forEach(slotDef=>{
     const slot = (team.slots||{})[slotDef.key];
     const raw = slot && slot.birthYear ? slot.birthYear.trim() : '';
     const y = raw ? parseInt(raw, 10) : NaN;
-    if(!isNaN(y) && (maxYear === null || y > maxYear)) maxYear = y;
+    if(isNaN(y)) return;
+    count++;
+    if(maxYear === null || y > maxYear) maxYear = y;
+    if(minYear === null || y < minYear) minYear = y;
   });
+  if(count >= 2 && maxYear === minYear) return null;
   return maxYear;
 }
 
@@ -3334,7 +3359,7 @@ function renderTacticalSheetDetailHtml(sheet){
     <div class="ts-legend">
       <span><span class="ts-legend-dot" style="background:var(--status-approved);"></span> posição preenchida</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid var(--gold-dim);"></span> por preencher</span>
-      <span><span class="ts-legend-dot" style="background:var(--status-follow);"></span> ano de nascimento mais alto (jogador mais novo), ou destacado manualmente (☆)</span>
+      <span><span class="ts-legend-dot" style="background:var(--status-follow);"></span> ano de nascimento mais alto (jogador mais novo), ou destacado manualmente (☆) — se todos forem do mesmo ano ficam a verde</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid #39ff14;box-shadow:0 0 4px 1px rgba(57,255,20,.65);"></span> jogador com notas escritas</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid var(--blue);"></span> clica em ⇄ (ou na posição) para mover/trocar um titular</span>
       <span><span class="ts-legend-dot" style="background:var(--pitch-panel-raise);border:2px solid var(--blue);"></span> "entrou?" na lista de suplentes marca que entrou em jogo; o seletor ao lado atribui a posição em que entrou</span>
