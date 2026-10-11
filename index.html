@@ -125,6 +125,13 @@
   .lvltab-filter-btn.lvl-a.active{border-color:var(--status-approved);color:var(--status-approved);}
   .lvltab-filter-btn.lvl-b.active{border-color:var(--status-urgent);color:var(--status-urgent);}
   .lvltab-filter-btn.lvl-c.active{border-color:var(--status-follow);color:var(--status-follow);}
+  .lvltab-year-row,.lvltab-year-row2{padding-top:10px;}
+  .lvltab-date{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+  .lvltab-date input{background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:6px 8px;border-radius:var(--radius);font-size:13px;color-scheme:dark;}
+  .lvltab-clear{padding:6px 12px;font-size:12px;}
+  .lvltab-year{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;}
+  .lvltab-year-n{font-size:10.5px;font-weight:600;opacity:.75;background:var(--pitch-panel-raise);border-radius:8px;padding:1px 6px;}
+  .lvltab-year.active .lvltab-year-n{background:var(--pitch-dark);opacity:1;}
   .lvltab-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));gap:1px;background:var(--line-soft);}
   .lvltab-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:16px 10px;background:var(--pitch-panel);border:none;cursor:pointer;color:inherit;font:inherit;}
   .lvltab-card:hover{background:var(--pitch-panel-raise);}
@@ -917,6 +924,8 @@ let activeClubId = null;
 let activeTacticalSheetId = null;
 let urgentPanelExpanded = false;
 let urgencyLevelFilter = 'all'; // 'all' | 'A' | 'B' | 'C' — filtro do separador "Nível de Urgência"
+let urgencyBirthFrom = '';      // filtro por data de nascimento: início do intervalo (YYYY-MM-DD, vazio = sem limite)
+let urgencyBirthTo = '';        // fim do intervalo
 let expandedNoteIds = new Set();
 let shadowAddSearch = '';
 // rascunhos das notas de relatório de jogo ainda por guardar, para não se perderem quando o ecrã é re-desenhado
@@ -1392,6 +1401,8 @@ function switchTab(tab){
   tacticalSelectedStarter = null;
   tacticalMobileExpandedSlot = null;
   urgencyLevelFilter = 'all';
+  urgencyBirthFrom = '';
+  urgencyBirthTo = '';
   renderMainShell();
 }
 function goHome(){
@@ -1470,14 +1481,48 @@ function setUrgencyLevelFilter(v){
   urgencyLevelFilter = v;
   renderTabContent();
 }
+function setUrgencyBirthRange(from, to){
+  urgencyBirthFrom = from || '';
+  urgencyBirthTo = to || '';
+  // se o início ficar depois do fim, troca-os
+  if(urgencyBirthFrom && urgencyBirthTo && urgencyBirthFrom > urgencyBirthTo){
+    const t = urgencyBirthFrom; urgencyBirthFrom = urgencyBirthTo; urgencyBirthTo = t;
+  }
+  renderTabContent();
+}
+function onUrgencyBirthInput(which, value){
+  if(which === 'from') setUrgencyBirthRange(value, urgencyBirthTo);
+  else setUrgencyBirthRange(urgencyBirthFrom, value);
+}
+function toggleUrgencyYear(y){
+  if(urgencyBirthFrom === y+'-01-01' && urgencyBirthTo === y+'-12-31') setUrgencyBirthRange('', '');
+  else setUrgencyBirthRange(y+'-01-01', y+'-12-31');
+}
+function clearUrgencyBirth(){ setUrgencyBirthRange('', ''); }
+function urgencyBirthYear(p){
+  const m = /^(\d{4})/.exec(p.birthDate || '');
+  return m ? m[1] : null;
+}
 // separador "Nível de Urgência" — todos os jogadores com A, B ou C atribuído, filtrável pelos três níveis
 function renderUrgencyLevelTabHtml(){
   const allLeveled = players.filter(p => currentUrgencyLevel(p)).sort((a,b)=>a.name.localeCompare(b.name));
-  const shown = urgencyLevelFilter === 'all' ? allLeveled : allLeveled.filter(p => currentUrgencyLevel(p) === urgencyLevelFilter);
+  const byLevel = urgencyLevelFilter === 'all' ? allLeveled : allLeveled.filter(p => currentUrgencyLevel(p) === urgencyLevelFilter);
+  // atalhos por ano (anos que existem dentro do nível escolhido, do mais novo para o mais velho)
+  const yearCounts = {};
+  byLevel.forEach(p => { const y = urgencyBirthYear(p); if(y) yearCounts[y] = (yearCounts[y]||0) + 1; });
+  const years = Object.keys(yearCounts).sort((a,b)=>b-a);
+  const hasBirthFilter = !!(urgencyBirthFrom || urgencyBirthTo);
+  const shown = !hasBirthFilter ? byLevel : byLevel.filter(p => {
+    if(!p.birthDate) return false;
+    if(urgencyBirthFrom && p.birthDate < urgencyBirthFrom) return false;
+    if(urgencyBirthTo && p.birthDate > urgencyBirthTo) return false;
+    return true;
+  });
+  const yearBtns = years.map(y=>`<button type="button" class="lvltab-filter-btn lvltab-year ${urgencyBirthFrom===y+'-01-01'&&urgencyBirthTo===y+'-12-31'?'active':''}" onclick="toggleUrgencyYear('${y}')">${y}<span class="lvltab-year-n">${yearCounts[y]}</span></button>`).join('');
   const filterBtns = [{v:'all', label:'Todos', cls:''}, {v:'A', label:'A', cls:'lvl-a'}, {v:'B', label:'B', cls:'lvl-b'}, {v:'C', label:'C', cls:'lvl-c'}]
     .map(f=>`<button type="button" class="lvltab-filter-btn ${f.cls} ${urgencyLevelFilter===f.v?'active':''}" onclick="setUrgencyLevelFilter('${f.v}')">${f.label}</button>`).join('');
   const grid = shown.length === 0
-    ? `<div class="lvltab-empty">${allLeveled.length===0 ? 'Ainda não há jogadores com nível de urgência atribuído.' : 'Nenhum jogador com este nível.'}</div>`
+    ? `<div class="lvltab-empty">${allLeveled.length===0 ? 'Ainda não há jogadores com nível de urgência atribuído.' : 'Nenhum jogador com estes filtros.'}</div>`
     : `<div class="lvltab-grid">${shown.map(p => {
         const pos = posInfo(p.position);
         const club = clubInfo(p.clubId);
@@ -1500,6 +1545,16 @@ function renderUrgencyLevelTabHtml(){
         <span class="lvltab-filter-label">Filtrar:</span>
         ${filterBtns}
       </div>
+      <div class="lvltab-filter-row lvltab-year-row">
+        <span class="lvltab-filter-label">Data de nascimento:</span>
+        <label class="lvltab-date"><span>de</span><input id="urgBirthFrom" type="date" value="${urgencyBirthFrom}" max="${urgencyBirthTo||''}" onchange="onUrgencyBirthInput('from', this.value)"></label>
+        <label class="lvltab-date"><span>até</span><input id="urgBirthTo" type="date" value="${urgencyBirthTo}" min="${urgencyBirthFrom||''}" onchange="onUrgencyBirthInput('to', this.value)"></label>
+        ${hasBirthFilter ? `<button type="button" class="lvltab-filter-btn lvltab-clear" onclick="clearUrgencyBirth()">✕ Limpar</button>` : ''}
+      </div>
+      ${yearBtns ? `<div class="lvltab-filter-row lvltab-year-row2">
+        <span class="lvltab-filter-label">Atalhos por ano:</span>
+        ${yearBtns}
+      </div>` : ''}
       ${grid}
     </div>`;
 }
