@@ -674,6 +674,71 @@
     .ts-pitch-col-title{font-size:13px;}
     .ts-formation-tag{font-size:11px;padding:2px 8px;}
   }
+
+  /* ---------- calendário de competições ---------- */
+  .home-comp-wrap{max-width:none;margin:18px auto 0;padding:0 24px;}
+  .comp-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .comp-panel-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);color:var(--gold);}
+  .comp-panel-title{font-family:var(--font-display);font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--chalk);flex:1;}
+  .comp-panel-count{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:1px 8px;}
+  .comp-panel-link{background:none;border:none;color:var(--gold);font-size:12px;padding:0 0 0 6px;}
+  .comp-panel-link:hover{text-decoration:underline;}
+  .comp-rows{display:grid;grid-template-columns:repeat(auto-fill, minmax(380px, 1fr));}
+  .comp-row{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line-soft);}
+  .comp-row-date{flex:0 0 auto;width:46px;text-align:center;border:1px solid var(--line);border-radius:3px;padding:2px 0;line-height:1.1;background:var(--pitch-panel-raise);}
+  .comp-row-date b{display:block;font-family:var(--font-display);font-size:17px;font-weight:600;}
+  .comp-row-date span{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+  .comp-row-main{flex:1;min-width:0;}
+  .comp-row-title{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .comp-row-sub{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .comp-row-link{color:var(--blue);text-decoration:none;font-size:12px;border:1px solid var(--line);border-radius:3px;padding:2px 7px;white-space:nowrap;}
+  .comp-row-link:hover{border-color:var(--blue);}
+  .comp-tag{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);border-radius:10px;padding:2px 9px;white-space:nowrap;color:var(--muted);}
+  .comp-tag.live{color:var(--status-approved);border-color:var(--status-approved);}
+  .comp-tag.soon{color:var(--status-follow);border-color:var(--status-follow);}
+  .comp-empty{padding:20px 18px;color:var(--muted);font-size:13px;}
+  .cal-card{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:18px;}
+  .cal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .cal-title{font-family:var(--font-display);font-weight:600;font-size:20px;letter-spacing:.04em;text-transform:capitalize;flex:1;}
+  .cal-nav{background:var(--pitch-panel-raise);border:1px solid var(--line);border-radius:3px;color:var(--chalk);padding:5px 12px;font-size:13px;}
+  .cal-nav:hover{border-color:var(--gold-dim);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7, minmax(0,1fr));border-top:1px solid var(--line-soft);border-left:1px solid var(--line-soft);}
+  .cal-dow{padding:6px 8px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);background:var(--pitch-panel-raise);}
+  .cal-day{min-height:96px;padding:4px 5px 5px;border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .cal-day:hover{background:rgba(201,154,68,.07);}
+  .cal-day.other{opacity:.42;}
+  .cal-day-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;}
+  .cal-day-level{font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--lc, var(--gold));text-align:right;line-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .cal-day-num{font-size:12px;color:var(--muted);align-self:flex-start;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px;padding:0 4px;}
+  .cal-day.today .cal-day-num{background:var(--gold);color:#241a07;font-weight:700;}
+  .cal-chip{display:block;width:100%;text-align:left;font-size:11px;line-height:16px;padding:0 6px;border:none;border-radius:3px;background:var(--lc-bg, rgba(115,150,168,.28));border-left:3px solid var(--lc, var(--blue));color:var(--chalk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cal-chip.has-lvl{position:relative;padding-left:30px;border-left:none;}
+  .lvl-U21{--lc:#e8892f;--lc-bg:rgba(232,137,47,.42);--lc-bg-hover:rgba(232,137,47,.6);--lc-fg:#2a1503;}
+  .lvl-U20{--lc:#a3a9ae;--lc-bg:rgba(163,169,174,.42);--lc-bg-hover:rgba(163,169,174,.6);--lc-fg:#1d2022;}
+  .lvl-U19{--lc:#4f93e0;--lc-bg:rgba(79,147,224,.42);--lc-bg-hover:rgba(79,147,224,.6);--lc-fg:#06182c;}
+  .lvl-U18{--lc:#f2d544;--lc-bg:rgba(242,213,68,.42);--lc-bg-hover:rgba(242,213,68,.6);--lc-fg:#2a2305;}
+  .lvl-U17{--lc:#4fb35a;--lc-bg:rgba(79,179,90,.42);--lc-bg-hover:rgba(79,179,90,.6);--lc-fg:#06210b;}
+  .lvl-U16{--lc:#b98a1b;--lc-bg:rgba(185,138,27,.42);--lc-bg-hover:rgba(185,138,27,.6);--lc-fg:#241a03;}
+  .cal-chip-lvl{position:absolute;left:0;top:0;bottom:0;width:26px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:.02em;border-radius:3px 0 0 3px;background:var(--lc, var(--gold));color:var(--lc-fg, #241a07);}
+  .cal-chip:hover{background:var(--lc-bg-hover, rgba(115,150,168,.5));}
+  .cal-more{font-size:10.5px;color:var(--muted);padding-left:4px;}
+  .cal-list-title{font-family:var(--font-display);font-weight:600;font-size:15px;letter-spacing:.05em;text-transform:uppercase;margin:0 0 8px;color:var(--chalk);}
+  .cal-list-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+  .cal-list-row.past{opacity:.5;}
+  .cal-list-row:last-child{border-bottom:none;}
+  @media(max-width:720px){
+    .home-comp-wrap{padding:0 14px;}
+    .comp-rows{grid-template-columns:1fr;}
+    .cal-card{padding:10px 8px;}
+    .cal-day{min-height:58px;padding:2px 2px 3px;}
+    .cal-day-num{font-size:11px;min-width:18px;height:18px;line-height:18px;}
+    .cal-day-level{font-size:8px;line-height:18px;letter-spacing:0;}
+    .cal-chip-lvl{display:none;}
+    .cal-chip.has-lvl{padding-left:0;border-left:3px solid var(--lc, var(--blue));}
+    .cal-chip{height:6px;padding:0;font-size:0;line-height:0;border-left-width:0;}
+    .cal-dow{padding:5px 2px;font-size:9px;text-align:center;letter-spacing:0;}
+    .cal-list-row{flex-wrap:wrap;}
+  }
 </style>
 </head>
 <body>
@@ -803,6 +868,8 @@ let clubs = [];
 let shortlists = [];
 let games = [];
 let shadowTeams = [];
+let competitions = [];
+let calendarMonth = null; // {y, m} do mês visível no separador Calendário (null = mês atual)
 let tacticalSheets = [];
 let storageOk = true;
 let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'rating', view:'list'};
@@ -1057,7 +1124,7 @@ function contentsPath(bustCache){
 
 async function fetchDataFromGitHub(){
   const res = await ghRequest(contentsPath(true));
-  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[], tacticalSheets:[]}; }
+  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[], tacticalSheets:[], competitions:[]}; }
   if(res.status === 401) throw new Error('AUTH');
   if(res.status === 403) throw new Error('FORBIDDEN');
   if(!res.ok) throw new Error('HTTP_'+res.status);
@@ -1128,7 +1195,7 @@ async function fetchDataFromGitHub(){
   if(Array.isArray(parsed)){
     migrateStatuses(parsed);
     migratePositions(parsed);
-    return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: [], tacticalSheets: []}; // formato antigo (só jogadores)
+    return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: [], tacticalSheets: [], competitions: []}; // formato antigo (só jogadores)
   }
   // normalização: shadow teams antigas não tinham categorização de jogadores (1ª Linha/2ª Linha/Composição)
   const normShadowTeams = (arr) => (arr || []).map(st => ({playerCategories: {}, ...st}));
@@ -1168,7 +1235,7 @@ async function fetchDataFromGitHub(){
     migratePositions(outPlayers);
     migrateNationality(outPlayers, outClubs);
     migrateUrgencyLevelToNotes(outPlayers);
-    return {players: outPlayers, clubs: outClubs, shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams), tacticalSheets: normTacticalSheets(parsed.tacticalSheets)};
+    return {players: outPlayers, clubs: outClubs, shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams), tacticalSheets: normTacticalSheets(parsed.tacticalSheets), competitions: Array.isArray(parsed.competitions) ? parsed.competitions : []};
   }
   // o ficheiro foi lido e tinha JSON válido, mas não no formato esperado (nem array antigo, nem
   // objeto com as listas) — mais vale travar com erro do que continuar com tudo vazio
@@ -1187,7 +1254,7 @@ async function saveDataToGitHub(){
   const doPut = async () => {
     const body = {
       message: 'Atualizar base de dados de scouting',
-      content: utf8ToB64(JSON.stringify({players, clubs, shortlists, games, shadowTeams, tacticalSheets}, null, 2)),
+      content: utf8ToB64(JSON.stringify({players, clubs, shortlists, games, shadowTeams, tacticalSheets, competitions}, null, 2)),
     };
     if(ghSha) body.sha = ghSha;
     return ghRequest(contentsPath(), {method:'PUT', body: JSON.stringify(body)});
@@ -1262,6 +1329,7 @@ const TABS = [
   {v:'games', label:'Jogos', icon:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
   {v:'shadowteams', label:'Shadow Teams', icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.4" fill="currentColor" stroke="none"/>'},
   {v:'urgencia', label:'Nível de Urgência', icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'},
+  {v:'calendario', label:'Calendário', icon:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.1" fill="currentColor" stroke="none"/><circle cx="16" cy="15" r="1.1" fill="currentColor" stroke="none"/><circle cx="8" cy="18.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="18.5" r="1.1" fill="currentColor" stroke="none"/>'},
   {v:'tatico', label:'Sistemas Táticos', icon:'<rect x="3" y="2" width="18" height="20" rx="1"/><line x1="12" y1="12" x2="12" y2="22"/><circle cx="12" cy="12" r="4"/>'},
 ];
 function headerPrimaryButtonHtml(){
@@ -1270,6 +1338,7 @@ function headerPrimaryButtonHtml(){
   if(activeTab==='games') return `<button class="btn btn-primary" onclick="openGameFormModal()">+ Novo Jogo</button>`;
   if(activeTab==='shadowteams') return `<button class="btn btn-primary" onclick="openShadowTeamFormModal()">+ Nova Shadow Team</button>`;
   if(activeTab==='urgencia') return '';
+  if(activeTab==='calendario') return `<button class="btn btn-primary" onclick="openCompetitionModal()">+ Nova Competição</button>`;
   if(activeTab==='tatico') return activeTacticalSheetId ? '' : `<button class="btn btn-primary" onclick="openTacticalSheetFormModal()">+ Nova Folha Tática</button>`;
   return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
 }
@@ -1306,6 +1375,7 @@ function tileCountLabel(tab){
   if(tab==='shadowteams') return `${shadowTeams.length} equipa${shadowTeams.length===1?'':'s'}`;
   if(tab==='urgencia'){ const n = players.filter(p=>currentUrgencyLevel(p)).length; return `${n} jogador${n===1?'':'es'}`; }
   if(tab==='tatico') return `${tacticalSheets.length} folha${tacticalSheets.length===1?'':'s'}`;
+  if(tab==='calendario') return `${competitions.length} competi${competitions.length===1?'ção':'ções'}`;
   return '';
 }
 function homeTilesHtml(){
@@ -1599,6 +1669,7 @@ function renderMainShell(){
     </div>
     <div class="home-urgent-wrap tab-fade">${homeUrgentPanelHtml()}</div>
     <div class="home-stats-wrap tab-fade">${homeStatsStripHtml()}</div>
+    <div class="home-comp-wrap tab-fade">${homeCompetitionsPanelHtml()}</div>
     <div class="home-insights-wrap tab-fade">${homeInsightsGridHtml()}</div>`}
     <footer>
       <button onclick="openSettingsModal()">Definições do GitHub</button>
@@ -1649,6 +1720,8 @@ function renderTabContent(){
     const activeShadowTeam = activeShadowTeamId ? shadowTeams.find(x=>x.id===activeShadowTeamId) : null;
     if(activeShadowTeamId && !activeShadowTeam) activeShadowTeamId = null;
     inner = activeShadowTeam ? renderShadowTeamDetailHtml(activeShadowTeam) : renderShadowTeamsTabHtml();
+  } else if(activeTab === 'calendario'){
+    inner = renderCalendarTabHtml();
   } else if(activeTab === 'urgencia'){
     inner = renderUrgencyLevelTabHtml();
   } else if(activeTab === 'tatico'){
@@ -1712,7 +1785,7 @@ async function submitSetup(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || [];
     activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
     saveConfig(ghConfig);
     storageOk = true;
@@ -1726,7 +1799,7 @@ async function connectAndLoad(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || [];
     activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
     storageOk = true;
     renderMainShell();
@@ -1780,7 +1853,7 @@ async function submitSettings(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets;
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || [];
     activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
     saveConfig(ghConfig);
     storageOk = true;
@@ -1800,6 +1873,7 @@ function disconnectGithub(){
   games = [];
   shadowTeams = [];
   tacticalSheets = [];
+  competitions = [];
   activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
   closeModal();
   renderSetupScreen();
@@ -4252,12 +4326,230 @@ async function confirmClearAll(){
   games = [];
   shadowTeams = [];
   tacticalSheets = [];
+  competitions = [];
   activeShortlistId = null;
   activeGameId = null;
   activeShadowTeamId = null;
   activeClubId = null;
   activeTacticalSheetId = null;
   await saveData();
+  render();
+}
+
+
+/* ---------------- calendário de competições ---------------- */
+const CAL_MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const CAL_DOW = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const COMP_UPCOMING_DAYS = 45; // janela de dias mostrada no painel da página inicial
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function dateToStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function todayStr(){ return dateToStr(new Date()); }
+function strToDate(s){ return new Date(s+'T00:00:00'); }
+function addDaysStr(s, n){ const d = strToDate(s); d.setDate(d.getDate()+n); return dateToStr(d); }
+function daysBetweenStr(a, b){ return Math.round((strToDate(b)-strToDate(a))/86400000); }
+function compEnd(c){ return (c.endDate && c.endDate >= c.startDate) ? c.endDate : c.startDate; }
+function compSafeLink(link){
+  const raw = (link||'').trim();
+  if(!raw) return '';
+  const withProto = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : 'https://'+raw;
+  return /^https?:\/\//i.test(withProto) ? withProto : '';
+}
+function compRangeLabel(c){
+  const a = strToDate(c.startDate), e = strToDate(compEnd(c));
+  const f = d => d.toLocaleDateString('pt-PT', {day:'2-digit', month:'short'});
+  return c.startDate === compEnd(c) ? `${f(a)} ${a.getFullYear()}` : `${f(a)} – ${f(e)} ${e.getFullYear()}`;
+}
+function compMetaLabel(c){
+  return [c.location, c.level, compRangeLabel(c)].filter(Boolean).map(escapeHtml).join(' · ');
+}
+
+// competições que decorrem ou começam dentro dos próximos 45 dias (inclui as que já estão a decorrer hoje)
+function upcomingCompetitions(){
+  const today = todayStr();
+  const limit = addDaysStr(today, COMP_UPCOMING_DAYS);
+  return competitions.filter(c => c.startDate && compEnd(c) >= today && c.startDate <= limit)
+    .slice().sort((a,b)=> a.startDate.localeCompare(b.startDate) || (a.name||'').localeCompare(b.name||''));
+}
+function homeCompetitionsPanelHtml(){
+  const list = upcomingCompetitions();
+  const today = todayStr();
+  const rows = list.length === 0
+    ? `<div class="comp-empty">Sem competições nos próximos ${COMP_UPCOMING_DAYS} dias.</div>`
+    : `<div class="comp-rows">${list.map(c=>{
+        const live = c.startDate <= today;
+        const inDays = daysBetweenStr(today, c.startDate);
+        const tag = live ? `<span class="comp-tag live">A decorrer</span>` : `<span class="comp-tag ${inDays<=7?'soon':''}">${inDays===1?'Amanhã':`Em ${inDays} dias`}</span>`;
+        const d = strToDate(c.startDate);
+        const link = compSafeLink(c.link);
+        return `
+        <div class="comp-row">
+          <div class="comp-row-date"><b>${d.getDate()}</b><span>${d.toLocaleDateString('pt-PT',{month:'short'}).replace('.','')}</span></div>
+          <div class="comp-row-main">
+            <div class="comp-row-title">${escapeHtml(c.name)}</div>
+            <div class="comp-row-sub">${compMetaLabel(c)}</div>
+          </div>
+          ${link ? `<a class="comp-row-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Link ↗</a>` : ''}
+          ${tag}
+        </div>`;
+      }).join('')}</div>`;
+  return `
+    <div class="comp-panel">
+      <div class="comp-panel-head">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div class="comp-panel-title">Competições nos Próximos ${COMP_UPCOMING_DAYS} Dias</div>
+        <div class="comp-panel-count">${list.length}</div>
+        <button type="button" class="comp-panel-link" onclick="switchTab('calendario')">Abrir calendário →</button>
+      </div>
+      ${rows}
+    </div>`;
+}
+
+function calLevelClass(level){ return level ? 'lvl-' + String(level).replace(/[^A-Za-z0-9]/g,'') : ''; }
+function calLevelShort(level){ return level === 'Equipa A' ? 'A' : level; }
+function calGetMonth(){
+  if(!calendarMonth){ const n = new Date(); calendarMonth = {y: n.getFullYear(), m: n.getMonth()}; }
+  return calendarMonth;
+}
+function calShiftMonth(delta){
+  const cm = calGetMonth();
+  const d = new Date(cm.y, cm.m + delta, 1);
+  calendarMonth = {y: d.getFullYear(), m: d.getMonth()};
+  renderTabContent();
+}
+function calGoToday(){ calendarMonth = null; renderTabContent(); }
+
+function renderCalendarTabHtml(){
+  const cm = calGetMonth();
+  const first = new Date(cm.y, cm.m, 1);
+  const startOffset = (first.getDay() + 6) % 7; // semana a começar à segunda
+  const gridStart = new Date(cm.y, cm.m, 1 - startOffset);
+  const daysInMonth = new Date(cm.y, cm.m + 1, 0).getDate();
+  const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+  const today = todayStr();
+  const MAX_CHIPS = 3;
+  let cells = '';
+  for(let i = 0; i < totalCells; i++){
+    const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
+    const ds = dateToStr(d);
+    const inMonth = d.getMonth() === cm.m;
+    const items = competitions.filter(c => c.startDate && c.startDate <= ds && compEnd(c) >= ds)
+      .sort((a,b)=> a.startDate.localeCompare(b.startDate) || (a.name||'').localeCompare(b.name||''));
+    const shown = items.slice(0, MAX_CHIPS);
+    // escalões das competições deste dia (sem repetir), mostrados no canto superior direito do quadrado
+    // se todas as competições do dia partilham o mesmo escalão, mostra-se uma só vez no canto; se forem
+    // escalões diferentes, cada competição leva o seu próprio mini quadrado do escalão à esquerda da barra
+    const levelSet = [...new Set(items.map(c=>c.level).filter(Boolean))];
+    const mixedLevels = levelSet.length > 1 || (levelSet.length === 1 && items.some(c=>!c.level));
+    const levels = mixedLevels ? '' : levelSet.map(escapeHtml).join('');
+    cells += `
+      <div class="cal-day ${inMonth?'':'other'} ${ds===today?'today':''}" onclick="openCompetitionModal(null,'${ds}')">
+        <div class="cal-day-top">
+          <div class="cal-day-num">${d.getDate()}</div>
+          ${levels ? `<div class="cal-day-level ${calLevelClass(levelSet[0])}" title="Escalão">${levels}</div>` : ''}
+        </div>
+        ${shown.map(c=>`<button type="button" class="cal-chip ${calLevelClass(c.level)} ${mixedLevels && c.level ? 'has-lvl' : ''}" title="${escapeHtml(c.name)}${c.location?' · '+escapeHtml(c.location):''}" onclick="event.stopPropagation(); openCompetitionModal('${c.id}')">${mixedLevels && c.level ? `<span class="cal-chip-lvl" title="Escalão: ${escapeHtml(c.level)}">${escapeHtml(calLevelShort(c.level))}</span>` : ''}${escapeHtml(c.name)}</button>`).join('')}
+        ${items.length > MAX_CHIPS ? `<div class="cal-more">+${items.length-MAX_CHIPS} mais</div>` : ''}
+      </div>`;
+  }
+  const sorted = competitions.slice().sort((a,b)=> (a.startDate||'').localeCompare(b.startDate||'') || (a.name||'').localeCompare(b.name||''));
+  const listHtml = sorted.length === 0
+    ? `<div class="comp-empty" style="padding:6px 0;">Ainda não adicionaste nenhuma competição. Clica num dia do calendário ou em "+ Nova Competição".</div>`
+    : sorted.map(c=>{
+        const past = compEnd(c) < today;
+        const link = compSafeLink(c.link);
+        return `
+        <div class="cal-list-row ${past?'past':''}">
+          <div class="comp-row-main">
+            <div class="comp-row-title" style="white-space:normal;">${escapeHtml(c.name)}</div>
+            <div class="comp-row-sub">${compMetaLabel(c)}</div>
+          </div>
+          ${link ? `<a class="comp-row-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Link ↗</a>` : ''}
+          <button class="btn-ghost" onclick="openCompetitionModal('${c.id}')">Editar</button>
+          <button class="btn-ghost" onclick="removeCompetition('${c.id}')">Eliminar</button>
+        </div>`;
+      }).join('');
+  return `
+    <div class="cal-card">
+      <div class="cal-head">
+        <div class="cal-title">${CAL_MONTHS[cm.m]} ${cm.y}</div>
+        <button class="cal-nav" onclick="calGoToday()">Hoje</button>
+        <button class="cal-nav" onclick="calShiftMonth(-1)" aria-label="Mês anterior">‹</button>
+        <button class="cal-nav" onclick="calShiftMonth(1)" aria-label="Mês seguinte">›</button>
+      </div>
+      <div class="cal-grid">
+        ${CAL_DOW.map(n=>`<div class="cal-dow">${n}</div>`).join('')}
+        ${cells}
+      </div>
+    </div>
+    <div class="cal-card">
+      <h3 class="cal-list-title">Todas as competições</h3>
+      ${listHtml}
+    </div>`;
+}
+
+function openCompetitionModal(editId, presetDate){
+  const editing = editId ? competitions.find(c=>c.id===editId) : null;
+  const startVal = editing ? editing.startDate : (presetDate || todayStr());
+  const endVal = editing ? (editing.endDate || '') : '';
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>${editing ? 'Editar Competição' : 'Nova Competição'}</h2>
+        <div class="field"><label>Nome da competição</label><input id="c_name" type="text" placeholder="ex: Torneio Internacional de Montaigu" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="field-row">
+          <div class="field"><label>Data de início</label><input id="c_start" type="date" value="${startVal}"></div>
+          <div class="field"><label>Data de fim</label><input id="c_end" type="date" value="${endVal}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Local</label><input id="c_location" type="text" placeholder="ex: Montaigu, França" value="${editing?escapeHtml(editing.location||''):''}"></div>
+          <div class="field">
+            <label>Escalão</label>
+            <select id="c_level"><option value="">—</option>${GAME_LEVELS.map(l=>`<option value="${l}" ${editing&&editing.level===l?'selected':''}>${l}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="field"><label>Link</label><input id="c_link" type="text" inputmode="url" placeholder="https://..." value="${editing?escapeHtml(editing.link||''):''}"></div>
+        <div class="modal-actions">
+          ${editing ? `<button class="btn" style="margin-right:auto;" onclick="removeCompetition('${editing.id}')">Eliminar</button>` : ''}
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="submitCompetition(${editing?`'${editing.id}'`:'null'})">${editing ? 'Guardar' : 'Adicionar'}</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function submitCompetition(editId){
+  const name = document.getElementById('c_name').value.trim();
+  const startDate = document.getElementById('c_start').value;
+  const endDate = document.getElementById('c_end').value;
+  const location = document.getElementById('c_location').value.trim();
+  const level = document.getElementById('c_level').value;
+  const rawLink = document.getElementById('c_link').value.trim();
+  if(!name){ showToast('Indica o nome da competição.'); return; }
+  if(!startDate){ showToast('Indica a data de início.'); return; }
+  if(endDate && endDate < startDate){ showToast('A data de fim não pode ser anterior à de início.'); return; }
+  if(rawLink && !compSafeLink(rawLink)){ showToast('O link não é válido (tem de ser um endereço http ou https).'); return; }
+  const link = compSafeLink(rawLink);
+  if(editId){
+    const c = competitions.find(x=>x.id===editId);
+    if(!c){ closeModal(); return; }
+    Object.assign(c, {name, startDate, endDate, location, level, link});
+  } else {
+    competitions.push({id: uid(), name, startDate, endDate, location, level, link, createdAt: Date.now()});
+    // mostra o mês da competição acabada de adicionar
+    const d = strToDate(startDate);
+    calendarMonth = {y: d.getFullYear(), m: d.getMonth()};
+  }
+  await saveData();
+  closeModal();
+  render();
+}
+async function removeCompetition(id){
+  const c = competitions.find(x=>x.id===id);
+  if(!c) return;
+  if(!confirm(`Eliminar a competição "${c.name}"?`)) return;
+  competitions = competitions.filter(x=>x.id!==id);
+  await saveData();
+  closeModal();
   render();
 }
 
