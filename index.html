@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scouting Base</title>
+<script>
+  // tema (escuro/claro) — aplicado logo no arranque para não "piscar"
+  (function(){ try{ var t = localStorage.getItem('scouting_theme_v1'); if(t === 'light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,6 +35,43 @@
     --font-display:'Oswald',sans-serif;
     --font-body:'Inter',sans-serif;
   }
+  /* ---------- tema claro (fundo cinzento claro + painéis brancos) ---------- */
+  :root[data-theme="light"]{
+    color-scheme:light;
+    --pitch-dark:#eef0f2;
+    --pitch-panel:#ffffff;
+    --pitch-panel-raise:#f3f4f6;
+    --line:#d5d9de;
+    --line-soft:#e4e7ea;
+    --chalk:#1d2630;
+    --muted:#6b7683;
+    --gold:#a87a1e;
+    --gold-dim:#c9a24f;
+    --blue:#4f7a91;
+    --olive:#7f8c5c;
+    --success:#3f8a4a;
+    --status-approved:#3f8a4a;
+    --status-urgent:#5aa04a;
+    --status-follow:#d4a516;
+    --st-cat-second:#f2d02e;
+  }
+  :root[data-theme="light"] ::selection{background:#e6d29a;color:#1d2630;}
+  :root[data-theme="light"] .motif{display:none;}
+  :root[data-theme="light"] .tile{background:#ffffff;border-color:#d5d9de;box-shadow:0 1px 3px rgba(20,30,40,.08);}
+  :root[data-theme="light"] .tile:hover{box-shadow:0 6px 16px rgba(20,30,40,.12);}
+  :root[data-theme="light"] .tile-icon{background:#f3f4f6;border-color:#e4e7ea;}
+  :root[data-theme="light"] .lvltab-date input{color-scheme:light;}
+  /* o relvado das folhas táticas mantém-se verde escuro nos dois temas: repõe as cores escuras lá dentro */
+  :root[data-theme="light"] .ts-pitch-wrap{
+    --pitch-dark:#12271f; --pitch-panel:#1a3a2c; --pitch-panel-raise:#204634;
+    --line:#365848; --line-soft:#2a4738; --chalk:#f1eee3; --muted:#93a89b;
+    --gold:#c99a44; --gold-dim:#8a713f; --status-approved:#5f9260; --status-follow:#d7b23c;
+    color:var(--chalk);
+  }
+  .theme-toggle{display:inline-flex;align-items:center;gap:7px;background:var(--pitch-panel);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:8px 12px;font-size:13px;font-weight:500;}
+  .theme-toggle:hover{border-color:var(--gold-dim);}
+  .theme-toggle svg{flex-shrink:0;}
+  @media (max-width:600px){ .theme-toggle .theme-toggle-label{display:none;} .theme-toggle{padding:8px 10px;} }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--pitch-dark);color:var(--chalk);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
   ::selection{background:var(--gold-dim);color:var(--chalk);}
@@ -1727,6 +1768,30 @@ function homeInsightsGridHtml(){
       </div>
     </div>`;
 }
+/* ---------------- tema claro / escuro ---------------- */
+function currentTheme(){ return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
+function themeToggleHtml(){
+  const light = currentTheme() === 'light';
+  const icon = light
+    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.7" y2="6.7"/><line x1="17.3" y1="17.3" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.7" y2="17.3"/><line x1="17.3" y1="6.7" x2="19.1" y2="4.9"/></svg>';
+  const label = light ? 'Tema escuro' : 'Tema claro';
+  return `<button type="button" class="theme-toggle" onclick="toggleTheme()" title="Mudar para ${label.toLowerCase()}" aria-label="Mudar para ${label.toLowerCase()}">${icon}<span class="theme-toggle-label">${label}</span></button>`;
+}
+function setTheme(t){
+  if(t === 'light') document.documentElement.setAttribute('data-theme','light');
+  else document.documentElement.removeAttribute('data-theme');
+  try{ localStorage.setItem('scouting_theme_v1', t); }catch(e){}
+}
+function toggleTheme(){
+  setTheme(currentTheme() === 'light' ? 'dark' : 'light');
+  // volta a desenhar o cabeçalho (rótulo/ícone do botão) sem perder a secção em que estás
+  const header = document.querySelector('header .header-actions');
+  if(header){
+    const old = header.querySelector('.theme-toggle');
+    if(old) old.outerHTML = themeToggleHtml();
+  }
+}
 function renderMainShell(){
   const inSection = activeTab !== null;
   document.getElementById('appRoot').innerHTML = `
@@ -1741,15 +1806,15 @@ function renderMainShell(){
           <h1>SCOUTING BASE</h1>
           <span>A tua base de dados pessoal de jogadores observados</span>
         </div>
-        ${inSection ? `
         <div class="header-actions">
-          <div class="search-box">
+          ${inSection ? `<div class="search-box">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input id="searchInput" type="text" placeholder="Procurar jogador ou clube..." value="${escapeHtml(state.search)}" oninput="onSearch(this.value)">
             <div id="searchDropdown" class="search-dropdown"></div>
           </div>
-          ${headerPrimaryButtonHtml()}
-        </div>` : ''}
+          ${headerPrimaryButtonHtml()}` : ''}
+          ${themeToggleHtml()}
+        </div>
       </div>
     </header>
     ${inSection ? `
