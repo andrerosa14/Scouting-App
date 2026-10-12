@@ -286,7 +286,7 @@
   .ts-legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0;}
 
   /* ---------- home stats strip ---------- */
-  .home-stats-wrap{max-width:none;margin:34px auto 0;padding:0 24px;}
+  .home-stats-wrap{max-width:none;margin:18px auto 80px;padding:0 24px;}
   .home-stats-strip{display:flex;flex-wrap:wrap;gap:14px;}
   .stat-card{flex:1;min-width:145px;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;}
   .stat-card .stat-num{font-family:var(--font-display);font-weight:700;font-size:26px;line-height:1.1;}
@@ -298,7 +298,7 @@
   .stat-card.st-month .stat-num{color:var(--gold);}
 
   /* ---------- home insight panels ---------- */
-  .home-insights-wrap{max-width:none;margin:18px auto 80px;padding:0 24px;}
+  .home-insights-wrap{max-width:none;margin:18px auto 0;padding:0 24px;}
   .insights-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(420px, 1fr));gap:20px;}
   .insight-panel{background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
   .insight-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-soft);}
@@ -1828,9 +1828,9 @@ function renderMainShell(){
       <div class="home-tiles">${homeTilesHtml()}</div>
     </div>
     <div class="home-urgent-wrap tab-fade">${homeUrgentPanelHtml()}</div>
-    <div class="home-stats-wrap tab-fade">${homeStatsStripHtml()}</div>
     <div class="home-comp-wrap tab-fade">${homeCompetitionsPanelHtml()}</div>
-    <div class="home-insights-wrap tab-fade">${homeInsightsGridHtml()}</div>`}
+    <div class="home-insights-wrap tab-fade">${homeInsightsGridHtml()}</div>
+    <div class="home-stats-wrap tab-fade">${homeStatsStripHtml()}</div>`}
     <footer>
       <button onclick="openSettingsModal()">Definições do GitHub</button>
       <button onclick="confirmClearAll()">Limpar todos os dados</button>
@@ -4877,21 +4877,32 @@ ${autoPrint ? '<script>window.onload = function(){ setTimeout(function(){ window
 }
 
 // ---- planner horizontal (uma linha por mês, dias 1–31 em colunas, barras por competição) ----
+// largura real (mm) de um texto, medida em canvas — para o nome da competição caber sempre no sítio reservado
+function compPdfTextMm(txt, pt, weight){
+  const cv = compPdfTextMm.cv || (compPdfTextMm.cv = document.createElement('canvas'));
+  const ctx = cv.getContext('2d');
+  ctx.font = (weight || 600) + ' ' + (pt * 96 / 72) + 'px Inter, Arial, sans-serif';
+  return ctx.measureText(txt).width * 25.4 / 96;
+}
 function compPdfPlannerLayout(months, list, autoPrint){
-  const LABEL_MM = 1.72;   // largura média por carácter do texto das barras a 8pt (mm)
   const DAY_MM = (281 - 19) / 31;
+  const PT_EST = 8;        // medição conservadora (o texto final é ≤ 7.2pt)
+  const BAR_MM = 4.6;      // altura da barra
+  const FONT_PT = 7.2;
   const rows = months.map(({y,m})=>{
     const dim = new Date(y, m+1, 0).getDate();
     const ms = `${compMonthStr(y,m)}-01`, me = `${compMonthStr(y,m)}-${pad2(dim)}`;
     const segs = list.filter(c => c.startDate <= me && compEnd(c) >= ms).map(c=>{
       const s = c.startDate > ms ? +c.startDate.slice(8,10) : 1;
       const e = compEnd(c) < me ? +compEnd(c).slice(8,10) : dim;
-      const label = `${c.level?c.level+' · ':''}${c.name}`;
-      const labelDays = Math.ceil((label.length * LABEL_MM + 2) / DAY_MM);
-      let occS = s, occE = Math.max(e, s + labelDays - 1), anchorRight = false;
-      if(occE > 31){ anchorRight = true; occE = e; occS = Math.min(s, e - labelDays + 1); if(occS < 1) occS = 1; }
-      return {c, s, e, label, occS, occE, anchorRight};
-    }).sort((a,b)=> a.s - b.s);
+      // o nome vai ao lado da barra (nunca por cima): à direita; se não couber até ao dia 31, à esquerda
+      const txtMm = compPdfTextMm(c.name + (c.level ? '  ' + c.level : ''), PT_EST) + 3.2;
+      const labelDays = Math.ceil(txtMm / DAY_MM);
+      let occS = s, occE = e, side = 'right';
+      if(e + labelDays <= 31){ occE = e + labelDays; }
+      else { side = 'left'; occS = Math.max(1, s - labelDays); }
+      return {c, s, e, occS, occE, side};
+    }).sort((a,b)=> a.occS - b.occS);
     const lanes = [];
     segs.forEach(sg=>{
       let li = lanes.findIndex(end => end < sg.occS);
@@ -4905,18 +4916,22 @@ function compPdfPlannerLayout(months, list, autoPrint){
   const availMm = 194 - 17 - 6;           // altura útil abaixo do cabeçalho e do rodapé
   const padMm = 1.6;
   const laneMm = Math.max(3.2, Math.min(11, (availMm - rows.length * padMm) / Math.max(totalLanes, 1)));
-  const fontPt = Math.max(5.2, Math.min(8, laneMm * 1.25));
+  const barH = Math.min(laneMm - .5, BAR_MM);
+  const fontPt = barH < BAR_MM ? Math.max(5.2, Math.min(FONT_PT, barH * 1.45)) : FONT_PT;
   const head = `<div class="ph"><div class="pm"></div><div class="pdays">${Array.from({length:31},(_,i)=>`<span>${i+1}</span>`).join('')}</div></div>`;
   const rowsHtml = rows.map(r=>{
     const h = r.laneCount * laneMm + padMm;
     const bars = r.segs.map(sg=>{
       const left = (sg.s - 1) / 31 * 100, width = (sg.e - sg.s + 1) / 31 * 100;
-      const top = sg.lane * laneMm + padMm / 2;
-      const col = compTint(compLevelColor(sg.c.level), .1);
-      const lblLeft = sg.anchorRight ? '' : `left:${left}%;`;
-      const lblRight = sg.anchorRight ? `right:${(31 - sg.e) / 31 * 100}%;text-align:right;` : '';
-      return `<div class="bar" style="left:${left}%;width:${width}%;top:${top}mm;height:${laneMm - .5}mm;background:${col};"></div>
-        <div class="bl" style="${lblLeft}${lblRight}top:${top}mm;height:${laneMm - .5}mm;line-height:${laneMm - .5}mm;">${escapeHtml(sg.label)}</div>`;
+      const top = sg.lane * laneMm + padMm / 2 + (laneMm - .5 - barH) / 2;
+      const strong = compLevelColor(sg.c.level);
+      const col = compTint(strong, .1);
+      const pos = sg.side === 'right'
+        ? `left:${(sg.e) / 31 * 100}%;`
+        : `right:${(31 - sg.s + 1) / 31 * 100}%;text-align:right;`;
+      const lvl = sg.c.level ? ` <span class="lv" style="color:${strong};">${escapeHtml(sg.c.level)}</span>` : '';
+      return `<div class="bar" style="left:${left}%;width:${width}%;top:${top}mm;height:${barH}mm;background:${col};border-left:.9mm solid ${strong};"></div>
+        <div class="bl" style="${pos}top:${top}mm;height:${barH}mm;line-height:${barH}mm;">${escapeHtml(sg.c.name)}${lvl}</div>`;
     }).join('');
     const wkCols = Array.from({length:31}, (_,i)=>{
       const d = i + 1;
@@ -4944,6 +4959,7 @@ function compPdfPlannerLayout(months, list, autoPrint){
     .pcols span.x{background:repeating-linear-gradient(135deg,#f4f4f4,#f4f4f4 1mm,#e9e9e9 1mm,#e9e9e9 1.4mm);}
     .bar{position:absolute;border-radius:.7mm;border:.2mm solid rgba(0,0,0,.28);}
     .bl{position:absolute;white-space:nowrap;font-size:${fontPt}pt;font-weight:600;color:#10241a;padding:0 1mm;}
+    .bl .lv{font-weight:700;font-size:.85em;}
   `;
   const inner = `${compPdfHeaderHtml(months, list)}<div class="planner">${head}${rowsHtml}</div>`;
   return compPdfWrapDoc(inner, css, autoPrint);
