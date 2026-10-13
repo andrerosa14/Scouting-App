@@ -3079,6 +3079,7 @@ function renderShadowTeamDetailHtml(st){
     <div class="shortlist-detail-head">
       <button class="btn btn-ghost" onclick="activeShadowTeamId=null; renderTabContent();">← Shadow Teams</button>
       <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="exportShadowTeamPdf('${st.id}')">↓ Exportar PDF</button>
         <button class="btn btn-ghost" onclick="openShadowTeamFormModal('${st.id}')">Editar nome</button>
         <button class="btn btn-ghost" onclick="removeShadowTeam('${st.id}')">Eliminar</button>
       </div>
@@ -3135,6 +3136,113 @@ function renderShadowTeamDetailHtml(st){
       </div>
     </div>
   `;
+}
+
+/* ---------------- exportar Shadow Team (PDF, uma página A4 horizontal) ---------------- */
+function shadowTeamPdfHtml(st, autoPrint){
+  const byPos = {};
+  POSITIONS.forEach(pos=>{ byPos[pos.v] = []; });
+  st.playerIds.forEach(pid=>{
+    const p = players.find(x=>x.id===pid);
+    if(!p) return;
+    if(!byPos[p.position]) byPos[p.position] = [];
+    byPos[p.position].push(p);
+  });
+  const COLS = [['GR'], ['DE','DCE','DCD','DD'], ['MDC'], ['MC','MOC'], ['EE','SA','ED'], ['PL']];
+  // altura de cada cartão (mm): ajusta-se para tudo caber numa só página, mesmo com muitos jogadores
+  const colUnits = COLS.map(col => col.reduce((a,pos)=> a + (byPos[pos].length ? byPos[pos].length + .62 : .62) + .5, 0));
+  const maxUnits = Math.max(...colUnits, 1);
+  const availMm = 194 - 18 - 6 - 10;
+  const u = Math.max(4.6, Math.min(10.5, availMm / maxUnits));
+  const namePt = Math.max(4.6, Math.min(8.4, u * .8));
+  const subPt = namePt * .78;
+  const catInfo = (id) => (st.playerCategories && st.playerCategories[id]) || '';
+  const letter = { first:'1ª', second:'2ª', squad:'C', '':'–' };
+  // largura útil do texto em cada coluna (mm), para encolher o nome/clube até caberem inteiros (sem "…")
+  const FR = [1, 1.05, 1, 1.05, 1.05, 1];
+  const frMm = (281 - .8 - 8 - 5 * 3) / FR.reduce((a,b)=>a+b, 0);
+  const photoW = (u - 1.4) * .82, letterW = (u - 1.8) * .78;
+  const textMm = (ci) => frMm * FR[ci] - 2.4 - 2.8 - .4 - photoW - letterW - .6;
+  const fitPt = (txt, pt, weight, maxMm, minPt) => {
+    const w = compPdfTextMm(txt, pt, weight);
+    return w <= maxMm ? pt : Math.max(minPt, pt * maxMm / w);
+  };
+  const cardHtml = (p, ci) => {
+    const cat = catInfo(p.id);
+    const club = clubInfo(p.clubId);
+    const year = /^(\d{4})/.test(p.birthDate || '') ? p.birthDate.slice(0,4) : '—';
+    const sub = `${year} | ${club ? club.name : 'Sem clube'}`;
+    const avail = textMm(ci);
+    const nPt = fitPt(p.name, namePt, 700, avail, 4.2);
+    const sPt = fitPt(sub, subPt, 400, avail, 3.8);
+    return `<div class="c ${cat || 'none'}"><div class="ph">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div><div class="in"><div class="n" style="font-size:${nPt.toFixed(2)}pt;">${escapeHtml(p.name)}</div><div class="s" style="font-size:${sPt.toFixed(2)}pt;">${escapeHtml(sub)}</div></div><div class="l">${letter[cat] || '–'}</div></div>`;
+  };
+  const grpHtml = (pos, ci) => {
+    const list = byPos[pos] || [];
+    return `<div class="g ${list.length ? '' : 'e'}"><div class="t">${pos}</div>${list.map(p=>cardHtml(p, ci)).join('')}</div>`;
+  };
+  const total = st.playerIds.filter(id => players.some(p => p.id === id)).length;
+  const counts = { first:0, second:0, squad:0 };
+  st.playerIds.forEach(id => { const c = catInfo(id); if(counts[c] !== undefined && players.some(p=>p.id===id)) counts[c]++; });
+  const inner = `
+    <div class="top">
+      <div>
+        <div class="brand">Scouting Base · Shadow Team</div>
+        <h1>${escapeHtml(st.name)}</h1>
+      </div>
+      <div class="top-right">
+        <div class="period">${total} jogador${total===1?'':'es'}</div>
+        <div class="keys">
+          <span class="key"><i style="background:#7cc050"></i>1ª Linha (${counts.first})</span>
+          <span class="key"><i style="background:#f1c40f"></i>2ª Linha (${counts.second})</span>
+          <span class="key"><i style="background:#ef8a2b"></i>Composição (${counts.squad})</span>
+        </div>
+      </div>
+    </div>
+    <div class="stp">
+      <svg class="lines" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.2">
+        <rect x="8" y="8" width="984" height="584"/><line x1="500" y1="8" x2="500" y2="592"/>
+        <circle cx="500" cy="300" r="70"/><circle cx="500" cy="300" r="3" fill="rgba(255,255,255,.8)"/>
+        <rect x="8" y="140" width="150" height="320"/><rect x="8" y="225" width="52" height="150"/>
+        <rect x="842" y="140" width="150" height="320"/><rect x="940" y="225" width="52" height="150"/>
+      </svg>
+      <div class="cols">${COLS.map((col, ci) => `<div class="col">${col.map(pos => grpHtml(pos, ci)).join('')}</div>`).join('')}</div>
+    </div>`;
+  const css = `
+    .stp{position:relative;flex:1;min-height:0;border-radius:1mm;overflow:hidden;border:.4mm solid #2d6b2b;padding:4mm 4mm;
+      background:repeating-linear-gradient(90deg,#3f8a3a 0 6.25%,#4a9a43 6.25% 12.5%);}
+    .stp .lines{position:absolute;inset:0;width:100%;height:100%;}
+    .cols{position:relative;height:100%;display:grid;grid-template-columns:1fr 1.05fr 1fr 1.05fr 1.05fr 1fr;gap:3mm;}
+    .col{display:flex;flex-direction:column;justify-content:space-around;min-width:0;}
+    .g{min-width:0;}
+    .g.e{opacity:.5;}
+    .t{display:inline-block;background:#1b2a3a;color:#fff;font-weight:800;font-size:${Math.max(5.4, namePt)}pt;letter-spacing:.04em;padding:.4mm 2.6mm .2mm;border-radius:1.2mm 1.2mm 0 0;margin-left:1.4mm;border:.2mm solid #0d1722;border-bottom:none;line-height:1.3;}
+    .c{display:flex;align-items:center;gap:1.4mm;padding:.5mm 1.2mm;height:${u}mm;border:.2mm solid rgba(0,0,0,.5);border-top:none;color:#111;}
+    .g .t + .c{border-top:.2mm solid rgba(0,0,0,.5);}
+    .c.none{background:linear-gradient(90deg,#f1f1ee,#d7d9d4);}
+    .c.first{background:linear-gradient(90deg,#e4f3d2,#b9dc9a);}
+    .c.second{background:linear-gradient(90deg,#fdf3b8,#f4d95a);}
+    .c.squad{background:linear-gradient(90deg,#fde1bd,#f2a867);}
+    .ph{height:${(u - 1.4).toFixed(2)}mm;width:${((u - 1.4) * .82).toFixed(2)}mm;border-radius:.6mm;border:.2mm solid rgba(0,0,0,.45);background:#fff;display:flex;align-items:center;justify-content:center;font-size:${subPt}pt;font-weight:800;color:#556;overflow:hidden;flex-shrink:0;}
+    .ph img{width:100%;height:100%;object-fit:cover;}
+    .in{flex:1;min-width:0;line-height:1.18;}
+    .n{font-weight:700;font-size:${namePt}pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .s{font-size:${subPt}pt;color:#3a3a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .l{height:${(u - 1.8).toFixed(2)}mm;min-width:${((u - 1.8) * .78).toFixed(2)}mm;border-radius:.6mm;font-weight:800;font-size:${namePt}pt;display:flex;align-items:center;justify-content:center;border:.2mm solid rgba(0,0,0,.45);color:#10241a;flex-shrink:0;background:#cfd2cc;}
+    .first .l{background:#7cc050;} .second .l{background:#f1c40f;} .squad .l{background:#ef8a2b;}
+  `;
+  return compPdfWrapDoc(inner, css, !!autoPrint).replace('<title>Calendário de Competições</title>', `<title>${escapeHtml('Shadow Team — ' + st.name)}</title>`);
+}
+function exportShadowTeamPdf(id){
+  const st = shadowTeams.find(x=>x.id===id);
+  if(!st) return;
+  if(!st.playerIds.some(pid => players.some(p => p.id === pid))){ showToast('Esta Shadow Team ainda não tem jogadores.'); return; }
+  const html = shadowTeamPdfHtml(st, true);
+  const win = window.open('', '_blank');
+  if(!win){ showToast('O browser bloqueou a nova janela. Permite pop-ups para exportar o PDF.'); return; }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
 }
 
 function onShadowAddSearch(shadowTeamId, value){
