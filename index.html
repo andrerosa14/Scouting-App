@@ -390,7 +390,7 @@
   .modal h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 18px;}
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
-  .field input,.field select{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:9px 10px;border-radius:var(--radius);font-size:14px;}
+  .field input,.field select,.field textarea{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);padding:9px 10px;border-radius:var(--radius);font-size:14px;}
   .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
 
@@ -1424,7 +1424,7 @@ function headerPrimaryButtonHtml(){
   if(activeTab==='games') return `<button class="btn btn-primary" onclick="openGameFormModal()">+ Novo Jogo</button>`;
   if(activeTab==='shadowteams') return `<button class="btn btn-primary" onclick="openShadowTeamFormModal()">+ Nova Shadow Team</button>`;
   if(activeTab==='urgencia') return '';
-  if(activeTab==='calendario') return `<button class="btn btn-ghost" onclick="openCompetitionsPdfModal()">Exportar PDF</button><button class="btn btn-primary" onclick="openCompetitionModal()">+ Nova Competição</button>`;
+  if(activeTab==='calendario') return `<button class="btn btn-ghost" onclick="openCompetitionsImportModal()">Importar</button><button class="btn btn-ghost" onclick="openCompetitionsPdfModal()">Exportar PDF</button><button class="btn btn-primary" onclick="openCompetitionModal()">+ Nova Competição</button>`;
   if(activeTab==='tatico') return activeTacticalSheetId ? '' : `<button class="btn btn-primary" onclick="openTacticalSheetFormModal()">+ Nova Folha Tática</button>`;
   return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
 }
@@ -4821,6 +4821,87 @@ function renderCalendarTabHtml(){
       <h3 class="cal-list-title">Todas as competições</h3>
       ${listHtml}
     </div>`;
+}
+
+
+/* ---------------- importar competições para o calendário (ficheiro .json ou texto colado) ---------------- */
+let compImportParsed = null; // {fresh:[...], dup:n, bad:n}
+function compNormName(str){ return (str||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
+function parseCompetitionsImport(text){
+  let data;
+  try{ data = JSON.parse(text); }catch(e){ return {error:'O texto não é um JSON válido.'}; }
+  if(data && !Array.isArray(data) && Array.isArray(data.competitions)) data = data.competitions;
+  if(!Array.isArray(data)) return {error:'Esperava uma lista de competições.'};
+  const isDate = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(new Date(v+'T00:00:00'));
+  const known = new Set(competitions.map(c=>compNormName(c.name)+'|'+c.startDate));
+  const fresh = []; let dup = 0, bad = 0;
+  data.forEach(it=>{
+    const name = it && typeof it.name === 'string' ? it.name.trim() : '';
+    const startDate = it && it.startDate;
+    let endDate = it && it.endDate ? it.endDate : '';
+    if(!name || !isDate(startDate) || (endDate && (!isDate(endDate) || endDate < startDate))){ bad++; return; }
+    const key = compNormName(name)+'|'+startDate;
+    if(known.has(key)){ dup++; return; }
+    known.add(key);
+    fresh.push({
+      id: uid(), name, startDate, endDate,
+      location: typeof it.location === 'string' ? it.location.trim() : '',
+      level: GAME_LEVELS.includes(it.level) ? it.level : '',
+      link: compSafeLink(typeof it.link === 'string' ? it.link : ''),
+      createdAt: Date.now(),
+    });
+  });
+  return {fresh, dup, bad};
+}
+function openCompetitionsImportModal(){
+  compImportParsed = null;
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="modal">
+        <h2>Importar competições</h2>
+        <p style="color:var(--muted);font-size:13px;margin:0 0 12px;">Escolhe o ficheiro <b>.json</b> com as competições (ou cola o conteúdo abaixo). As que já existirem no calendário com o mesmo nome e data de início não são repetidas.</p>
+        <div class="field"><label>Ficheiro</label><input id="ci_file" type="file" accept=".json,application/json" onchange="compImportFromFile(this)"></div>
+        <div class="field"><label>Ou cola aqui</label><textarea id="ci_text" rows="6" style="font-size:12px;font-family:monospace;resize:vertical;" placeholder='[{"name":"UEFA Youth League – Jornada 1","startDate":"2026-10-13","level":"U19","location":"Lens","link":"https://..."}]' oninput="compImportPreview()"></textarea></div>
+        <div id="ci_preview" class="comp-empty" style="padding:4px 0;"></div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" id="ci_btn" onclick="submitCompetitionsImport()" disabled>Importar</button>
+        </div>
+      </div>
+    </div>`;
+}
+function compImportFromFile(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ const ta = document.getElementById('ci_text'); if(ta){ ta.value = String(r.result||''); compImportPreview(); } };
+  r.readAsText(f);
+}
+function compImportPreview(){
+  const ta = document.getElementById('ci_text'), pv = document.getElementById('ci_preview'), btn = document.getElementById('ci_btn');
+  if(!ta || !pv || !btn) return;
+  compImportParsed = null; btn.disabled = true;
+  if(!ta.value.trim()){ pv.textContent = ''; return; }
+  const res = parseCompetitionsImport(ta.value);
+  if(res.error){ pv.textContent = res.error; return; }
+  compImportParsed = res;
+  const parts = [`${res.fresh.length} nova${res.fresh.length===1?'':'s'}`];
+  if(res.dup) parts.push(`${res.dup} já existia${res.dup===1?'':'m'}`);
+  if(res.bad) parts.push(`${res.bad} ignorada${res.bad===1?'':'s'} (sem nome ou data válida)`);
+  pv.textContent = parts.join(' · ');
+  btn.disabled = res.fresh.length === 0;
+}
+async function submitCompetitionsImport(){
+  const res = compImportParsed;
+  if(!res || !res.fresh.length) return;
+  competitions.push(...res.fresh);
+  const first = res.fresh.slice().sort((a,b)=>a.startDate.localeCompare(b.startDate))[0];
+  const d = strToDate(first.startDate);
+  calendarMonth = {y: d.getFullYear(), m: d.getMonth()};
+  await saveData();
+  closeModal();
+  render();
+  showToast(`${res.fresh.length} competição(ões) adicionada(s) ao calendário.`);
 }
 
 function openCompetitionModal(editId, presetDate){
