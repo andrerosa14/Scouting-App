@@ -757,7 +757,7 @@
   .cal-day-level{font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--lc, var(--gold));text-align:right;line-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
   .cal-day-num{font-size:12px;color:var(--muted);align-self:flex-start;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px;padding:0 4px;}
   .cal-day.today .cal-day-num{background:var(--gold);color:#241a07;font-weight:700;}
-  .cal-chip{display:block;width:100%;text-align:left;font-size:11px;line-height:16px;padding:0 6px;border:none;border-radius:3px;background:var(--lc-bg, rgba(115,150,168,.28));border-left:3px solid var(--lc, var(--blue));color:var(--chalk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cal-chip{display:block;width:100%;text-align:left;font-size:11px;line-height:14px;padding:1px 6px;border:none;border-radius:3px;background:var(--lc-bg, rgba(115,150,168,.28));border-left:3px solid var(--lc, var(--blue));color:var(--chalk);white-space:normal;overflow-wrap:anywhere;}
   .cal-chip.has-lvl{position:relative;padding-left:30px;border-left:none;}
   .lvl-U21{--lc:#e8892f;--lc-bg:rgba(232,137,47,.42);--lc-bg-hover:rgba(232,137,47,.6);--lc-fg:#2a1503;}
   .lvl-U20{--lc:#a3a9ae;--lc-bg:rgba(163,169,174,.42);--lc-bg-hover:rgba(163,169,174,.6);--lc-fg:#1d2022;}
@@ -815,7 +815,7 @@
     .cal-day-level{font-size:8px;line-height:18px;letter-spacing:0;}
     .cal-chip-lvl{display:none;}
     .cal-chip.has-lvl{padding-left:0;border-left:3px solid var(--lc, var(--blue));}
-    .cal-chip{height:6px;padding:0;font-size:0;line-height:0;border-left-width:0;}
+    .cal-chip{height:6px;padding:0;font-size:0;line-height:0;border-left-width:0;overflow:hidden;}
     .cal-dow{padding:5px 2px;font-size:9px;text-align:center;letter-spacing:0;}
     .cal-list-row{flex-wrap:wrap;}
   }
@@ -4762,7 +4762,7 @@ function renderCalendarTabHtml(){
   const daysInMonth = new Date(cm.y, cm.m + 1, 0).getDate();
   const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
   const today = todayStr();
-  const MAX_CHIPS = 3;
+  const MAX_CHIPS = Infinity; // mostra todas as competições/jogos de cada dia, sem limite
   let cells = '';
   for(let i = 0; i < totalCells; i++){
     const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
