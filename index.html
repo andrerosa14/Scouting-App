@@ -447,7 +447,7 @@
   .note p{margin:0;font-size:14px;white-space:pre-wrap;}
   .note-form textarea{width:100%;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:10px;font-size:14px;min-height:70px;resize:vertical;margin-top:10px;}
   .note-form{margin-bottom:14px;}
-  .note-form-actions{display:flex;justify-content:flex-end;margin-top:8px;}
+  .note-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;}
 
   /* ---------- collapsed final-evaluation reports ---------- */
   .note.t-final .note-body{position:relative;cursor:pointer;}
@@ -4202,6 +4202,7 @@ function setNoteType(t){
   }
 }
 function closeDossier(){
+  editingNoteId = null; noteEditDraft = '';
   if(openDossierId && (openDossierId in reportDrafts)) commitReport(openDossierId);
   openDossierId = null;
   document.getElementById('backdrop').classList.remove('open');
@@ -4252,6 +4253,7 @@ function onReportInput(id, value){
 async function setDossierTab(tab){
   if(openDossierId && (openDossierId in reportDrafts)) await commitReport(openDossierId);
   dossierTab = tab;
+  editingNoteId = null; noteEditDraft = '';
   renderDossier();
 }
 function ratingBadgesHtml(p){
@@ -4381,12 +4383,24 @@ function renderDossier(){
                     <span class="note-type-pill t-${nt.v}${lvlCls}">${nt.v==='nivel' ? `${nt.label}: ${escapeHtml(n.level||'—')}` : nt.label}</span>
                     ${nt.v==='nivel' && n.id===curLevelNoteId ? `<span class="tag">Nível atual</span>` : ''}
                     <span class="note-date">${fmtDate(n.date)}</span>
+                    ${n.editedAt ? `<span class="tag" title="Editada a ${fmtDate(n.editedAt)}">editada</span>` : ''}
                     ${ng ? `<span class="tag">Jogo: ${gaClub?escapeHtml(gaClub.name):'—'} vs ${gbClub?escapeHtml(gbClub.name):'—'}</span>` : ''}
                     ${ng && (ng.competition || ng.level) ? `<span class="tag">${ng.competition?escapeHtml(ng.competition):'Sem competição'}${ng.level?' · '+escapeHtml(ng.level):''}</span>` : ''}
                   </div>
-                  <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
+                  <div style="display:flex;gap:4px;flex-shrink:0;">
+                    ${nt.v!=='nivel' && editingNoteId!==n.id ? `<button class="btn-ghost" style="font-size:12px;" onclick="startEditNote('${p.id}','${n.id}')">Editar</button>` : ''}
+                    <button class="btn-ghost" style="font-size:12px;" onclick="removeNote('${p.id}','${n.id}')">Remover</button>
+                  </div>
                 </div>
-                ${nt.v==='nivel' ? `<div class="note-body"><p>${ng ? 'Nível de urgência de observação atribuído neste jogo' : 'Nível de urgência de observação atribuído manualmente na ficha do jogador'}: <strong>${escapeHtml(n.level||'—')}</strong>.</p></div>` :
+                ${nt.v!=='nivel' && editingNoteId===n.id ? `
+                <div class="note-form" style="margin:8px 0 0;">
+                  <textarea id="noteEditText" style="min-height:110px;" oninput="noteEditDraft=this.value" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){saveEditNote('${p.id}','${n.id}')} else if(event.key==='Escape'){cancelEditNote()}">${escapeHtml(noteEditDraft)}</textarea>
+                  <div class="note-form-actions">
+                    <button class="btn" onclick="cancelEditNote()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="saveEditNote('${p.id}','${n.id}')">Guardar</button>
+                  </div>
+                </div>` :
+                nt.v==='nivel' ? `<div class="note-body"><p>${ng ? 'Nível de urgência de observação atribuído neste jogo' : 'Nível de urgência de observação atribuído manualmente na ficha do jogador'}: <strong>${escapeHtml(n.level||'—')}</strong>.</p></div>` :
                   nt.v==='final' ? (() => {
                   const isOpen = expandedNoteIds.has(n.id);
                   return `
@@ -4633,6 +4647,37 @@ async function addNote(id){
   if(!text) return;
   const p = players.find(x=>x.id===id);
   p.notes.push({id: uid(), date: Date.now(), text, type: noteFormType});
+  await saveData(); renderDossier();
+}
+let editingNoteId = null; // nota que está a ser editada no separador Notas da ficha
+let noteEditDraft = '';
+function startEditNote(id, noteId){
+  const p = players.find(x=>x.id===id);
+  const n = p && (p.notes||[]).find(x=>x.id===noteId);
+  if(!n || n.type==='nivel') return;
+  editingNoteId = noteId;
+  noteEditDraft = n.text || '';
+  if(n.type==='final') expandedNoteIds.add(noteId);
+  renderDossier();
+  setTimeout(()=>{ const ta = document.getElementById('noteEditText'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } }, 30);
+}
+function cancelEditNote(){
+  editingNoteId = null; noteEditDraft = '';
+  renderDossier();
+}
+async function saveEditNote(id, noteId){
+  const p = players.find(x=>x.id===id);
+  const n = p && (p.notes||[]).find(x=>x.id===noteId);
+  if(!n) { cancelEditNote(); return; }
+  const ta = document.getElementById('noteEditText');
+  const text = (ta ? ta.value : noteEditDraft).trim();
+  if(!text){ showToast('A nota não pode ficar vazia. Para a apagar usa "Remover".'); return; }
+  if(text !== (n.text||'')){
+    n.text = text;
+    n.editedAt = Date.now();
+    if(n.type==='final') delete reportDrafts[id]; // o relatório passa a mostrar o texto guardado
+  }
+  editingNoteId = null; noteEditDraft = '';
   await saveData(); renderDossier();
 }
 async function removeNote(id, noteId){
