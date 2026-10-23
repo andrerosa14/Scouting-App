@@ -4202,7 +4202,9 @@ function setNoteType(t){
   }
 }
 function closeDossier(){
-  editingNoteId = null; noteEditDraft = '';
+  // se havia uma nota a ser editada, grava o que já estava escrito antes de sair
+  if(editingNoteId && openDossierId){ clearNoteEditTimer(editingNoteId); commitNoteEdit(openDossierId, editingNoteId); }
+  editingNoteId = null; noteEditDraft = ''; noteEditOriginal = null;
   if(openDossierId && (openDossierId in reportDrafts)) commitReport(openDossierId);
   openDossierId = null;
   document.getElementById('backdrop').classList.remove('open');
@@ -4252,8 +4254,9 @@ function onReportInput(id, value){
 }
 async function setDossierTab(tab){
   if(openDossierId && (openDossierId in reportDrafts)) await commitReport(openDossierId);
+  if(editingNoteId && openDossierId){ clearNoteEditTimer(editingNoteId); await commitNoteEdit(openDossierId, editingNoteId); }
   dossierTab = tab;
-  editingNoteId = null; noteEditDraft = '';
+  editingNoteId = null; noteEditDraft = ''; noteEditOriginal = null;
   renderDossier();
 }
 function ratingBadgesHtml(p){
@@ -4394,10 +4397,11 @@ function renderDossier(){
                 </div>
                 ${nt.v!=='nivel' && editingNoteId===n.id ? `
                 <div class="note-form" style="margin:8px 0 0;">
-                  <textarea id="noteEditText" style="min-height:110px;" oninput="noteEditDraft=this.value" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){saveEditNote('${p.id}','${n.id}')} else if(event.key==='Escape'){cancelEditNote()}">${escapeHtml(noteEditDraft)}</textarea>
-                  <div class="note-form-actions">
-                    <button class="btn" onclick="cancelEditNote()">Cancelar</button>
-                    <button class="btn btn-primary" onclick="saveEditNote('${p.id}','${n.id}')">Guardar</button>
+                  <textarea id="noteEditText" style="min-height:110px;" oninput="onNoteEditInput('${p.id}','${n.id}',this.value)" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){saveEditNote('${p.id}','${n.id}')} else if(event.key==='Escape'){cancelEditNote('${p.id}','${n.id}')}">${escapeHtml(noteEditDraft)}</textarea>
+                  <div class="note-form-actions" style="align-items:center;">
+                    <span id="noteEditStatus" style="margin-right:auto;font-size:12px;color:var(--muted);">Guarda automaticamente enquanto escreves</span>
+                    <button class="btn" title="Descarta as alterações desta edição e volta ao texto original" onclick="cancelEditNote('${p.id}','${n.id}')">Repor original</button>
+                    <button class="btn btn-primary" onclick="saveEditNote('${p.id}','${n.id}')">Concluir</button>
                   </div>
                 </div>` :
                 nt.v==='nivel' ? `<div class="note-body"><p>${ng ? 'Nível de urgência de observação atribuído neste jogo' : 'Nível de urgência de observação atribuído manualmente na ficha do jogador'}: <strong>${escapeHtml(n.level||'—')}</strong>.</p></div>` :
@@ -4651,34 +4655,70 @@ async function addNote(id){
 }
 let editingNoteId = null; // nota que está a ser editada no separador Notas da ficha
 let noteEditDraft = '';
+let noteEditOriginal = null; // {text, editedAt} da nota quando se abriu a edição (para "Repor original")
+function setNoteEditStatus(msg){ const el = document.getElementById('noteEditStatus'); if(el) el.textContent = msg; }
 function startEditNote(id, noteId){
   const p = players.find(x=>x.id===id);
   const n = p && (p.notes||[]).find(x=>x.id===noteId);
   if(!n || n.type==='nivel') return;
   editingNoteId = noteId;
   noteEditDraft = n.text || '';
+  noteEditOriginal = {text: n.text || '', editedAt: n.editedAt || null};
   if(n.type==='final') expandedNoteIds.add(noteId);
   renderDossier();
   setTimeout(()=>{ const ta = document.getElementById('noteEditText'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } }, 30);
 }
-function cancelEditNote(){
-  editingNoteId = null; noteEditDraft = '';
-  renderDossier();
-}
-async function saveEditNote(id, noteId){
+// grava o texto atual da edição na nota (sem fechar a edição); não grava texto vazio
+async function commitNoteEdit(id, noteId){
+  if(editingNoteId !== noteId) return;
   const p = players.find(x=>x.id===id);
   const n = p && (p.notes||[]).find(x=>x.id===noteId);
-  if(!n) { cancelEditNote(); return; }
-  const ta = document.getElementById('noteEditText');
-  const text = (ta ? ta.value : noteEditDraft).trim();
-  if(!text){ showToast('A nota não pode ficar vazia. Para a apagar usa "Remover".'); return; }
+  if(!n) return;
+  const text = noteEditDraft.trim();
+  if(!text){ setNoteEditStatus('Nota vazia — ainda não guardada'); return; }
   if(text !== (n.text||'')){
     n.text = text;
     n.editedAt = Date.now();
     if(n.type==='final') delete reportDrafts[id]; // o relatório passa a mostrar o texto guardado
+    await saveData();
   }
-  editingNoteId = null; noteEditDraft = '';
-  await saveData(); renderDossier();
+  setNoteEditStatus(storageOk ? 'Guardado ✓' : 'Não foi possível guardar');
+}
+function onNoteEditInput(id, noteId, value){
+  noteEditDraft = value;
+  setNoteEditStatus('A escrever…');
+  debounceAutosave('noteedit_'+noteId, () => commitNoteEdit(id, noteId));
+}
+function clearNoteEditTimer(noteId){
+  const k = 'noteedit_'+noteId;
+  clearTimeout(_autosaveTimers[k]); delete _autosaveTimers[k]; delete _autosavePending[k];
+}
+// "Repor original": descarta o que foi escrito nesta edição (mesmo o que já tinha sido guardado automaticamente)
+async function cancelEditNote(id, noteId){
+  if(noteId) clearNoteEditTimer(noteId);
+  const p = players.find(x=>x.id===id);
+  const n = p && (p.notes||[]).find(x=>x.id===noteId);
+  if(n && noteEditOriginal && (n.text !== noteEditOriginal.text)){
+    n.text = noteEditOriginal.text;
+    n.editedAt = noteEditOriginal.editedAt || undefined;
+    if(!n.editedAt) delete n.editedAt;
+    await saveData();
+  }
+  editingNoteId = null; noteEditDraft = ''; noteEditOriginal = null;
+  renderDossier();
+}
+// "Concluir": grava o que falta e fecha a edição
+async function saveEditNote(id, noteId){
+  const p = players.find(x=>x.id===id);
+  const n = p && (p.notes||[]).find(x=>x.id===noteId);
+  if(!n){ editingNoteId = null; renderDossier(); return; }
+  clearNoteEditTimer(noteId);
+  const ta = document.getElementById('noteEditText');
+  if(ta) noteEditDraft = ta.value;
+  if(!noteEditDraft.trim()){ showToast('A nota não pode ficar vazia. Para a apagar usa "Remover".'); return; }
+  await commitNoteEdit(id, noteId);
+  editingNoteId = null; noteEditDraft = ''; noteEditOriginal = null;
+  renderDossier();
 }
 async function removeNote(id, noteId){
   const p = players.find(x=>x.id===id);
