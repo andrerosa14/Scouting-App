@@ -994,7 +994,8 @@ let tacticalPendingNoteOpen = new Set();
 let tacticalPendingNoteDrafts = {};
 
 function posInfo(v){ return POSITIONS.find(p=>p.v===v) || POSITIONS.find(p=>p.v==='MC') || POSITIONS[0]; }
-function statusInfo(v){ return STATUSES.find(s=>s.v===v) || STATUSES[0]; }
+const NO_STATUS = {v:'', label:'Sem estado', cls:'st-none', short:'—'};
+function statusInfo(v){ return STATUSES.find(s=>s.v===v) || NO_STATUS; }
 function noteTypeInfo(v){ if(v===LEVEL_NOTE_TYPE.v) return LEVEL_NOTE_TYPE; return NOTE_TYPES.find(t=>t.v===v) || NOTE_TYPES[0]; }
 // devolve a nota de nível de urgência mais recente do jogador (a que define o nível atual)
 function latestLevelNote(p){
@@ -1259,8 +1260,10 @@ async function fetchDataFromGitHub(){
   const migrateStatuses = (playersArr) => {
     const validNow = STATUSES.map(s=>s.v);
     (playersArr || []).forEach(p => {
-      if(!validNow.includes(p.status)){
-        p.status = LEGACY_STATUS_MAP[p.status] || 'follow';
+      if(!p.status){
+        p.status = ''; // sem estado atribuído
+      } else if(!validNow.includes(p.status)){
+        p.status = LEGACY_STATUS_MAP[p.status] || '';
       }
       if(!p.statusChangedAt){
         p.statusChangedAt = p.createdAt || Date.now();
@@ -2045,6 +2048,7 @@ function renderFilters(){
     </div>
     <select class="filter-select" onchange="state.status=this.value; render();">
       <option value="all" ${state.status==='all'?'selected':''}>Todos os estados</option>
+      <option value="none" ${state.status==='none'?'selected':''}>Sem estado</option>
       ${STATUSES.map(s=>`<option value="${s.v}" ${state.status===s.v?'selected':''}>${s.label}</option>`).join('')}
     </select>
     <select class="filter-select" onchange="state.clubId=this.value||null; render();">
@@ -2156,7 +2160,7 @@ function getFiltered(){
     const clubName = club ? club.name.toLowerCase() : '';
     if(state.search && !(p.name.toLowerCase().includes(state.search) || clubName.includes(state.search))) return false;
     if(state.line && posInfo(p.position).line !== state.line) return false;
-    if(state.status !== 'all' && p.status !== state.status) return false;
+    if(state.status === 'none'){ if(p.status) return false; } else if(state.status !== 'all' && p.status !== state.status) return false;
     if(state.clubId && p.clubId !== state.clubId) return false;
     if(p.rating < state.minRating) return false;
     return true;
@@ -2219,7 +2223,7 @@ function renderList(){
         <div class="age num">${p.birthDate ? `${fmtDateOnly(p.birthDate)}${age!==null?` (${age} anos)`:''}` : '—'}</div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
           ${starsHtml(p.rating)}
-          <span class="status-pill ${st.cls}">${st.label}</span>
+          ${p.status ? `<span class="status-pill ${st.cls}">${st.label}</span>` : ''}
         </div>
       </button>`;
     }).join('')}
@@ -2245,7 +2249,7 @@ function renderPlayerCardsHtml(list){
           <div class="pcard-age">${p.birthDate ? `${fmtDateOnly(p.birthDate)}${age!==null?` (${age} anos)`:''}` : 'Sem data de nascimento'}</div>
           <div class="pcard-foot">
             ${starsHtml(p.rating, 13)}
-            <span class="status-pill ${st.cls}" title="${escapeHtml(st.label)}">${escapeHtml(st.short)}</span>
+            ${p.status ? `<span class="status-pill ${st.cls}" title="${escapeHtml(st.label)}">${escapeHtml(st.short)}</span>` : ''}
           </div>
         </div>
       </button>`;
@@ -2348,7 +2352,7 @@ async function submitNewPlayer(){
     id: uid(),
     ...fields,
     photo,
-    status: 'follow',
+    status: '',
     statusChangedAt: Date.now(),
     rating: 0,
     notes: [],
@@ -2544,7 +2548,7 @@ function renderClubDetailHtml(c){
             <div class="cpr-name">${escapeHtml(p.name)}</div>
             <div class="cpr-meta"><span class="pos-badge">${pos.v}</span><span>${p.height ? p.height+' cm' : '—'}</span></div>
           </div>
-          <div class="cpr-status ${st.cls}">${st.label}</div>
+          ${p.status ? `<div class="cpr-status ${st.cls}">${st.label}</div>` : ''}
           <div class="cpr-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
         </button>`;
       }).join('')}</div>`;
@@ -4280,6 +4284,7 @@ function renderReportTabHtml(p){
         <div class="report-grid">
           <div class="section">
             <h3>Estado</h3>
+            ${p.status ? '' : '<div class="report-status" style="margin:0 0 8px;">Sem estado atribuído.</div>'}
             <div class="status-select-row">
               ${STATUSES.map(s=>`<button class="chip ${s.cls} ${p.status===s.v?'active':''}" onclick="updateStatus('${p.id}','${s.v}')">${s.label}</button>`).join('')}
             </div>
@@ -4561,7 +4566,7 @@ function playerReportHtml(p){
           <span class="report-tag">${escapeHtml(pos.label)}</span>
           <span class="report-tag">${club ? escapeHtml(club.name) : 'Sem clube'}</span>
           ${age !== null ? `<span class="report-tag">${age} anos</span>` : ''}
-          <span class="report-tag status ${statusClsMap[p.status]||''}">${escapeHtml(st.label)}</span>
+          ${p.status ? `<span class="report-tag status ${statusClsMap[p.status]||''}">${escapeHtml(st.label)}</span>` : ''}
         </div>
       </div>
     </div>
@@ -4607,7 +4612,9 @@ function exportPlayerReport(id){
 /* ---------------- mutations ---------------- */
 async function updateStatus(id, v){
   const p = players.find(x=>x.id===id);
-  if(p.status !== v) p.statusChangedAt = Date.now();
+  if(!p) return;
+  if(p.status === v) v = ''; // clicar no estado ativo remove-o
+  p.statusChangedAt = Date.now();
   p.status=v;
   await saveData();
   render();
