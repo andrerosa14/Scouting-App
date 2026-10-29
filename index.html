@@ -405,7 +405,8 @@
   .pcard{display:flex;flex-direction:column;background:var(--pitch-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;text-align:left;padding:0;}
   .pcard:hover{border-color:var(--gold-dim);background:var(--pitch-panel-raise);}
   .pcard-photo{position:relative;width:100%;aspect-ratio:1/1;background:var(--pitch-panel-raise);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:30px;color:var(--muted);}
-  .pcard-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+  .pcard-photo{overflow:hidden;min-height:0;}
+  .pcard-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
   .pcard-pos-badge{position:absolute;top:8px;right:8px;font-family:var(--font-display);font-weight:700;font-size:11px;color:#12271f;border-radius:3px;padding:2px 7px;}
   .pcard-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:5px;}
   .pcard-name{font-family:var(--font-display);font-weight:600;font-size:15px;line-height:1.25;}
@@ -985,7 +986,7 @@ let competitions = [];
 let calendarMonth = null; // {y, m} do mês visível no separador Calendário (null = mês atual)
 let tacticalSheets = [];
 let storageOk = true;
-let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'rating', view:'list'};
+let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:'recent', view:'cards'};
 let openDossierId = null;
 let activeTab = null; // null (início) | 'players' | 'clubs' | 'shortlists' | 'games' | 'shadowteams' | 'tatico'
 let activeShortlistId = null;
@@ -1467,6 +1468,8 @@ function headerPrimaryButtonHtml(){
   return `<button class="btn btn-primary" onclick="openAddModal()">+ Novo Jogador</button>`;
 }
 function switchTab(tab){
+  // ao entrar em Jogadores: vista de cartões, ordenados dos mais recentes para os mais antigos
+  if(tab === 'players'){ state.view = 'cards'; state.sort = 'recent'; }
   activeTab = tab;
   activeShortlistId = null;
   activeGameId = null;
@@ -4337,11 +4340,6 @@ function renderReportTabHtml(p){
   const note = finalReportNote(p);
   const last = note ? `Última atualização: ${fmtDate(note.date)}` : 'Ainda sem relatório.';
   return `
-        <div class="section">
-          <h3>Relatório de avaliação final</h3>
-          <textarea id="reportText" class="report-textarea" placeholder="Escreve aqui o relatório de avaliação final do jogador..." oninput="onReportInput('${p.id}', this.value)" onblur="commitReport('${p.id}')">${escapeHtml(reportTextFor(p))}</textarea>
-          <div class="report-status" id="reportStatus">${escapeHtml(last)}</div>
-        </div>
         <div class="report-grid">
           <div class="section">
             <h3>Estado</h3>
@@ -4362,6 +4360,11 @@ function renderReportTabHtml(p){
               ${ENQUADRAMENTO_OPTIONS.map(v=>`<button class="class-chip ${p.enquadramento===v?'active':''}" onclick="updateEnquadramento('${p.id}','${v}')">${v}</button>`).join('')}
             </div>
           </div>
+        </div>
+        <div class="section">
+          <h3>Relatório de avaliação final</h3>
+          <textarea id="reportText" class="report-textarea" placeholder="Escreve aqui o relatório de avaliação final do jogador..." oninput="onReportInput('${p.id}', this.value)" onblur="commitReport('${p.id}')">${escapeHtml(reportTextFor(p))}</textarea>
+          <div class="report-status" id="reportStatus">${escapeHtml(last)}</div>
         </div>`;
 }
 
