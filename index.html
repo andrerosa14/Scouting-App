@@ -10,7 +10,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --pitch-dark:#12271f;
@@ -32,8 +32,8 @@
     --status-rejected:#c1453f;
     --st-cat-second:#bfe0a8;
     --radius:4px;
-    --font-display:'Barlow Semi Condensed','Oswald',sans-serif;
-    --font-body:'Inter',sans-serif;
+    --font-display:'EB Garamond',Georgia,serif;
+    --font-body:'EB Garamond',Georgia,serif;
   }
   /* ---------- tema claro (fundo cinzento claro + painéis brancos) ---------- */
   :root[data-theme="light"]{
@@ -85,7 +85,7 @@
   .theme-toggle svg{flex-shrink:0;}
   @media (max-width:600px){ .theme-toggle .theme-toggle-label{display:none;} .theme-toggle{padding:8px 10px;} }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--pitch-dark);color:var(--chalk);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  body{margin:0;background:var(--pitch-dark);color:var(--chalk);font-family:var(--font-body);font-size:16px;font-size-adjust:0.5;line-height:1.5;-webkit-font-smoothing:antialiased;}
   ::selection{background:var(--gold-dim);color:var(--chalk);}
   input,select,textarea,button{font-family:inherit;color:inherit;}
   button{cursor:pointer;}
@@ -100,7 +100,7 @@
   .motif{position:absolute;inset:0;pointer-events:none;opacity:.16;}
   .header-inner{position:relative;max-width:none;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
   .brand{display:flex;flex-direction:column;gap:2px;}
-  .brand h1{font-family:var(--font-display);font-weight:700;font-size:28px;letter-spacing:.04em;margin:0;color:var(--chalk);}
+  .brand h1{font-family:var(--font-display);font-weight:700;font-size:30px;letter-spacing:.03em;margin:0;color:var(--chalk);}
   .brand span{color:var(--muted);font-size:13px;}
   .header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
   .search-box{position:relative;}
@@ -143,7 +143,7 @@
   .tile:hover{border-color:var(--gold-dim);transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.2);}
   .tile-icon{width:52px;height:52px;border-radius:50%;background:var(--pitch-panel-raise);border:1px solid var(--pitch-dark);display:flex;align-items:center;justify-content:center;color:var(--gold);}
   .tile:hover .tile-icon{border-color:var(--gold-dim);}
-  .tile-label{font-family:var(--font-display);font-weight:600;font-size:19px;letter-spacing:.01em;color:#000000;}
+  .tile-label{font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:0;color:#000000;}
   .tile-count{font-size:12px;color:#7a7a72;}
 
   /* ---------- home urgent watchlist panel ---------- */
