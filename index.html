@@ -838,6 +838,123 @@
   .report-textarea{width:100%;min-height:220px;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:12px;font-size:14px;line-height:1.55;resize:vertical;}
   .report-status{font-size:11.5px;color:var(--muted);margin-top:6px;}
   .report-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:0 28px;}
+  /* ---------- perfil do jogador em formato dashboard ---------- */
+  .dossier-body.pd{max-width:1360px;padding:22px 28px 80px;}
+  .pd-crumb{display:flex;align-items:center;gap:14px;min-width:0;}
+  .pd-path{font-family:var(--font-display);font-size:12px;letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pd-path b{color:var(--chalk);}
+  .pd-wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start;}
+  .pd-card{background:var(--pitch-panel);border:1px solid var(--line);border-radius:8px;}
+  .pd-side{padding:22px;position:sticky;top:78px;}
+  .pd-photo{width:100%;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:54px;color:#12271f;overflow:hidden;}
+  .pd-name{font-family:var(--font-display);font-weight:700;font-size:20px;margin:16px 0 2px;letter-spacing:.01em;}
+  .pd-sub{color:var(--muted);font-size:13px;}
+  .pd-status{display:inline-block;font-family:var(--font-display);font-weight:600;font-size:11px;padding:3px 10px;border-radius:99px;border:1px solid;margin-top:10px;letter-spacing:.03em;text-transform:uppercase;}
+  .pd-kv{margin:18px 0 0;border-top:1px solid var(--line);}
+  .pd-kv>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .pd-kv dt{color:var(--muted);}
+  .pd-kv dd{margin:0;font-family:var(--font-display);font-weight:600;font-size:12.5px;text-align:right;}
+  .pd-club-btn{margin-top:14px;font-size:12px;}
+  .pd-main{display:grid;gap:20px;min-width:0;}
+  .pd-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;}
+  .pd-kpi{padding:16px 18px;min-width:0;}
+  .pd-l{font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .pd-v{font-family:var(--font-display);font-weight:700;font-size:28px;margin-top:6px;line-height:1.1;color:var(--chalk);}
+  .pd-s{font-size:12px;color:var(--muted);margin-top:6px;min-height:16px;}
+  .pd-kpi .rating-row{margin:8px 0 0;gap:2px;}
+  .pd-kpi .rating-row button{padding:0;border:none;background:none;display:flex;}
+  .pd-kpi .rating-row svg{width:20px;height:20px;}
+  .pd-kpi .lvl-row{gap:6px;}
+  .pd-kpi .lvl-chip{width:38px;height:34px;font-size:14px;}
+  .pd-panel{padding:18px 20px;min-width:0;}
+  .pd-panel h3{font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;}
+  .pd-panel .section{margin-top:0;padding-top:0;border-top:none;}
+  .pd-panel .section + .section{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);}
+  .pd-tabs-panel .section h3{display:none;}
+  .pd-tabs-panel .report-grid{gap:16px 28px;margin-bottom:18px;}
+  .pd-tabs-panel .report-grid .section h3{display:block;}
+  .pd-tabs-panel .report-grid .section{margin-top:0;padding-top:0;border-top:none;}
+  .pd-kv dd .status-pill{margin-left:6px;}
+  .pd-ptabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-4px 0 16px;}
+  .pd-ptab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--muted);font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding:10px 14px;}
+  .pd-ptab:hover{color:var(--chalk);}
+  .pd-ptab.active{color:var(--chalk);border-bottom-color:var(--gold);}
+  .pd-ptab em{font-style:normal;background:var(--pitch-panel-raise);border-radius:99px;padding:1px 7px;margin-left:4px;font-size:11px;}
+  .pd-row2{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;}
+  .pd-count{font-size:11px;background:var(--pitch-panel-raise);border-radius:99px;padding:1px 8px;}
+  .pd-empty{color:var(--muted);font-size:13px;margin:0;}
+  .pd-game{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .pd-game:last-child{border-bottom:0;}
+  .pd-game b{font-family:var(--font-display);font-weight:600;font-size:12.5px;}
+  .pd-game span{color:var(--muted);font-family:var(--font-display);font-size:12px;text-align:right;}
+  .note-filters{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;}
+  .pd-tabs-panel .report-textarea{min-height:190px;}
+
+  /* ---------- métricas físicas ---------- */
+  .mt-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .mt-title{font-size:14px;color:var(--muted);}
+  .mt-title b{color:var(--chalk);}
+  .mt-legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+  .mt-legend-hint{font-size:12px;color:var(--muted);}
+  .mt-c-red{--mc:var(--status-rejected);} .mt-c-orange{--mc:#e8892f;} .mt-c-yellow{--mc:var(--status-follow);} .mt-c-green{--mc:var(--status-approved);} .mt-c-teal{--mc:#0fa896;}
+  .mt-chip{display:inline-block;flex:none;min-width:84px;max-width:120px;box-sizing:border-box;text-align:center;font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:99px;border:1px solid var(--mc, var(--line));color:var(--mc, var(--muted));background:color-mix(in srgb, var(--mc, transparent) 14%, transparent);}
+  .mt-chip.mt-none{--mc:var(--muted);background:transparent;border-color:var(--line);}
+  .mt-list{border-top:1px solid var(--line);}
+  .mt-row{display:grid;grid-template-columns:minmax(120px,1.1fr) 170px minmax(200px,1.6fr);gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);}
+  .mt-name{font-weight:600;font-size:14px;}
+  .mt-input{display:flex;align-items:center;gap:8px;}
+  .mt-input input{width:110px;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:8px 10px;font-size:15px;font-family:var(--font-display);font-weight:600;}
+  .mt-unit{font-size:12px;color:var(--muted);}
+  .mt-res{display:flex;align-items:center;gap:12px;min-width:0;}
+  .mt-bar-wrap{flex:1;min-width:90px;}
+  .mt-bar{position:relative;display:flex;height:8px;border-radius:99px;overflow:visible;}
+  .mt-bar i{display:block;height:100%;opacity:.85;}
+  .mt-bar i:first-child{border-radius:99px 0 0 99px;} .mt-bar i:nth-child(3){border-radius:0 99px 99px 0;}
+  .mt-bar i{background:var(--mc);}
+  .mt-marker{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--chalk);transform:translateX(-50%);box-shadow:0 0 0 2px var(--pitch-panel);}
+  .mt-ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin:6px 25% 0;font-family:var(--font-display);}
+  .mt-ticks-bands{position:relative;display:block;margin:6px 0 0;height:14px;}
+  .mt-ticks-bands span{position:absolute;transform:translateX(-50%);}
+  .mt-noscale{font-size:12px;color:var(--muted);}
+  .mc-hint{font-size:12.5px;color:var(--muted);margin:2px 0 12px;line-height:1.5;}
+  .mc-cols,.mc-row{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,.8fr) minmax(0,1.1fr) 34px;gap:8px;align-items:center;}
+  .mc-cols{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .mc-row{margin-bottom:8px;}
+  .mc-row input,.mc-row select,.mc-scale input,.mc-scale select{width:100%;min-width:0;box-sizing:border-box;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:8px 10px;font-size:14px;font-family:inherit;}
+  .mc-item{margin-bottom:10px;}
+  .mc-item .mc-row{margin-bottom:6px;}
+  .mc-scale{margin:0 0 6px 12px;padding:10px 12px;border-left:2px solid var(--line);display:grid;grid-template-columns:auto 110px auto 110px;gap:8px 10px;align-items:center;font-size:12.5px;color:var(--muted);}
+  .mc-scale.mc-bands{display:flex;flex-direction:column;align-items:stretch;gap:6px;}
+  .mc-band{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1.6fr) 110px 30px;gap:8px;align-items:center;}
+  .mc-band .mcb-from-wrap,.mc-band .mcb-from-fixed{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);white-space:nowrap;}
+  .mc-band .mcb-from-wrap input{width:90px;}
+  .mc-band .mc-del{width:30px;}
+  .mc-scale .link-btn{align-self:flex-start;}
+  @media (max-width:700px){ .mc-scale{margin-left:0;grid-template-columns:1fr 1fr;} .mc-band{grid-template-columns:1fr 1fr;} .mc-band .mcb-from-wrap,.mc-band .mcb-from-fixed{grid-column:1 / -1;} .mc-band .mc-del{justify-self:end;} }
+  .mc-del{font-size:20px;line-height:1;padding:0;color:var(--muted);}
+  @media (max-width:900px){
+    .mt-row{grid-template-columns:1fr;gap:8px;}
+    .mc-cols{display:none;}
+    .mc-row{grid-template-columns:1fr 1fr 1fr 34px;}
+    .mc-row .mc-name{grid-column:1 / -1;}
+    .mc-row .mc-unit{grid-column:1;}
+  }
+
+  @media (max-width:1100px){ .pd-kpis{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  @media (max-width:900px){
+    .dossier-body.pd{padding:16px;}
+    .pd-wrap{grid-template-columns:1fr;}
+    .pd-side{position:static;}
+    .pd-row2{grid-template-columns:1fr;}
+    .pd-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .pd-path{display:none;}
+    .dossier-head{flex-wrap:wrap;gap:8px;padding:12px 16px;}
+    .dossier-head .btn{white-space:nowrap;padding:7px 10px;font-size:12px;}
+    .dossier-head > div:last-child{flex-wrap:wrap;}
+    .pd-photo{width:120px;height:120px;aspect-ratio:auto;font-size:36px;}
+    .pd-side{padding:18px;}
+  }
+
   @media(max-width:720px){
     .dossier-badge{width:72px;height:72px;font-size:24px;}
     .dtab{padding:9px 12px;font-size:13px;}
@@ -983,6 +1100,27 @@ let shortlists = [];
 let games = [];
 let shadowTeams = [];
 let competitions = [];
+let metricsConfig = {}; // métricas físicas por posição: {GR:[{id,name,unit,bad,good}], ...}
+// métricas físicas: garante estrutura válida {posição: [{id,name,unit,bad,good}]}
+function normMetricsConfig(raw){
+  const out = {};
+  if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  const num = v => (v === '' || v === null || v === undefined || !Number.isFinite(Number(v))) ? null : Number(v);
+  const COLORS = ['red','orange','yellow','green','teal'];
+  Object.keys(raw).forEach(pos => {
+    if(!Array.isArray(raw[pos])) return;
+    const list = raw[pos].filter(m => m && m.id && typeof m.name === 'string' && m.name.trim()).map(m => {
+      const o = {id: String(m.id), name: m.name.trim(), unit: typeof m.unit === 'string' ? m.unit.trim() : '', bad: num(m.bad), good: num(m.good)};
+      if(Array.isArray(m.bands) && m.bands.length >= 2){
+        o.bands = m.bands.map((b,i) => ({label: String(b.label||'').trim() || ('Categoria '+(i+1)), from: i === 0 ? null : num(b.from), color: COLORS.includes(b.color) ? b.color : 'yellow'}));
+      }
+      return o;
+    });
+    if(list.length) out[pos] = list;
+  });
+  return out;
+}
+
 let calendarMonth = null; // {y, m} do mês visível no separador Calendário (null = mês atual)
 let tacticalSheets = [];
 let storageOk = true;
@@ -1247,7 +1385,7 @@ function contentsPath(bustCache){
 
 async function fetchDataFromGitHub(){
   const res = await ghRequest(contentsPath(true));
-  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[], tacticalSheets:[], competitions:[]}; }
+  if(res.status === 404){ ghSha = null; return {players:[], clubs:[], shortlists:[], games:[], shadowTeams:[], tacticalSheets:[], competitions:[], metricsConfig: defaultMetricsConfig()}; }
   if(res.status === 401) throw new Error('AUTH');
   if(res.status === 403) throw new Error('FORBIDDEN');
   if(!res.ok) throw new Error('HTTP_'+res.status);
@@ -1320,7 +1458,7 @@ async function fetchDataFromGitHub(){
   if(Array.isArray(parsed)){
     migrateStatuses(parsed);
     migratePositions(parsed);
-    return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: [], tacticalSheets: [], competitions: []}; // formato antigo (só jogadores)
+    return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: [], tacticalSheets: [], competitions: [], metricsConfig: defaultMetricsConfig()}; // formato antigo (só jogadores)
   }
   // normalização: shadow teams antigas não tinham categorização de jogadores (1ª Linha/2ª Linha/Composição)
   const normShadowTeams = (arr) => (arr || []).map(st => ({playerCategories: {}, ...st}));
@@ -1360,7 +1498,7 @@ async function fetchDataFromGitHub(){
     migratePositions(outPlayers);
     migrateNationality(outPlayers, outClubs);
     migrateUrgencyLevelToNotes(outPlayers);
-    return {players: outPlayers, clubs: outClubs, shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams), tacticalSheets: normTacticalSheets(parsed.tacticalSheets), competitions: Array.isArray(parsed.competitions) ? parsed.competitions : []};
+    return {players: outPlayers, clubs: outClubs, shortlists: parsed.shortlists || [], games: outGames, shadowTeams: normShadowTeams(parsed.shadowTeams), tacticalSheets: normTacticalSheets(parsed.tacticalSheets), competitions: Array.isArray(parsed.competitions) ? parsed.competitions : [], metricsConfig: parsed.metricsConfig === undefined ? defaultMetricsConfig() : normMetricsConfig(parsed.metricsConfig)};
   }
   // o ficheiro foi lido e tinha JSON válido, mas não no formato esperado (nem array antigo, nem
   // objeto com as listas) — mais vale travar com erro do que continuar com tudo vazio
@@ -1379,7 +1517,7 @@ async function saveDataToGitHub(){
   const doPut = async () => {
     const body = {
       message: 'Atualizar base de dados de scouting',
-      content: utf8ToB64(JSON.stringify({players, clubs, shortlists, games, shadowTeams, tacticalSheets, competitions}, null, 2)),
+      content: utf8ToB64(JSON.stringify({players, clubs, shortlists, games, shadowTeams, tacticalSheets, competitions, metricsConfig}, null, 2)),
     };
     if(ghSha) body.sha = ghSha;
     return ghRequest(contentsPath(), {method:'PUT', body: JSON.stringify(body)});
@@ -2008,7 +2146,7 @@ async function submitSetup(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || [];
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || []; metricsConfig = data.metricsConfig || {};
     activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
     saveConfig(ghConfig);
     storageOk = true;
@@ -2022,7 +2160,7 @@ async function connectAndLoad(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || [];
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || []; metricsConfig = data.metricsConfig || {};
     activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
     storageOk = true;
     renderMainShell();
@@ -2076,7 +2214,7 @@ async function submitSettings(){
   renderLoadingScreen('A ligar ao GitHub...');
   try{
     const data = await fetchDataFromGitHub();
-    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || [];
+    players = data.players; clubs = data.clubs; shortlists = data.shortlists; games = data.games; shadowTeams = data.shadowTeams; tacticalSheets = data.tacticalSheets; competitions = data.competitions || []; metricsConfig = data.metricsConfig || {};
     activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
     saveConfig(ghConfig);
     storageOk = true;
@@ -2097,6 +2235,7 @@ function disconnectGithub(){
   shadowTeams = [];
   tacticalSheets = [];
   competitions = [];
+  metricsConfig = {};
   activeTab = null; activeShortlistId = null; activeGameId = null; activeShadowTeamId = null; activeClubId = null; activeTacticalSheetId = null;
   closeModal();
   renderSetupScreen();
@@ -4255,7 +4394,10 @@ async function tacticalSlotCommitNotes(sheetId, teamIdx, slotKey){
 let noteFormType = 'nota';
 function openDossier(id){
   openDossierId = id;
-  dossierTab = 'ficha';
+  // se a posição do jogador tem métricas físicas definidas, abre logo nesse separador para as preencher
+  const op = players.find(x=>x.id===id);
+  dossierTab = (op && (metricsConfig[op.position] || []).length) ? 'metricas' : 'ficha';
+  noteFilter = 'all';
   noteFormType = 'nota';
   document.getElementById('backdrop').classList.add('open');
   renderDossier();
@@ -4285,6 +4427,7 @@ function closeDossier(){
 
 /* ---------------- ficha do jogador: separadores Ficha / Relatório / Notas ---------------- */
 let dossierTab = 'ficha';
+let noteFilter = 'all'; // filtro do separador Notas: all | nota | final | nivel
 let reportDrafts = {};   // playerId -> texto do relatório ainda por guardar (para não se perder ao mudar de separador/chips)
 
 function finalReportNote(p){
@@ -4319,6 +4462,318 @@ function onReportInput(id, value){
   reportDrafts[id] = value;
   setReportStatus('A escrever…');
   debounceAutosave('report_'+id, () => commitReport(id));
+}
+
+/* ---------------- métricas físicas por posição ---------------- */
+// Cada métrica pode ter uma escala:
+//  - 3 níveis (bad / good): se good > bad, mais é melhor; se good < bad, menos é melhor. Mostra Fraco / Médio / Bom.
+//  - categorias (bands): lista ordenada [{label, from, color}]; a 1.ª categoria não tem limite inferior ("from": null).
+//  - nenhuma: só o valor.
+const METRIC_COLORS = [
+  {v:'red', label:'Vermelho'}, {v:'orange', label:'Laranja'}, {v:'yellow', label:'Amarelo'}, {v:'green', label:'Verde'}, {v:'teal', label:'Turquesa'},
+];
+function metricHasBands(m){ return !!(m && Array.isArray(m.bands) && m.bands.length >= 2); }
+function metricHasTri(m){ return m && m.bad !== null && m.bad !== undefined && m.good !== null && m.good !== undefined && m.bad !== m.good; }
+function metricHasScale(m){ return metricHasBands(m) || metricHasTri(m); }
+function metricValid(v){ return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)); }
+// devolve {label, color, idx} ou null (sem valor ou sem escala)
+function metricEval(m, v){
+  if(!metricValid(v) || !metricHasScale(m)) return null;
+  v = Number(v);
+  if(metricHasBands(m)){
+    let idx = 0;
+    m.bands.forEach((b, i) => { if(i > 0 && b.from !== null && b.from !== undefined && v >= b.from) idx = i; });
+    return {label: m.bands[idx].label, color: m.bands[idx].color || 'yellow', idx};
+  }
+  let lvl;
+  if(m.good > m.bad) lvl = v >= m.good ? 'good' : (v <= m.bad ? 'bad' : 'mid');
+  else lvl = v <= m.good ? 'good' : (v >= m.bad ? 'bad' : 'mid');
+  return lvl === 'good' ? {label:'Bom', color:'green'} : (lvl === 'bad' ? {label:'Fraco', color:'red'} : {label:'Médio', color:'yellow'});
+}
+function fmtMetricNum(n){ return Number(n).toLocaleString('pt-PT', {maximumFractionDigits:3}); }
+function metricResultHtml(m, v){
+  if(!metricHasScale(m)) return `<span class="mt-noscale">Sem escala definida</span>`;
+  const ev = metricEval(m, v);
+  const chip = `<span class="mt-chip ${ev ? 'mt-c-'+ev.color : 'mt-none'}">${ev ? escapeHtml(ev.label) : '—'}</span>`;
+  const hasV = metricValid(v);
+  if(metricHasBands(m)){
+    const bands = m.bands, n = bands.length;
+    let pct = null;
+    if(hasV){
+      const x = Number(v), i = ev.idx;
+      const lower = i === 0 ? null : bands[i].from;
+      const upper = i === n-1 ? null : bands[i+1].from;
+      let lo2 = lower, up2 = upper;
+      if(lo2 === null){ const gap = (n >= 3 && bands[2].from !== null && bands[1].from !== null) ? (bands[2].from - bands[1].from) : 1; lo2 = up2 - gap; }
+      if(up2 === null){ const gap = (n >= 3 && bands[n-1].from !== null && bands[n-2].from !== null) ? (bands[n-1].from - bands[n-2].from) : 1; up2 = lo2 + gap; }
+      const frac = up2 > lo2 ? Math.max(0, Math.min(1, (x - lo2) / (up2 - lo2))) : 0.5;
+      pct = (i + frac) / n * 100;
+    }
+    return `${chip}
+    <div class="mt-bar-wrap">
+      <div class="mt-bar">${bands.map(b => `<i class="mt-c-${b.color || 'yellow'}" style="width:${100/n}%"></i>`).join('')}${hasV ? `<b class="mt-marker" style="left:${pct}%"></b>` : ''}</div>
+      <div class="mt-ticks mt-ticks-bands">${bands.slice(1).map((b,k) => `<span style="left:${(k+1)/n*100}%">${b.from !== null && b.from !== undefined ? fmtMetricNum(b.from) : ''}</span>`).join('')}</div>
+    </div>`;
+  }
+  const lo = Math.min(m.bad, m.good), hi = Math.max(m.bad, m.good), span = hi - lo;
+  const min = lo - span*0.5, tot = span*2;
+  const higher = m.good > m.bad;
+  const pct = hasV ? Math.max(0, Math.min(100, (Number(v) - min) / tot * 100)) : null;
+  return `${chip}
+    <div class="mt-bar-wrap">
+      <div class="mt-bar">
+        <i class="${higher?'mt-c-red':'mt-c-green'}" style="width:25%"></i><i class="mt-c-yellow" style="width:50%"></i><i class="${higher?'mt-c-green':'mt-c-red'}" style="width:25%"></i>
+        ${hasV ? `<b class="mt-marker" style="left:${pct}%"></b>` : ''}
+      </div>
+      <div class="mt-ticks"><span>${fmtMetricNum(lo)}</span><span>${fmtMetricNum(hi)}</span></div>
+    </div>`;
+}
+function metricsTabHtml(p){
+  const pos = posInfo(p.position);
+  const list = metricsConfig[p.position] || [];
+  const head = `<div class="mt-head">
+      <div class="mt-title">Métricas físicas · <b>${escapeHtml(pos.label)}</b></div>
+      <button type="button" class="btn" onclick="openMetricsConfigModal('${p.position}')">${list.length ? 'Editar métricas' : 'Definir métricas'}</button>
+    </div>`;
+  if(list.length === 0){
+    return `<div class="section">${head}
+      <p class="pd-empty">Ainda não definiste métricas físicas para ${escapeHtml(pos.label)}. Define quais são as importantes e a escala que diz se um valor é bom ou mau.</p></div>`;
+  }
+  const vals = p.metrics || {};
+  return `<div class="section">${head}
+    <div class="mt-list">
+      ${list.map(m => {
+        const v = vals[m.id];
+        const has = metricValid(v);
+        return `<div class="mt-row">
+          <div class="mt-name">${escapeHtml(m.name)}</div>
+          <div class="mt-input"><input type="number" step="any" inputmode="decimal" placeholder="—" value="${has ? escapeHtml(String(v)) : ''}" oninput="onMetricInput('${p.id}','${m.id}',this.value)"><span class="mt-unit">${escapeHtml(m.unit||'')}</span></div>
+          <div class="mt-res" id="mres_${m.id}">${metricResultHtml(m, has ? v : null)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="report-status" id="metricStatus">Guarda automaticamente enquanto escreves.</div>
+  </div>`;
+}
+function onMetricInput(pid, mid, raw){
+  const p = players.find(x=>x.id===pid);
+  if(!p) return;
+  const m = (metricsConfig[p.position] || []).find(x=>x.id===mid);
+  if(!p.metrics) p.metrics = {};
+  const t = String(raw).trim().replace(',', '.');
+  if(t === '' || !Number.isFinite(Number(t))) delete p.metrics[mid]; else p.metrics[mid] = Number(t);
+  const el = document.getElementById('mres_'+mid);
+  if(el && m) el.innerHTML = metricResultHtml(m, p.metrics[mid] !== undefined ? p.metrics[mid] : null);
+  const st = document.getElementById('metricStatus'); if(st) st.textContent = 'A guardar…';
+  debounceAutosave('metric_'+pid, async () => {
+    await saveData();
+    const s2 = document.getElementById('metricStatus'); if(s2) s2.textContent = 'Guardado.';
+  }, 900);
+}
+
+// ---- métricas por defeito (usadas enquanto nunca guardaste a tua própria lista) ----
+function defaultMetricsConfig(){
+  const PV = () => ({id:'m_peak_velocity', name:'Peak Velocity', unit:'km/h', bad:null, good:null, bands:[
+    {label:'Lento', from:null, color:'red'}, {label:'Moderado', from:32, color:'orange'}, {label:'Rápido', from:33, color:'yellow'},
+    {label:'Muito rápido', from:34, color:'green'}, {label:'Acima de 35', from:35, color:'teal'}]});
+  const SPR = () => ({id:'m_sprints', name:'Sprints', unit:'', bad:null, good:null});
+  const TTS = () => ({id:'m_time_to_sprint', name:'Time to Sprint', unit:'', bad:null, good:null});
+  const HSR = () => ({id:'m_hsr', name:'HSR', unit:'', bad:null, good:null});
+  const HID = () => ({id:'m_hi_distance', name:'HI Distance', unit:'', bad:null, good:null});
+  const out = {};
+  ['DCD','DCE'].forEach(k => out[k] = [PV(), SPR(), TTS()]);
+  ['DD','DE'].forEach(k => out[k] = [PV(), HSR(), HID()]);
+  ['MDC','MC','MOC'].forEach(k => out[k] = [HSR(), HID()]);
+  ['ED','EE','PL'].forEach(k => out[k] = [PV(), SPR(), TTS()]);
+  return out;
+}
+
+// ---- definir as métricas de cada posição ----
+let metricsDraft = null; // {pos, all:{posição:[linhas]}}
+function metricsDraftSync(){
+  const root = document.getElementById('mcRows');
+  if(!root || !metricsDraft) return;
+  const rows = [...root.querySelectorAll('.mc-item')].map(it => {
+    const bandsEl = [...it.querySelectorAll('.mc-band')];
+    return {
+      id: it.dataset.id,
+      name: it.querySelector('.mc-name').value,
+      unit: it.querySelector('.mc-unit').value,
+      mode: it.querySelector('.mc-mode').value,
+      bad: it.querySelector('.mc-bad') ? it.querySelector('.mc-bad').value : (it._bad ?? ''),
+      good: it.querySelector('.mc-good') ? it.querySelector('.mc-good').value : (it._good ?? ''),
+      bands: it.querySelector('.mc-bands') ? bandsEl.map(b => ({label: b.querySelector('.mcb-label').value, from: b.querySelector('.mcb-from').value, color: b.querySelector('.mcb-color').value})) : JSON.parse(it.dataset.bands || '[]'),
+    };
+  });
+  metricsDraft.all[metricsDraft.pos] = rows;
+}
+function mcModeOf(r){ return r.mode || ((Array.isArray(r.bands) && r.bands.length >= 2) ? 'bands' : ((r.bad !== null && r.bad !== undefined && r.bad !== '' && r.good !== null && r.good !== undefined && r.good !== '') ? 'tri' : 'none')); }
+function openMetricsConfigModal(pos){
+  const all = {};
+  Object.keys(metricsConfig).forEach(k => { all[k] = metricsConfig[k].map(m => ({...m, bands: m.bands ? m.bands.map(b=>({...b})) : []})); });
+  metricsDraft = {pos: pos || 'GR', all};
+  renderMetricsConfigModal();
+}
+function renderMetricsConfigModal(){
+  const d = metricsDraft;
+  const rows = d.all[d.pos] || [];
+  const copyOpts = POSITIONS.filter(x => x.v !== d.pos && (d.all[x.v]||[]).length);
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeMetricsConfig()">
+      <div class="modal" style="max-width:820px;">
+        <h2>Métricas físicas por posição</h2>
+        <div class="field-row">
+          <div class="field"><label>Posição</label>
+            <select onchange="metricsConfigSetPos(this.value)">${POSITIONS.map(x=>`<option value="${x.v}" ${x.v===d.pos?'selected':''}>${escapeHtml(x.label)}${(d.all[x.v]||[]).length?` (${d.all[x.v].length})`:''}</option>`).join('')}</select>
+          </div>
+          ${copyOpts.length ? `<div class="field"><label>Copiar métricas de</label>
+            <div style="display:flex;gap:6px;"><select id="mcCopyFrom">${copyOpts.map(x=>`<option value="${x.v}">${escapeHtml(x.label)}</option>`).join('')}</select><button type="button" class="btn" onclick="metricsConfigCopy()">Copiar</button></div></div>` : ''}
+        </div>
+        <p class="mc-hint">Cada métrica pode ter uma escala para mostrar uma cor: <b>Fraco / bom</b> (dois limites; se o bom for menor que o fraco, menos é melhor, como num tempo) ou <b>Categorias</b> (por exemplo Lento, Moderado, Rápido), cada uma com o valor a partir do qual começa e uma cor. Sem escala, fica só o valor.</p>
+        <div id="mcRows">
+          ${rows.length ? rows.map(r => mcItemHtml(r)).join('') : '<p class="pd-empty">Ainda não há métricas para esta posição.</p>'}
+        </div>
+        <button type="button" class="link-btn" style="margin-top:8px;" onclick="metricsConfigAddRow()">+ Adicionar métrica</button>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeMetricsConfig()">Cancelar</button>
+          <button class="btn btn-primary" onclick="saveMetricsConfig()">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+}
+function mcItemHtml(r){
+  const v = x => (x === null || x === undefined) ? '' : escapeHtml(String(x));
+  const mode = mcModeOf(r);
+  const bands = Array.isArray(r.bands) ? r.bands : [];
+  let scale = '';
+  if(mode === 'tri'){
+    scale = `<div class="mc-scale"><label>Fraco a partir de</label><input class="mc-bad" type="number" step="any" inputmode="decimal" placeholder="35" value="${v(r.bad)}"><label>Bom a partir de</label><input class="mc-good" type="number" step="any" inputmode="decimal" placeholder="50" value="${v(r.good)}"></div>`;
+  } else if(mode === 'bands'){
+    scale = `<div class="mc-scale mc-bands">
+      ${bands.map((b,i) => `<div class="mc-band">
+        <input class="mcb-label" type="text" placeholder="Categoria" value="${v(b.label)}">
+        ${i === 0 ? `<span class="mcb-from-fixed">abaixo do próximo limite<input class="mcb-from" type="hidden" value=""></span>` : `<span class="mcb-from-wrap">a partir de <input class="mcb-from" type="number" step="any" inputmode="decimal" value="${v(b.from)}"></span>`}
+        <select class="mcb-color">${METRIC_COLORS.map(c=>`<option value="${c.v}" ${(b.color||'yellow')===c.v?'selected':''}>${c.label}</option>`).join('')}</select>
+        <button type="button" class="btn-ghost mc-del" title="Remover categoria" onclick="metricsConfigRemoveBand(this)">×</button>
+      </div>`).join('')}
+      <button type="button" class="link-btn" onclick="metricsConfigAddBand(this)">+ Categoria</button>
+    </div>`;
+  }
+  return `<div class="mc-item" data-id="${escapeHtml(String(r.id))}" data-bands='${escapeHtml(JSON.stringify(bands))}'>
+    <div class="mc-row">
+      <input class="mc-name" type="text" placeholder="ex: Peak Velocity" value="${v(r.name)}">
+      <input class="mc-unit" type="text" placeholder="unidade" value="${v(r.unit)}">
+      <select class="mc-mode" onchange="metricsConfigSetMode(this)">
+        <option value="none" ${mode==='none'?'selected':''}>Sem escala</option>
+        <option value="tri" ${mode==='tri'?'selected':''}>Fraco / bom</option>
+        <option value="bands" ${mode==='bands'?'selected':''}>Categorias</option>
+      </select>
+      <button type="button" class="btn-ghost mc-del" title="Remover métrica" onclick="metricsConfigRemoveRow(this)">×</button>
+    </div>
+    ${scale}
+  </div>`;
+}
+function metricsConfigSetPos(pos){ metricsDraftSync(); metricsDraft.pos = pos; renderMetricsConfigModal(); }
+function metricsConfigSetMode(sel){
+  metricsDraftSync();
+  const id = sel.closest('.mc-item').dataset.id;
+  const r = (metricsDraft.all[metricsDraft.pos]||[]).find(x => x.id === id);
+  if(r){
+    r.mode = sel.value;
+    if(r.mode === 'bands' && (!Array.isArray(r.bands) || r.bands.length < 2)){
+      r.bands = [{label:'Fraco', from:null, color:'red'}, {label:'Médio', from:'', color:'yellow'}, {label:'Bom', from:'', color:'green'}];
+    }
+  }
+  renderMetricsConfigModal();
+}
+function metricsConfigAddBand(btn){
+  metricsDraftSync();
+  const id = btn.closest('.mc-item').dataset.id;
+  const r = (metricsDraft.all[metricsDraft.pos]||[]).find(x => x.id === id);
+  if(r){ r.bands = r.bands || []; r.bands.push({label:'', from:'', color:'green'}); }
+  renderMetricsConfigModal();
+}
+function metricsConfigRemoveBand(btn){
+  metricsDraftSync();
+  const it = btn.closest('.mc-item'); const idx = [...it.querySelectorAll('.mc-band')].indexOf(btn.closest('.mc-band'));
+  const r = (metricsDraft.all[metricsDraft.pos]||[]).find(x => x.id === it.dataset.id);
+  if(r && Array.isArray(r.bands)) r.bands.splice(idx, 1);
+  renderMetricsConfigModal();
+}
+function metricsConfigAddRow(){
+  metricsDraftSync();
+  const d = metricsDraft;
+  (d.all[d.pos] = d.all[d.pos] || []).push({id: uid(), name:'', unit:'', mode:'none', bad:'', good:'', bands:[]});
+  renderMetricsConfigModal();
+  const names = document.querySelectorAll('#mcRows .mc-name'); if(names.length) names[names.length-1].focus();
+}
+function metricsConfigRemoveRow(btn){
+  metricsDraftSync();
+  const id = btn.closest('.mc-item').dataset.id;
+  metricsDraft.all[metricsDraft.pos] = (metricsDraft.all[metricsDraft.pos]||[]).filter(r => r.id !== id);
+  renderMetricsConfigModal();
+}
+function metricsConfigCopy(){
+  metricsDraftSync();
+  const from = document.getElementById('mcCopyFrom').value;
+  const src = metricsDraft.all[from] || [];
+  const cur = metricsDraft.all[metricsDraft.pos] || [];
+  // copia as métricas e junta às já existentes, sem repetir nomes (mantém o mesmo id: é a mesma métrica noutra posição)
+  const names = new Set(cur.map(r => String(r.name).trim().toLowerCase()));
+  src.forEach(r => { if(!names.has(String(r.name).trim().toLowerCase())) cur.push({...r, bands: (r.bands||[]).map(b=>({...b}))}); });
+  metricsDraft.all[metricsDraft.pos] = cur;
+  renderMetricsConfigModal();
+}
+function closeMetricsConfig(){ metricsDraft = null; closeModal(); }
+// converte as linhas do editor para o formato guardado
+function mcRowsToConfig(all){
+  const out = {};
+  Object.keys(all).forEach(pos => {
+    out[pos] = (all[pos] || []).filter(r => String(r.name).trim()).map(r => {
+      const mode = mcModeOf(r);
+      const o = {id: String(r.id), name: String(r.name).trim(), unit: String(r.unit||'').trim(), bad: null, good: null};
+      if(mode === 'tri'){ o.bad = r.bad === '' ? null : Number(r.bad); o.good = r.good === '' ? null : Number(r.good); }
+      if(mode === 'bands'){ o.bands = r.bands.map((b,i) => ({label: String(b.label||'').trim(), from: i === 0 ? null : (b.from === '' || b.from === null ? null : Number(b.from)), color: b.color || 'yellow'})); }
+      return o;
+    });
+  });
+  return out;
+}
+async function saveMetricsConfig(){
+  metricsDraftSync();
+  for(const pos of Object.keys(metricsDraft.all)){
+    for(const r of metricsDraft.all[pos]){
+      const nm = String(r.name).trim(); if(!nm) continue;
+      const mode = mcModeOf(r);
+      if(mode === 'tri'){
+        const b = String(r.bad).trim(), g = String(r.good).trim();
+        if(b === '' || g === ''){ showToast(`"${nm}": indica os dois limites (fraco e bom) ou escolhe "Sem escala".`); return; }
+        if(Number(b) === Number(g)){ showToast(`"${nm}": os limites fraco e bom têm de ser diferentes.`); return; }
+      }
+      if(mode === 'bands'){
+        const bs = r.bands || [];
+        if(bs.length < 2){ showToast(`"${nm}": precisa de pelo menos duas categorias.`); return; }
+        let prev = null;
+        for(let i = 0; i < bs.length; i++){
+          if(!String(bs[i].label||'').trim()){ showToast(`"${nm}": dá um nome a todas as categorias.`); return; }
+          if(i === 0) continue;
+          const f = String(bs[i].from).trim();
+          if(f === '' || !Number.isFinite(Number(f))){ showToast(`"${nm}": indica o valor de início de "${bs[i].label}".`); return; }
+          if(prev !== null && Number(f) <= prev){ showToast(`"${nm}": os valores das categorias têm de ir aumentando.`); return; }
+          prev = Number(f);
+        }
+      }
+    }
+  }
+  metricsConfig = normMetricsConfig(mcRowsToConfig(metricsDraft.all));
+  metricsDraft = null;
+  await saveData();
+  closeModal();
+  render();
+}
+function setNoteFilter(v){
+  noteFilter = v;
+  renderDossier();
 }
 async function setDossierTab(tab){
   if(openDossierId && (openDossierId in reportDrafts)) await commitReport(openDossierId);
@@ -4441,8 +4896,10 @@ function renderDossier(){
               <button class="btn btn-primary" onclick="addNote('${p.id}')">Adicionar</button>
             </div>
           </div>
+          ${p.notes.length === 0 ? '' : `<div class="note-filters">${[['all','Todas'],['nota','Notas'],['final','Avaliação final'],['nivel','Nível de urgência']].map(([v,l])=>`<button type="button" class="chip ${noteFilter===v?'active':''}" onclick="setNoteFilter('${v}')">${l}</button>`).join('')}</div>`}
           ${p.notes.length === 0 ? `<p style="color:var(--muted);font-size:13px;">Sem notas ainda.</p>` :
-            (() => { const curLevelNoteId = urgencyClosed(p) ? null : (latestLevelNote(p)||{}).id; return p.notes.slice().sort((a,b)=>b.date-a.date).map(n=>{
+            p.notes.filter(n=>noteFilter==='all' || noteTypeInfo(n.type).v===noteFilter).length === 0 ? `<p style="color:var(--muted);font-size:13px;">Sem notas deste tipo.</p>` :
+            (() => { const curLevelNoteId = urgencyClosed(p) ? null : (latestLevelNote(p)||{}).id; return p.notes.filter(n=>noteFilter==='all' || noteTypeInfo(n.type).v===noteFilter).sort((a,b)=>b.date-a.date).map(n=>{
               const nt = noteTypeInfo(n.type);
               const ng = n.gameId ? games.find(x=>x.id===n.gameId) : null;
               const gaClub = ng ? clubInfo(ng.clubAId) : null;
@@ -4489,35 +4946,78 @@ function renderDossier(){
         </div>`;
   const reportTabHtml = renderReportTabHtml(p);
   const head = `      <div class="dossier-head">
-        <button class="btn btn-ghost" onclick="closeDossier()">← Voltar</button>
+        <div class="pd-crumb"><button class="btn btn-ghost" onclick="closeDossier()">← Voltar</button><span class="pd-path">JOGADORES / ${club ? escapeHtml(club.name).toUpperCase() : 'SEM CLUBE'} / <b>${escapeHtml(p.name).toUpperCase()}</b></span></div>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-export" onclick="exportPlayerReport('${p.id}')">⭳ Exportar relatório</button>
           <button class="btn btn-ghost" onclick="openEditPlayerModal('${p.id}')">Editar</button>
           <button class="btn btn-ghost" onclick="removePlayer('${p.id}')">Eliminar ficha</button>
         </div>
       </div>`;
-  const idHtml = `        <div class="dossier-id">
-          ${avatarHtml(p.photo, initials(p.name), pos.line, 'dossier-badge')}
-          <div>
-            <h2 class="dossier-name">${escapeHtml(p.name)}</h2>
-            <div class="tag-row">
-              <span class="tag">${pos.label}</span>
-              <span class="tag">${club ? escapeHtml(club.name) : 'Sem clube'}</span>
-              ${age !== null ? `<span class="tag">${age} anos</span>` : ''}
-            </div>
-            <div class="club-update-row">
-              <button class="btn-ghost" onclick="openUpdateClubModal('${p.id}')">⟳ Atualizar clube</button>
-            </div>
+  // ---- perfil em formato dashboard ----
+  const tab = ['notas','metricas'].includes(dossierTab) ? dossierTab : 'relatorio';
+  const nt = p.nationalTeamId ? clubInfo(p.nationalTeamId) : null;
+  const natLabel = nt ? nt.name : (p.nationality || '—');
+  const stI = statusInfo(p.status);
+  const sideHtml = `
+      <aside class="pd-card pd-side">
+        ${avatarHtml(p.photo, initials(p.name), pos.line, 'pd-photo')}
+        <h2 class="pd-name">${escapeHtml(p.name)}</h2>
+        <div class="pd-sub">${escapeHtml(pos.label)} · ${club ? escapeHtml(club.name) : 'Sem clube'}</div>
+        ${p.status ? `<span class="pd-status ${stI.cls}">${escapeHtml(stI.label)}</span>` : ''}
+        <dl class="pd-kv">
+          <div><dt>Nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
+          <div><dt>Idade</dt><dd>${age !== null ? age+' anos' : '—'}</dd></div>
+          <div><dt>Altura</dt><dd>${p.height ? p.height+' cm' : '—'}</dd></div>
+          <div><dt>Nacionalidade</dt><dd>${escapeHtml(natLabel)}</dd></div>
+          <div><dt>Pé</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
+          <div><dt>Contrato</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ` <span class="status-pill ${cStatus.cls}">${cStatus.label}</span>` : ''}</dd></div>
+        </dl>
+        <button class="btn-ghost pd-club-btn" onclick="openUpdateClubModal('${p.id}')">⟳ Atualizar clube</button>
+      </aside>`;
+  const curLvl = currentUrgencyLevel(p);
+  const lastNote = p.notes.length ? p.notes.slice().sort((a,b)=>b.date-a.date)[0] : null;
+  const kpisHtml = `
+        <section class="pd-kpis">
+          <div class="pd-card pd-kpi"><div class="pd-l">Rating</div>${ratingStarsHtml}<div class="pd-s">${p.rating ? p.rating+' de 5' : 'Sem rating'}</div></div>
+          <div class="pd-card pd-kpi"><div class="pd-l">Projeção</div><div class="pd-v">${p.projecao ? escapeHtml(p.projecao) : '—'}</div><div class="pd-s">${p.projecao ? '' : 'Por definir'}</div></div>
+          <div class="pd-card pd-kpi"><div class="pd-l">Enquadramento</div><div class="pd-v">${p.enquadramento ? escapeHtml(p.enquadramento) : '—'}</div><div class="pd-s">${p.enquadramento ? '' : 'Por definir'}</div></div>
+          <div class="pd-card pd-kpi"><div class="pd-l">Urgência</div>
+            <div class="lvl-row" style="margin-top:8px;">${URGENCY_LEVELS.map(l=>`<button class="lvl-chip ${l.cls} ${curLvl===l.v?'active':''}" ${urgencyClosed(p)?'disabled':''} onclick="updateUrgencyLevel('${p.id}','${l.v}',null)">${l.v}</button>`).join('')}</div>
+            <div class="pd-s">${urgencyClosed(p) ? 'Avaliação fechada (Aprovado)' : (curLvl ? (curLvl==='A' ? 'Nível A: na lista da página inicial' : 'Nível atual: '+curLvl) : 'Sem nível atribuído')}</div></div>
+          <div class="pd-card pd-kpi"><div class="pd-l">Notas</div><div class="pd-v">${p.notes.length}</div><div class="pd-s">${lastNote ? 'última '+timeAgo(lastNote.date) : 'Ainda sem notas'}</div></div>
+        </section>`;
+  const gameIds = [...new Set(p.notes.map(n=>n.gameId).filter(Boolean))];
+  const seenGames = gameIds.map(id=>games.find(g=>g.id===id)).filter(Boolean);
+  const gamesHtml = `
+        <div class="pd-card pd-panel">
+          <h3>Jogos observados <span class="pd-count">${seenGames.length}</span></h3>
+          ${seenGames.length === 0 ? `<p class="pd-empty">Ainda sem jogos observados. Liga uma nota a um jogo para aparecer aqui.</p>` :
+            seenGames.map(g=>{ const ca = clubInfo(g.clubAId), cb = clubInfo(g.clubBId);
+              return `<div class="pd-game"><b>${ca?escapeHtml(ca.name):'—'} vs ${cb?escapeHtml(cb.name):'—'}</b><span>${g.date ? fmtDateOnly(g.date) : ''}${g.competition ? ' · '+escapeHtml(g.competition) : ''}</span></div>`; }).join('')}
+        </div>`;
+  const listsHtml = `
+        <div class="pd-card pd-panel pd-lists">
+          ${shortlistsHtml}${shadowHtml}
+        </div>`;
+  const dossierInner = `
+        <div class="pd-wrap">
+          ${sideHtml}
+          <div class="pd-main">
+            ${kpisHtml}
+            <section class="pd-card pd-panel pd-tabs-panel">
+              <div class="pd-ptabs">
+                <button type="button" class="pd-ptab ${tab==='relatorio'?'active':''}" onclick="setDossierTab('relatorio')">Relatório final</button>
+                <button type="button" class="pd-ptab ${tab==='notas'?'active':''}" onclick="setDossierTab('notas')">Notas <em>${p.notes.length}</em></button>
+                <button type="button" class="pd-ptab ${tab==='metricas'?'active':''}" onclick="setDossierTab('metricas')">Métricas físicas</button>
+              </div>
+              ${tab === 'notas' ? notesTabHtml : (tab === 'metricas' ? metricsTabHtml(p) : reportTabHtml)}
+            </section>
+            <div class="pd-row2">${gamesHtml}${listsHtml}</div>
           </div>
         </div>`;
-  const tabsHtml = (tabs) => `<div class="dtabs">${tabs.map(t=>`<button type="button" class="dtab ${dossierTab===t.v?'active':''}" onclick="setDossierTab('${t.v}')">${t.label}</button>`).join('')}</div>`;
-  const tab = ['relatorio','notas'].includes(dossierTab) ? dossierTab : 'ficha';
-  const dossierInner = `${idHtml}
-        ${tabsHtml([{v:'ficha',label:'Ficha'},{v:'relatorio',label:'Relatório'},{v:'notas',label:'Notas'}])}
-        ${tab === 'ficha' ? `${basicHtml}${ratingSectionHtml}${urgencyHtml}${shortlistsHtml}${shadowHtml}` : (tab === 'relatorio' ? reportTabHtml : notesTabHtml)}`;
   const dossierBodyHtml = `
       ${head}
-      <div class="dossier-body">
+      <div class="dossier-body pd">
         ${dossierInner}
       </div>`;
   let panel = root.querySelector('.dossier');
@@ -4818,6 +5318,7 @@ async function confirmClearAll(){
   shadowTeams = [];
   tacticalSheets = [];
   competitions = [];
+  metricsConfig = {};
   activeShortlistId = null;
   activeGameId = null;
   activeShadowTeamId = null;
