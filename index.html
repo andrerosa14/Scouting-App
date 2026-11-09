@@ -638,6 +638,17 @@
   .sp-sub{font-size:10px;color:#3a3a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .sp-cat{width:24px;height:30px;border-radius:3px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.4);color:#10241a;flex-shrink:0;padding:0;cursor:pointer;background:#cfd2cc;}
   .c-first .sp-cat{background:#7cc050;} .c-second .sp-cat{background:#f1c40f;} .c-squad .sp-cat{background:#ef8a2b;}
+  /* shadow team gerada a partir de uma shortlist: a cor é o estado atual do jogador */
+  .sp-card.c-approved{background:linear-gradient(90deg,#e4f3d2,#b9dc9a);}
+  .sp-card.c-urgent{background:linear-gradient(90deg,#dcefff,#a8d2f5);}
+  .sp-card.c-follow{background:linear-gradient(90deg,#fdf3b8,#f4d95a);}
+  .sp-card.c-rejected{background:linear-gradient(90deg,#fadbd8,#ee9a94);}
+  .sp-st{width:24px;height:30px;border-radius:3px;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.4);color:#10241a;flex-shrink:0;background:#cfd2cc;}
+  .c-approved .sp-st{background:#7cc050;} .c-urgent .sp-st{background:#4aa3df;} .c-follow .sp-st{background:#f1c40f;} .c-rejected .sp-st{background:#e0584f;color:#fff;}
+  .sl-view-toggle{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:0 0 14px;}
+  .sl-view-toggle button{background:transparent;border:none;color:var(--muted);padding:7px 16px;font-family:inherit;font-size:13.5px;cursor:pointer;}
+  .sl-view-toggle button.active{background:var(--pitch-panel-raise);color:var(--chalk);font-weight:700;}
+  .sp-legend-note{opacity:.8;}
   .sp-cat:hover{filter:brightness(1.08);transform:translateY(-1px);}
   .sp-rank{display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
   .sp-rank button{width:15px;height:12px;border-radius:2px;border:1px solid rgba(0,0,0,.35);background:rgba(255,255,255,.55);color:#222;font-size:7px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;}
@@ -1128,6 +1139,7 @@ let state = {search:'', line:null, status:'all', clubId:null, minRating:0, sort:
 let openDossierId = null;
 let activeTab = null; // null (início) | 'players' | 'clubs' | 'shortlists' | 'games' | 'shadowteams' | 'tatico'
 let activeShortlistId = null;
+let shortlistView = 'lista'; // 'lista' | 'campo' (Shadow Team pelo estado atual dos jogadores)
 let activeGameId = null;
 let activeShadowTeamId = null;
 let activeClubId = null;
@@ -3147,24 +3159,72 @@ function renderShortlistsTabHtml(){
 
 function openShortlistDetail(id){
   activeShortlistId = id;
+  shortlistView = 'lista';
   renderTabContent();
 }
 
+// ordena os jogadores da shortlist pelo estado (Aprovado, Urgência, Acompanhar, sem estado, Reprovado), mantendo a ordem da shortlist dentro de cada estado
+const STATUS_RANK = {approved:0, urgent:1, follow:2, '':3, rejected:4};
+function shortlistPlayersByStatus(sl){
+  return sl.playerIds.map(id => players.find(p=>p.id===id)).filter(Boolean)
+    .map((p,i) => ({p, i})).sort((a,b) => (STATUS_RANK[a.p.status||''] ?? 3) - (STATUS_RANK[b.p.status||''] ?? 3) || a.i - b.i).map(x=>x.p);
+}
+function setShortlistView(v){ shortlistView = v; renderTabContent(); }
+function shortlistPitchCardHtml(p){
+  const club = clubInfo(p.clubId);
+  const st = p.status || '';
+  const cat = STATUS_CATS.find(c=>c.v===st);
+  const year = /^(\d{4})/.test(p.birthDate || '') ? p.birthDate.slice(0,4) : '—';
+  return `
+  <div class="sp-card ${st ? 'c-'+st : 'c-none'}">
+    <div class="sp-photo">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div>
+    <div class="sp-info">
+      <button type="button" class="sp-name" title="Abrir perfil de ${escapeHtml(p.name)}" onclick="openDossier('${p.id}')">${escapeHtml(p.name)}</button>
+      <div class="sp-sub">${year} | ${club ? escapeHtml(club.name) : 'Sem clube'}</div>
+    </div>
+    <div class="sp-st" title="${cat ? escapeHtml(cat.label) : 'Sem estado'}">${cat ? cat.letter : '–'}</div>
+  </div>`;
+}
+function shortlistShadowHtml(sl){
+  const list = shortlistPlayersByStatus(sl);
+  const byPos = {};
+  POSITIONS.forEach(pos=>{ byPos[pos.v] = []; });
+  list.forEach(p => { (byPos[p.position] = byPos[p.position] || []).push(p); });
+  const counts = {}; STATUS_CATS.forEach(c => counts[c.v] = list.filter(p=>p.status===c.v).length);
+  const noStatus = list.filter(p=>!p.status).length;
+  const slotHtml = (posCode) => {
+    const l = byPos[posCode] || [];
+    return `<div class="sp-grp ${l.length ? '' : 'empty'}"><div class="sp-tag">${posCode}${l.length ? '' : '<small>—</small>'}</div>${l.map(shortlistPitchCardHtml).join('')}</div>`;
+  };
+  return `
+    <div class="sp-legend">
+      ${STATUS_CATS.map(c => `<span><i style="background:${c.color};${c.v==='rejected'?'color:#fff;':''}">${c.letter}</i>${escapeHtml(c.label)} (${counts[c.v]})</span>`).join('')}
+      <span><i style="background:#cfd2cc;">–</i>Sem estado (${noStatus})</span>
+      <span class="sp-legend-note">A cor é o estado atual do jogador · muda-se na ficha dele · dentro de cada posição ficam primeiro os aprovados</span>
+    </div>
+    ${shadowPitchHtml(slotHtml)}`;
+}
 function renderShortlistDetailHtml(){
   const sl = shortlists.find(s=>s.id===activeShortlistId);
   if(!sl){ activeShortlistId = null; return renderShortlistsTabHtml(); }
   const list = players.filter(p=>sl.playerIds.includes(p.id));
+  const campo = shortlistView === 'campo' && list.length > 0;
   return `
     <div class="shortlist-detail-head">
       <button class="btn btn-ghost" onclick="activeShortlistId=null; renderTabContent();">← Shortlists</button>
       <div style="display:flex;gap:6px;">
+        ${campo ? `<button class="btn btn-ghost" onclick="exportShortlistShadowPdf('${sl.id}')">↓ Exportar PDF</button>` : ''}
         <button class="btn btn-ghost" onclick="openShortlistFormModal('${sl.id}')">Editar nome</button>
         <button class="btn btn-ghost" onclick="removeShortlist('${sl.id}')">Eliminar shortlist</button>
       </div>
     </div>
     <h2 class="shortlist-detail-title">${escapeHtml(sl.name)}</h2>
     ${list.length === 0 ? `<div class="empty"><h2>Ainda sem jogadores</h2><p>Adiciona jogadores a esta shortlist a partir da ficha de cada um (secção "Shortlists").</p></div>` :
-    `<div class="list">${list.map(p=>{
+    `<div class="sl-view-toggle">
+      <button type="button" class="${campo ? '' : 'active'}" onclick="setShortlistView('lista')">Lista</button>
+      <button type="button" class="${campo ? 'active' : ''}" onclick="setShortlistView('campo')">Shadow Team</button>
+    </div>
+    ${campo ? shortlistShadowHtml(sl) : `<div class="list">${list.map(p=>{
       const pos = posInfo(p.position);
       const club = clubInfo(p.clubId);
       return `
@@ -3176,8 +3236,21 @@ function renderShortlistDetailHtml(){
         <div></div>
         <button type="button" class="btn-ghost" style="justify-self:end;" onclick="event.stopPropagation(); toggleShortlistPlayer('${sl.id}','${p.id}').then(renderTabContent);">Remover</button>
       </div>`;
-    }).join('')}</div>`}
+    }).join('')}</div>`}`}
   `;
+}
+function exportShortlistShadowPdf(id){
+  const sl = shortlists.find(x=>x.id===id);
+  if(!sl) return;
+  const ordered = shortlistPlayersByStatus(sl);
+  if(!ordered.length){ showToast('Esta shortlist ainda não tem jogadores.'); return; }
+  const html = shadowTeamPdfHtml({name: sl.name, playerIds: ordered.map(p=>p.id)}, true, {
+    cats: STATUS_CATS, catOf: (pid) => { const p = players.find(x=>x.id===pid); return p ? (p.status || '') : ''; },
+    brand: 'Scouting Base · Shadow Team (estado dos jogadores)', titlePrefix: 'Shadow Team',
+  });
+  const win = window.open('', '_blank');
+  if(!win){ showToast('O browser bloqueou a nova janela. Permite pop-ups para exportar o PDF.'); return; }
+  win.document.open(); win.document.write(html); win.document.close();
 }
 
 async function toggleShortlistPlayer(shortlistId, playerId){
@@ -3281,6 +3354,30 @@ function pitchPlayerRowHtml(st, p, rank, isFirst, isLast){
   </div>`;
 }
 
+// o campo (relvado + colunas por posição); `slotHtml(posCode)` devolve o grupo de cartões de cada posição
+function shadowPitchHtml(slotHtml){
+  return `
+    <div class="sp-scroll">
+      <div class="sp-pitch">
+        <svg class="sp-lines" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.2">
+          <rect x="8" y="8" width="984" height="584"/><line x1="500" y1="8" x2="500" y2="592"/>
+          <circle cx="500" cy="300" r="70"/><circle cx="500" cy="300" r="3" fill="rgba(255,255,255,.8)"/>
+          <rect x="8" y="140" width="150" height="320"/><rect x="8" y="225" width="52" height="150"/>
+          <rect x="842" y="140" width="150" height="320"/><rect x="940" y="225" width="52" height="150"/>
+        </svg>
+        <div class="sp-cols">
+          <div class="sp-col">${slotHtml('GR')}</div>
+          <div class="sp-col">${slotHtml('DE')}${slotHtml('DCE')}${slotHtml('DCD')}${slotHtml('DD')}</div>
+          <div class="sp-col">${slotHtml('MDC')}</div>
+          <div class="sp-col">${slotHtml('MC')}${slotHtml('MOC')}</div>
+          <div class="sp-col">${slotHtml('EE')}${slotHtml('SA')}${slotHtml('ED')}</div>
+          <div class="sp-col">${slotHtml('PL')}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderShadowTeamDetailHtml(st){
   const headHtml = `
     <div class="shortlist-detail-head">
@@ -3324,29 +3421,26 @@ function renderShadowTeamDetailHtml(st){
       <span><i style="background:#ef8a2b;">C</i>Composição</span>
       <span style="opacity:.8;">Clica na letra para mudar a categoria · clica no nome para abrir o perfil</span>
     </div>
-    <div class="sp-scroll">
-      <div class="sp-pitch">
-        <svg class="sp-lines" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.2">
-          <rect x="8" y="8" width="984" height="584"/><line x1="500" y1="8" x2="500" y2="592"/>
-          <circle cx="500" cy="300" r="70"/><circle cx="500" cy="300" r="3" fill="rgba(255,255,255,.8)"/>
-          <rect x="8" y="140" width="150" height="320"/><rect x="8" y="225" width="52" height="150"/>
-          <rect x="842" y="140" width="150" height="320"/><rect x="940" y="225" width="52" height="150"/>
-        </svg>
-        <div class="sp-cols">
-          <div class="sp-col">${slotHtml('GR')}</div>
-          <div class="sp-col">${slotHtml('DE')}${slotHtml('DCE')}${slotHtml('DCD')}${slotHtml('DD')}</div>
-          <div class="sp-col">${slotHtml('MDC')}</div>
-          <div class="sp-col">${slotHtml('MC')}${slotHtml('MOC')}</div>
-          <div class="sp-col">${slotHtml('EE')}${slotHtml('SA')}${slotHtml('ED')}</div>
-          <div class="sp-col">${slotHtml('PL')}</div>
-        </div>
-      </div>
-    </div>
+    ${shadowPitchHtml(slotHtml)}
   `;
 }
 
 /* ---------------- exportar Shadow Team (PDF, uma página A4 horizontal) ---------------- */
-function shadowTeamPdfHtml(st, autoPrint){
+// categorias da Shadow Team (manuais) e do modo "estado do jogador" (shortlist)
+const SHADOW_CATS = [
+  {v:'first', letter:'1ª', label:'1ª Linha', color:'#7cc050', bg:['#e4f3d2','#b9dc9a']},
+  {v:'second', letter:'2ª', label:'2ª Linha', color:'#f1c40f', bg:['#fdf3b8','#f4d95a']},
+  {v:'squad', letter:'C', label:'Composição', color:'#ef8a2b', bg:['#fde1bd','#f2a867']},
+];
+const STATUS_CATS = [
+  {v:'approved', letter:'A', label:'Aprovado', color:'#7cc050', bg:['#e4f3d2','#b9dc9a']},
+  {v:'urgent', letter:'U', label:'Observação com Urgência', color:'#4aa3df', bg:['#dcefff','#a8d2f5']},
+  {v:'follow', letter:'Ac', label:'Acompanhar', color:'#f1c40f', bg:['#fdf3b8','#f4d95a']},
+  {v:'rejected', letter:'R', label:'Reprovado', color:'#e0584f', bg:['#fadbd8','#ee9a94']},
+];
+function shadowTeamPdfHtml(st, autoPrint, opts){
+  opts = opts || {};
+  const cats = opts.cats || SHADOW_CATS;
   const byPos = {};
   POSITIONS.forEach(pos=>{ byPos[pos.v] = []; });
   st.playerIds.forEach(pid=>{
@@ -3363,8 +3457,8 @@ function shadowTeamPdfHtml(st, autoPrint){
   const u = Math.max(4.6, Math.min(10.5, availMm / maxUnits));
   const namePt = Math.max(4.6, Math.min(8.4, u * .8));
   const subPt = namePt * .78;
-  const catInfo = (id) => (st.playerCategories && st.playerCategories[id]) || '';
-  const letter = { first:'1ª', second:'2ª', squad:'C', '':'–' };
+  const catInfo = opts.catOf || ((id) => (st.playerCategories && st.playerCategories[id]) || '');
+  const letter = {}; cats.forEach(c => { letter[c.v] = c.letter; });
   // largura útil do texto em cada coluna (mm), para encolher o nome/clube até caberem inteiros (sem "…")
   const FR = [1, 1.05, 1, 1.05, 1.05, 1];
   const frMm = (281 - .8 - 8 - 5 * 3) / FR.reduce((a,b)=>a+b, 0);
@@ -3389,20 +3483,18 @@ function shadowTeamPdfHtml(st, autoPrint){
     return `<div class="g ${list.length ? '' : 'e'}"><div class="t">${pos}</div>${list.map(p=>cardHtml(p, ci)).join('')}</div>`;
   };
   const total = st.playerIds.filter(id => players.some(p => p.id === id)).length;
-  const counts = { first:0, second:0, squad:0 };
+  const counts = {}; cats.forEach(c => { counts[c.v] = 0; });
   st.playerIds.forEach(id => { const c = catInfo(id); if(counts[c] !== undefined && players.some(p=>p.id===id)) counts[c]++; });
   const inner = `
     <div class="top">
       <div>
-        <div class="brand">Scouting Base · Shadow Team</div>
+        <div class="brand">${escapeHtml(opts.brand || 'Scouting Base · Shadow Team')}</div>
         <h1>${escapeHtml(st.name)}</h1>
       </div>
       <div class="top-right">
         <div class="period">${total} jogador${total===1?'':'es'}</div>
         <div class="keys">
-          <span class="key"><i style="background:#7cc050"></i>1ª Linha (${counts.first})</span>
-          <span class="key"><i style="background:#f1c40f"></i>2ª Linha (${counts.second})</span>
-          <span class="key"><i style="background:#ef8a2b"></i>Composição (${counts.squad})</span>
+          ${cats.map(c => `<span class="key"><i style="background:${c.color}"></i>${escapeHtml(c.label)} (${counts[c.v]})</span>`).join('')}
         </div>
       </div>
     </div>
@@ -3427,18 +3519,16 @@ function shadowTeamPdfHtml(st, autoPrint){
     .c{display:flex;align-items:center;gap:1.4mm;padding:.5mm 1.2mm;height:${u}mm;border:.2mm solid rgba(0,0,0,.5);border-top:none;color:#111;}
     .g .t + .c{border-top:.2mm solid rgba(0,0,0,.5);}
     .c.none{background:linear-gradient(90deg,#f1f1ee,#d7d9d4);}
-    .c.first{background:linear-gradient(90deg,#e4f3d2,#b9dc9a);}
-    .c.second{background:linear-gradient(90deg,#fdf3b8,#f4d95a);}
-    .c.squad{background:linear-gradient(90deg,#fde1bd,#f2a867);}
+    ${cats.map(c => `.c.${c.v}{background:linear-gradient(90deg,${c.bg[0]},${c.bg[1]});}`).join('\n    ')}
     .ph{height:${(u - 1.4).toFixed(2)}mm;width:${((u - 1.4) * .82).toFixed(2)}mm;border-radius:.6mm;border:.2mm solid rgba(0,0,0,.45);background:#fff;display:flex;align-items:center;justify-content:center;font-size:${subPt}pt;font-weight:800;color:#556;overflow:hidden;flex-shrink:0;}
     .ph img{width:100%;height:100%;object-fit:cover;}
     .in{flex:1;min-width:0;line-height:1.18;}
     .n{font-weight:700;font-size:${namePt}pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .s{font-size:${subPt}pt;color:#3a3a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .l{height:${(u - 1.8).toFixed(2)}mm;min-width:${((u - 1.8) * .78).toFixed(2)}mm;border-radius:.6mm;font-weight:800;font-size:${namePt}pt;display:flex;align-items:center;justify-content:center;border:.2mm solid rgba(0,0,0,.45);color:#10241a;flex-shrink:0;background:#cfd2cc;}
-    .first .l{background:#7cc050;} .second .l{background:#f1c40f;} .squad .l{background:#ef8a2b;}
+    ${cats.map(c => `.${c.v} .l{background:${c.color};}`).join(' ')}
   `;
-  return compPdfWrapDoc(inner, css, !!autoPrint).replace('<title>Calendário de Competições</title>', `<title>${escapeHtml('Shadow Team — ' + st.name)}</title>`);
+  return compPdfWrapDoc(inner, css, !!autoPrint).replace('<title>Calendário de Competições</title>', `<title>${escapeHtml((opts.titlePrefix || 'Shadow Team') + ' — ' + st.name)}</title>`);
 }
 function exportShadowTeamPdf(id){
   const st = shadowTeams.find(x=>x.id===id);
