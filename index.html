@@ -847,7 +847,9 @@
   .rbadge.rb-st.st-rejected{border-color:var(--status-rejected);}
   .rbadge.rb-st.st-rejected .rb-v{color:var(--status-rejected);}
   .report-textarea{width:100%;min-height:220px;background:var(--pitch-panel-raise);border:1px solid var(--line);color:var(--chalk);border-radius:var(--radius);padding:12px;font-size:14px;line-height:1.55;resize:vertical;}
-  .report-status{font-size:11.5px;color:var(--muted);margin-top:6px;}
+  .report-status{font-size:11.5px;color:var(--muted);margin-top:6px;min-height:15px;}
+  .report-dates{font-size:12.5px;color:var(--muted);margin-top:8px;}
+  .report-dates b{color:var(--chalk);font-weight:600;}
   .report-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:0 28px;}
   /* ---------- perfil do jogador em formato dashboard ---------- */
   .dossier-body.pd{max-width:1360px;padding:22px 28px 80px;}
@@ -4540,13 +4542,24 @@ async function commitReport(id){
   if(!text){
     if(existing) p.notes = p.notes.filter(n => n.id !== existing.id);
   } else if(existing){
+    if(!existing.createdAt) existing.createdAt = existing.date; // relatórios antigos: a data guardada é a melhor aproximação da criação
     existing.text = text; existing.date = Date.now();
   } else {
-    p.notes.push({id: uid(), date: Date.now(), text, type: 'final'});
+    const now = Date.now();
+    p.notes.push({id: uid(), date: now, createdAt: now, text, type: 'final'});
   }
   await saveData();
+  refreshReportDates(p);
   setReportStatus(storageOk ? 'Guardado ✓' : 'Não foi possível guardar');
 }
+// datas do relatório final: criação e última atualização
+function reportDatesHtml(p){
+  const n = finalReportNote(p);
+  if(!n) return 'Ainda sem relatório.';
+  const created = n.createdAt || n.date;
+  return `Criado em <b>${fmtDate(created)}</b> · Última atualização: <b>${fmtDate(n.date)}</b>`;
+}
+function refreshReportDates(p){ const el = document.getElementById('reportDates'); if(el) el.innerHTML = reportDatesHtml(p); }
 function setReportStatus(msg){ const el = document.getElementById('reportStatus'); if(el) el.textContent = msg; }
 function onReportInput(id, value){
   reportDrafts[id] = value;
@@ -4883,7 +4896,6 @@ function ratingBadgesHtml(p){
 }
 function renderReportTabHtml(p){
   const note = finalReportNote(p);
-  const last = note ? `Última atualização: ${fmtDate(note.date)}` : 'Ainda sem relatório.';
   return `
         <div class="report-grid">
           <div class="section">
@@ -4909,7 +4921,8 @@ function renderReportTabHtml(p){
         <div class="section">
           <h3>Relatório de avaliação final</h3>
           <textarea id="reportText" class="report-textarea" placeholder="Escreve aqui o relatório de avaliação final do jogador..." oninput="onReportInput('${p.id}', this.value)" onblur="commitReport('${p.id}')">${escapeHtml(reportTextFor(p))}</textarea>
-          <div class="report-status" id="reportStatus">${escapeHtml(last)}</div>
+          <div class="report-dates" id="reportDates">${reportDatesHtml(p)}</div>
+          <div class="report-status" id="reportStatus"></div>
         </div>`;
 }
 
@@ -5001,7 +5014,8 @@ function renderDossier(){
                   <div class="note-head-left">
                     <span class="note-type-pill t-${nt.v}${lvlCls}">${nt.v==='nivel' ? `${nt.label}: ${escapeHtml(n.level||'—')}` : nt.label}</span>
                     ${nt.v==='nivel' && n.id===curLevelNoteId ? `<span class="tag">Nível atual</span>` : ''}
-                    <span class="note-date">${fmtDate(n.date)}</span>
+                    <span class="note-date">${n.type==='final' ? 'Criado em '+fmtDate(n.createdAt || n.date) : fmtDate(n.date)}</span>
+                    ${n.type==='final' && n.createdAt && fmtDate(n.createdAt) !== fmtDate(n.date) ? `<span class="tag">atualizado em ${fmtDate(n.date)}</span>` : ''}
                     ${n.editedAt ? `<span class="tag" title="Editada a ${fmtDate(n.editedAt)}">editada</span>` : ''}
                     ${ng ? `<span class="tag">Jogo: ${gaClub?escapeHtml(gaClub.name):'—'} vs ${gbClub?escapeHtml(gbClub.name):'—'}</span>` : ''}
                     ${ng && (ng.competition || ng.level) ? `<span class="tag">${ng.competition?escapeHtml(ng.competition):'Sem competição'}${ng.level?' · '+escapeHtml(ng.level):''}</span>` : ''}
@@ -5152,12 +5166,32 @@ function playerReportHtml(p){
         <div class="report-note">
           <div class="report-note-head">
             <span class="report-note-type">${ntype.v==='nivel' ? `${escapeHtml(ntype.label)}: ${escapeHtml(n.level||'—')}` : escapeHtml(ntype.label)}</span>
-            <span class="report-note-date">${fmtDate(n.date)}</span>
+            <span class="report-note-date">${n.type==='final' ? 'Criado em '+fmtDate(n.createdAt || n.date)+((n.createdAt && fmtDate(n.createdAt) !== fmtDate(n.date)) ? ' · atualizado em '+fmtDate(n.date) : '') : fmtDate(n.date)}</span>
             ${gameTagParts.length ? `<span class="report-note-tag">· ${gameTagParts.join(' · ')}</span>` : ''}
           </div>
           <p>${ntype.v==='nivel' ? `${ng ? 'Nível de urgência de observação atribuído neste jogo' : 'Nível de urgência de observação atribuído manualmente na ficha do jogador'}: ${escapeHtml(n.level||'—')}.` : escapeHtml(n.text)}</p>
         </div>`;
       }).join('');
+  // métricas físicas da posição do jogador (só aparece se a posição tiver métricas definidas)
+  const REPORT_MC = {red:'#c1453f', orange:'#d9731c', yellow:'#b8920f', green:'#3f8a4a', teal:'#0b8f80'};
+  const mList = metricsConfig[p.position] || [];
+  const mVals = p.metrics || {};
+  const metricsSectionHtml = mList.length === 0 ? '' : `
+    <div class="report-section">
+      <h3>Métricas físicas · ${escapeHtml(pos.label)}</h3>
+      <table class="report-metrics">
+        ${mList.map(m => {
+          const has = metricValid(mVals[m.id]);
+          const ev = has ? metricEval(m, mVals[m.id]) : null;
+          const col = ev ? (REPORT_MC[ev.color] || '#65675f') : '';
+          return `<tr>
+            <td class="rm-name">${escapeHtml(m.name)}</td>
+            <td class="rm-val">${has ? `<b>${escapeHtml(fmtMetricNum(mVals[m.id]))}</b>${m.unit ? ' <span>'+escapeHtml(m.unit)+'</span>' : ''}` : '<span>—</span>'}</td>
+            <td class="rm-res">${ev ? `<span class="rm-chip" style="color:${col};border-color:${col};background:${col}1f;">${escapeHtml(ev.label)}</span>` : ''}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>`;
   const statusClsMap = {approved:'ok', urgent:'urgent', follow:'follow', rejected:'rejected'};
   const starsHtml = [1,2,3,4,5].map(n => n<=p.rating
     ? `<span style="color:#c99a44;">★</span>`
@@ -5199,6 +5233,13 @@ function playerReportHtml(p){
   .report-note-date{font-size:12px;color:var(--ink-muted);}
   .report-note-tag{font-size:11.5px;color:var(--ink-muted);}
   .report-note p{margin:0;font-size:13.5px;line-height:1.55;}
+  .report-metrics{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .report-metrics td{padding:8px 4px;border-bottom:1px solid var(--paper-line);vertical-align:middle;}
+  .report-metrics tr:last-child td{border-bottom:none;}
+  .rm-name{font-weight:600;width:40%;}
+  .rm-val span{color:var(--ink-muted);font-size:12px;}
+  .rm-res{text-align:right;}
+  .rm-chip{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 12px;border:1px solid;border-radius:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .report-footer{margin-top:32px;padding-top:14px;border-top:1px solid var(--paper-line);font-size:11px;color:var(--ink-muted);display:flex;justify-content:space-between;}
   @media print{
     body{background:var(--paper);}
@@ -5234,8 +5275,11 @@ function playerReportHtml(p){
         <div><dt>Pé preferido</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
         <div><dt>Contrato até</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ' · '+escapeHtml(cStatus.label) : ''}</dd></div>
         <div><dt>Rating geral</dt><dd>${starsHtml} <span style="font-size:12px;color:var(--ink-muted);">${p.rating||0}/5</span></dd></div>
+        <div><dt>Projeção</dt><dd>${p.projecao ? escapeHtml(p.projecao) : '—'}</dd></div>
+        <div><dt>Enquadramento</dt><dd>${p.enquadramento ? escapeHtml(p.enquadramento) : '—'}</dd></div>
       </dl>
     </div>
+    ${metricsSectionHtml}
 
     <div class="report-section">
       <h3>Notas e Avaliações (${p.notes.length})</h3>
