@@ -634,6 +634,8 @@
   .sp-photo{width:30px;height:34px;border-radius:3px;border:1px solid rgba(0,0,0,.4);background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#556;overflow:hidden;flex-shrink:0;}
   .sp-photo img{width:100%;height:100%;object-fit:cover;}
   .sp-info{flex:1;min-width:0;line-height:1.2;}
+  /* só o logo: o branco do fundo (logos guardados com fundo branco) funde-se com a cor do cartão */
+  .sp-clogo{width:16px;height:16px;object-fit:contain;vertical-align:-3px;margin-right:4px;mix-blend-mode:multiply;}
   .sp-name{display:block;max-width:100%;font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:none;padding:0;color:#111;text-align:left;cursor:pointer;font-family:inherit;}
   .sp-name:hover{text-decoration:underline;}
   .sp-sub{font-size:10px;color:#3a3a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -880,7 +882,7 @@
   .ph-club-btn{margin-top:12px;background:none;border:none;color:rgba(244,246,242,.6);font-family:inherit;font-size:12px;cursor:pointer;padding:0;}
   .ph-club-btn:hover{color:#fff;}
   .ph-logos{flex:none;display:flex;align-items:center;gap:18px;align-self:center;padding-bottom:26px;}
-  .ph-logos img{height:64px;max-width:90px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));}
+  .ph-logos img{height:64px;max-width:90px;object-fit:contain;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.4);}
   .ph-logos img.ph-flag{height:44px;border-radius:4px;}
   .ph-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(0,0,0,.5);border-top:1px solid rgba(255,255,255,.1);}
   .ph-cell{padding:16px 22px 14px;border-left:1px solid rgba(255,255,255,.08);min-width:0;}
@@ -2723,7 +2725,7 @@ async function submitInlineClub(){
   const file = fileInput.files[0];
   let logo = null;
   if(file){
-    try{ logo = await fileToDataUrl(file, 240, 0.85); }
+    try{ logo = await fileToDataUrl(file, 240, 0.92, '#ffffff'); }
     catch(e){ showToast('Não foi possível carregar o logótipo.'); }
   }
   const c = {id: uid(), name, logo, createdAt: Date.now()};
@@ -2865,7 +2867,7 @@ function openClubFormModal(editId){
       </div>
     </div>`;
   renderPhotoPreview('c_logo_preview', editing ? editing.logo : null, 'Sem logótipo');
-  wirePhotoPreview('c_logo', 'c_logo_preview', 240, 0.85);
+  wirePhotoPreview('c_logo', 'c_logo_preview', 240, 0.92, '#ffffff');
   setTimeout(()=>{ const el=document.getElementById('c_name'); if(el) el.focus(); }, 50);
 }
 
@@ -2881,7 +2883,7 @@ async function submitClubForm(editId){
     const c = clubs.find(x=>x.id===editId);
     if(!c){ closeModal(); return; }
     if(file){
-      try{ c.logo = await fileToDataUrl(file, 240, 0.85); }
+      try{ c.logo = await fileToDataUrl(file, 240, 0.92, '#ffffff'); }
       catch(e){ showToast('Não foi possível carregar o logótipo.'); }
     } else if(removeChk && removeChk.checked){
       c.logo = null;
@@ -2891,7 +2893,7 @@ async function submitClubForm(editId){
   } else {
     let logo = null;
     if(file){
-      try{ logo = await fileToDataUrl(file, 240, 0.85); }
+      try{ logo = await fileToDataUrl(file, 240, 0.92, '#ffffff'); }
       catch(e){ showToast('Não foi possível carregar o logótipo.'); }
     }
     clubs.push({id: uid(), name, logo, type, createdAt: Date.now()});
@@ -3236,7 +3238,7 @@ function shortlistPitchCardHtml(p){
     <div class="sp-photo">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div>
     <div class="sp-info">
       <button type="button" class="sp-name" title="Abrir perfil de ${escapeHtml(p.name)}" onclick="openDossier('${p.id}')">${escapeHtml(p.name)}</button>
-      <div class="sp-sub">${year} | ${club ? escapeHtml(club.name) : 'Sem clube'}</div>
+      <div class="sp-sub">${year} | ${club && club.logo ? `<img class="sp-clogo" src="${club.logo}" alt="">` : ''}${club ? escapeHtml(club.name) : 'Sem clube'}</div>
     </div>
     <div class="sp-st" title="${cat ? escapeHtml(cat.label) : 'Sem estado'}">${cat ? cat.letter : '–'}</div>
   </div>`;
@@ -3400,7 +3402,7 @@ function pitchPlayerRowHtml(st, p, rank, isFirst, isLast){
     <div class="sp-photo">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div>
     <div class="sp-info">
       <button type="button" class="sp-name" title="Abrir perfil de ${escapeHtml(p.name)}" onclick="openDossier('${p.id}')">${escapeHtml(p.name)}</button>
-      <div class="sp-sub">${year} | ${club ? escapeHtml(club.name) : 'Sem clube'}</div>
+      <div class="sp-sub">${year} | ${club && club.logo ? `<img class="sp-clogo" src="${club.logo}" alt="">` : ''}${club ? escapeHtml(club.name) : 'Sem clube'}</div>
     </div>
     <div class="sp-rank">
       <button type="button" title="Subir no ranking" ${isFirst?'disabled':''} onclick="moveShadowPlayerRank('${st.id}','${p.id}',-1)">▲</button>
@@ -3519,7 +3521,8 @@ function shadowTeamPdfHtml(st, autoPrint, opts){
   const FR = [1, 1.05, 1, 1.05, 1.05, 1];
   const frMm = (281 - .8 - 8 - 5 * 3) / FR.reduce((a,b)=>a+b, 0);
   const photoW = (u - 1.4) * .82, letterW = (u - 1.8) * .78;
-  const textMm = (ci) => frMm * FR[ci] - 2.4 - 2.8 - .4 - photoW - letterW - .6;
+  const logoMm = u - 1.6;
+  const textMm = (ci, hasLogo) => frMm * FR[ci] - 2.4 - 2.8 - .4 - photoW - letterW - .6 - (hasLogo ? logoMm + 1.4 : 0);
   const fitPt = (txt, pt, weight, maxMm, minPt) => {
     const w = compPdfTextMm(txt, pt, weight);
     return w <= maxMm ? pt : Math.max(minPt, pt * maxMm / w);
@@ -3529,10 +3532,10 @@ function shadowTeamPdfHtml(st, autoPrint, opts){
     const club = clubInfo(p.clubId);
     const year = /^(\d{4})/.test(p.birthDate || '') ? p.birthDate.slice(0,4) : '—';
     const sub = `${year} | ${club ? club.name : 'Sem clube'}`;
-    const avail = textMm(ci);
+    const avail = textMm(ci, !!(club && club.logo));
     const nPt = fitPt(p.name, namePt, 700, avail, 4.2);
     const sPt = fitPt(sub, subPt, 400, avail, 3.8);
-    return `<div class="c ${cat || 'none'}"><div class="ph">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div><div class="in"><div class="n" style="font-size:${nPt.toFixed(2)}pt;">${escapeHtml(p.name)}</div><div class="s" style="font-size:${sPt.toFixed(2)}pt;">${escapeHtml(sub)}</div></div><div class="l">${letter[cat] || '–'}</div></div>`;
+    return `<div class="c ${cat || 'none'}"><div class="ph">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div><div class="in"><div class="n" style="font-size:${nPt.toFixed(2)}pt;">${escapeHtml(p.name)}</div><div class="s" style="font-size:${sPt.toFixed(2)}pt;">${escapeHtml(sub)}</div></div>${club && club.logo ? `<img class="lg" src="${club.logo}" alt="">` : ''}<div class="l">${letter[cat] || '–'}</div></div>`;
   };
   const grpHtml = (pos, ci) => {
     const list = byPos[pos] || [];
@@ -3579,6 +3582,7 @@ function shadowTeamPdfHtml(st, autoPrint, opts){
     .ph{height:${(u - 1.4).toFixed(2)}mm;width:${((u - 1.4) * .82).toFixed(2)}mm;border-radius:.6mm;border:.2mm solid rgba(0,0,0,.45);background:#fff;display:flex;align-items:center;justify-content:center;font-size:${subPt}pt;font-weight:800;color:#556;overflow:hidden;flex-shrink:0;}
     .ph img{width:100%;height:100%;object-fit:cover;}
     .in{flex:1;min-width:0;line-height:1.18;}
+    .lg{height:${(u - 1.6).toFixed(2)}mm;width:${(u - 1.6).toFixed(2)}mm;object-fit:contain;mix-blend-mode:multiply;flex-shrink:0;}
     .n{font-weight:700;font-size:${namePt}pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .s{font-size:${subPt}pt;color:#3a3a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .l{height:${(u - 1.8).toFixed(2)}mm;min-width:${((u - 1.8) * .78).toFixed(2)}mm;border-radius:.6mm;font-weight:800;font-size:${namePt}pt;display:flex;align-items:center;justify-content:center;border:.2mm solid rgba(0,0,0,.45);color:#10241a;flex-shrink:0;background:#cfd2cc;}
