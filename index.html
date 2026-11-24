@@ -627,9 +627,10 @@
   .sp-card{position:relative;display:flex;align-items:center;gap:7px;padding:4px 6px;border:1px solid rgba(0,0,0,.45);border-top:none;box-shadow:0 1px 2px rgba(0,0,0,.35);color:#111;}
   .sp-card:first-of-type{border-top:1px solid rgba(0,0,0,.45);}
   .sp-card.c-none{background:linear-gradient(90deg,#f1f1ee,#d7d9d4);}
-  .sp-card.c-first{background:linear-gradient(90deg,#e4f3d2,#b9dc9a);}
-  .sp-card.c-second{background:linear-gradient(90deg,#fdf3b8,#f4d95a);}
-  .sp-card.c-squad{background:linear-gradient(90deg,#fde1bd,#f2a867);}
+  .sp-card.c-titular{background:linear-gradient(90deg,#c8e6c9,#81c784);}
+  .sp-card.c-pot_titular{background:linear-gradient(90deg,#f1f9e6,#d9eec0);}
+  .sp-card.c-suplente{background:linear-gradient(90deg,#fdf3b8,#f4d95a);}
+  .sp-card.c-pot_plantel{background:linear-gradient(90deg,#fde1bd,#f2a867);}
   .sp-photo{width:30px;height:34px;border-radius:3px;border:1px solid rgba(0,0,0,.4);background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#556;overflow:hidden;flex-shrink:0;}
   .sp-photo img{width:100%;height:100%;object-fit:cover;}
   .sp-info{flex:1;min-width:0;line-height:1.2;}
@@ -637,7 +638,8 @@
   .sp-name:hover{text-decoration:underline;}
   .sp-sub{font-size:10px;color:#3a3a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .sp-cat{width:24px;height:30px;border-radius:3px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.4);color:#10241a;flex-shrink:0;padding:0;cursor:pointer;background:#cfd2cc;}
-  .c-first .sp-cat{background:#7cc050;} .c-second .sp-cat{background:#f1c40f;} .c-squad .sp-cat{background:#ef8a2b;}
+  .c-titular .sp-cat{background:#43a047;} .c-pot_titular .sp-cat{background:#b5e08f;} .c-suplente .sp-cat{background:#f1c40f;} .c-pot_plantel .sp-cat{background:#ef8a2b;}
+  .sp-cat{min-width:24px;width:auto;padding:0 4px;font-size:12px;}
   /* shadow team gerada a partir de uma shortlist: a cor é o estado atual do jogador */
   .sp-card.c-approved{background:linear-gradient(90deg,#e4f3d2,#b9dc9a);}
   .sp-card.c-urgent{background:linear-gradient(90deg,#dcefff,#a8d2f5);}
@@ -856,7 +858,43 @@
   .pd-crumb{display:flex;align-items:center;gap:14px;min-width:0;}
   .pd-path{font-family:var(--font-display);font-size:12px;letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .pd-path b{color:var(--chalk);}
-  .pd-wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start;}
+  .pd-wrap{display:block;}
+  /* cabeçalho da ficha em banner: foto, identificação e faixa de indicadores */
+  .ph-hero-card{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 24px rgba(0,0,0,.28);color:#f4f6f2;
+    --ph-a:#262626;--ph-b:#000;
+    background:radial-gradient(150% 200% at 0% 0%, var(--ph-a), transparent 78%), linear-gradient(135deg,var(--ph-b) 0%,#050505 100%);}
+  .ph-hero{position:relative;display:flex;align-items:flex-end;gap:30px;padding:26px 36px 0 40px;min-height:230px;}
+  .ph-photo{flex:none;width:158px;height:206px;border-radius:10px 10px 0 0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:50px;color:#12271f;background:#e9ece6;align-self:flex-end;}
+  .ph-photo.has-img{background:#fff;}
+  .ph-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;display:block;}
+  .ph-info{flex:1;min-width:0;align-self:center;padding-bottom:26px;}
+  .ph-posrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .ph-badge{background:#fff;color:#12271f;font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.04em;padding:3px 10px;border-radius:5px;}
+  .ph-poslabel{font-family:var(--font-display);font-weight:600;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:rgba(244,246,242,.78);}
+  .ph-name{font-family:var(--font-display);font-weight:700;font-size:44px;line-height:1.08;margin:10px 0 12px;color:#fff;letter-spacing:.005em;}
+  .ph-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;font-size:14px;color:rgba(244,246,242,.8);}
+  .ph-meta b{color:#fff;font-weight:600;}
+  .ph-club{display:inline-flex;align-items:center;gap:8px;}
+  .ph-mini{width:18px;height:18px;object-fit:contain;border-radius:3px;}
+  .ph-status{margin-top:0;}
+  .ph-club-btn{margin-top:12px;background:none;border:none;color:rgba(244,246,242,.6);font-family:inherit;font-size:12px;cursor:pointer;padding:0;}
+  .ph-club-btn:hover{color:#fff;}
+  .ph-logos{flex:none;display:flex;align-items:center;gap:18px;align-self:center;padding-bottom:26px;}
+  .ph-logos img{height:64px;max-width:90px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));}
+  .ph-logos img.ph-flag{height:44px;border-radius:4px;}
+  .ph-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(0,0,0,.5);border-top:1px solid rgba(255,255,255,.1);}
+  .ph-cell{padding:16px 22px 14px;border-left:1px solid rgba(255,255,255,.08);min-width:0;}
+  .ph-cell:first-child{border-left:none;}
+  .ph-l{font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,246,242,.55);}
+  .ph-v{font-family:var(--font-display);font-weight:700;font-size:26px;margin-top:6px;line-height:1.1;color:#fff;}
+  .ph-v-sm{font-size:21px;margin-top:8px;}
+  .ph-s{font-size:12px;color:rgba(244,246,242,.6);margin-top:6px;min-height:16px;}
+  .ph-cell .rating-row{margin:8px 0 0;gap:2px;}
+  .ph-cell .rating-row button{padding:0;border:none;background:none;display:flex;}
+  .ph-cell .rating-row svg{width:22px;height:22px;}
+  .ph-cell .lvl-row{gap:6px;margin-top:8px;}
+  .ph-cell .lvl-chip{width:38px;height:34px;font-size:14px;}
+  .pd-main{margin-top:0;}
   .pd-card{background:var(--pitch-panel);border:1px solid var(--line);border-radius:8px;}
   .pd-side{padding:22px;position:sticky;top:78px;}
   .pd-photo{width:100%;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:54px;color:#12271f;overflow:hidden;}
@@ -953,11 +991,18 @@
     .mc-row .mc-unit{grid-column:1;}
   }
 
-  @media (max-width:1100px){ .pd-kpis{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  @media (max-width:1100px){ .ph-strip{grid-template-columns:repeat(3,minmax(0,1fr));} .ph-cell:nth-child(4){border-left:none;} .ph-cell:nth-child(n+4){border-top:1px solid rgba(255,255,255,.08);} .ph-name{font-size:36px;} }
   @media (max-width:900px){
     .dossier-body.pd{padding:16px;}
-    .pd-wrap{grid-template-columns:1fr;}
-    .pd-side{position:static;}
+    .ph-hero{flex-wrap:wrap;gap:16px;padding:20px 18px 0;min-height:0;align-items:flex-start;}
+    .ph-photo{width:104px;height:136px;font-size:34px;align-self:flex-start;border-radius:10px;margin-bottom:18px;}
+    .ph-info{flex:1 1 0;min-width:0;align-self:flex-start;padding-bottom:16px;}
+    .ph-name{font-size:26px;margin:8px 0 8px;}
+    .ph-meta{gap:4px 14px;font-size:13px;}
+    .ph-logos{display:none;}
+    .ph-strip{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .ph-cell{padding:12px 16px;border-left:none !important;border-top:1px solid rgba(255,255,255,.08);}
+    .ph-cell:nth-child(even){border-left:1px solid rgba(255,255,255,.08) !important;}
     .pd-row2{grid-template-columns:1fr;}
     .pd-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
     .pd-path{display:none;}
@@ -1032,6 +1077,9 @@ const URGENCY_LEVELS = [
 // classificações de scouting: Projeção (potencial de evolução) e Enquadramento (nível/escalão onde já rende)
 const PROJECAO_OPTIONS = ['A', 'B'];
 const ENQUADRAMENTO_OPTIONS = ['A1', 'A2', 'B1', 'B2', 'U23', 'U19'];
+// com Projeção atual = A (equipa A) o enquadramento passa a indicar o papel esperado no plantel
+const ENQUADRAMENTO_OPTIONS_A = ['Titular', 'Potencial Titular', 'Suplente', 'Potencial Plantel'];
+function enquadramentoOptionsFor(p){ return p.projecao === 'A' ? ENQUADRAMENTO_OPTIONS_A : ENQUADRAMENTO_OPTIONS; }
 // largura abaixo da qual as Folhas Táticas usam o esquema compacto (os dois campos lado a lado,
 // com edição por modal) em vez do esquema normal de ambiente de trabalho — tem de corresponder
 // ao "@media (max-width:1366px)" usado para esse esquema no CSS. 1366px cobre telemóveis e
@@ -1475,7 +1523,13 @@ async function fetchDataFromGitHub(){
     return {players: parsed, clubs: [], shortlists: [], games: [], shadowTeams: [], tacticalSheets: [], competitions: [], metricsConfig: defaultMetricsConfig()}; // formato antigo (só jogadores)
   }
   // normalização: shadow teams antigas não tinham categorização de jogadores (1ª Linha/2ª Linha/Composição)
-  const normShadowTeams = (arr) => (arr || []).map(st => ({playerCategories: {}, ...st}));
+  // as categorias antigas (1ª Linha, 2ª Linha, Composição) passaram a Titular, Potencial Titular e Suplente, pela mesma ordem
+  const OLD_SHADOW_CATS = {first:'titular', second:'pot_titular', squad:'suplente'};
+  const normShadowTeams = (arr) => (arr || []).map(st => {
+    const cats = {};
+    Object.keys(st.playerCategories || {}).forEach(id => { const v = st.playerCategories[id]; cats[id] = OLD_SHADOW_CATS[v] || v; });
+    return {...st, playerCategories: cats};
+  });
   // normalização: clubes antigos não tinham "tipo" (clube vs seleção nacional)
   const normClubs = (arr) => (arr || []).map(c => ({type: 'clube', ...c}));
   // normalização: folhas táticas — cada equipa tem um mapa de posições {slotKey: {number, birthYear, notes}}
@@ -3336,9 +3390,10 @@ function openShadowTeamDetail(id){
 function pitchPlayerRowHtml(st, p, rank, isFirst, isLast){
   const club = clubInfo(p.clubId);
   const cat = (st.playerCategories && st.playerCategories[p.id]) || '';
-  const catClass = cat === 'first' ? 'c-first' : cat === 'second' ? 'c-second' : cat === 'squad' ? 'c-squad' : 'c-none';
-  const catLetter = cat === 'first' ? '1ª' : cat === 'second' ? '2ª' : cat === 'squad' ? 'C' : '–';
-  const catName = cat === 'first' ? '1ª Linha' : cat === 'second' ? '2ª Linha' : cat === 'squad' ? 'Composição' : 'Sem categoria';
+  const catDef = SHADOW_CATS.find(c => c.v === cat);
+  const catClass = catDef ? 'c-' + catDef.v : 'c-none';
+  const catLetter = catDef ? catDef.letter : '–';
+  const catName = catDef ? catDef.label : 'Sem categoria';
   const year = /^(\d{4})/.test(p.birthDate || '') ? p.birthDate.slice(0,4) : '—';
   return `
   <div class="sp-card ${catClass}">
@@ -3418,9 +3473,7 @@ function renderShadowTeamDetailHtml(st){
   `;
   return headHtml + addPlayerHtml + `
     <div class="sp-legend">
-      <span><i style="background:#7cc050;">1ª</i>1ª Linha</span>
-      <span><i style="background:#f1c40f;">2ª</i>2ª Linha</span>
-      <span><i style="background:#ef8a2b;">C</i>Composição</span>
+      ${SHADOW_CATS.map(c => `<span><i style="background:${c.color};min-width:20px;padding:0 3px;">${c.letter}</i>${c.label}</span>`).join('')}
       <span style="opacity:.8;">Clica na letra para mudar a categoria · clica no nome para abrir o perfil</span>
     </div>
     ${shadowPitchHtml(slotHtml)}
@@ -3430,9 +3483,10 @@ function renderShadowTeamDetailHtml(st){
 /* ---------------- exportar Shadow Team (PDF, uma página A4 horizontal) ---------------- */
 // categorias da Shadow Team (manuais) e do modo "estado do jogador" (shortlist)
 const SHADOW_CATS = [
-  {v:'first', letter:'1ª', label:'1ª Linha', color:'#7cc050', bg:['#e4f3d2','#b9dc9a']},
-  {v:'second', letter:'2ª', label:'2ª Linha', color:'#f1c40f', bg:['#fdf3b8','#f4d95a']},
-  {v:'squad', letter:'C', label:'Composição', color:'#ef8a2b', bg:['#fde1bd','#f2a867']},
+  {v:'titular', letter:'T', label:'Titular', color:'#43a047', bg:['#c8e6c9','#81c784']},
+  {v:'pot_titular', letter:'PT', label:'Potencial Titular', color:'#b5e08f', bg:['#f1f9e6','#d9eec0']},
+  {v:'suplente', letter:'S', label:'Suplente', color:'#f1c40f', bg:['#fdf3b8','#f4d95a']},
+  {v:'pot_plantel', letter:'PP', label:'Potencial Plantel', color:'#ef8a2b', bg:['#fde1bd','#f2a867']},
 ];
 const STATUS_CATS = [
   {v:'approved', letter:'A', label:'Aprovado', color:'#7cc050', bg:['#e4f3d2','#b9dc9a']},
@@ -3604,7 +3658,7 @@ async function setShadowPlayerCategory(shadowTeamId, playerId, cat){
 async function cycleShadowPlayerCategory(shadowTeamId, playerId){
   const st = shadowTeams.find(s=>s.id===shadowTeamId);
   if(!st) return;
-  const order = ['', 'first', 'second', 'squad'];
+  const order = [''].concat(SHADOW_CATS.map(c => c.v));
   const cur = (st.playerCategories && st.playerCategories[playerId]) || '';
   await setShadowPlayerCategory(shadowTeamId, playerId, order[(order.indexOf(cur) + 1) % order.length]);
 }
@@ -4889,7 +4943,7 @@ function ratingBadgesHtml(p){
   const st = statusInfo(p.status);
   const badge = (label, value, cls) => `<div class="rbadge ${value ? '' : 'empty'} ${cls||''}"><span class="rb-l">${label}</span><span class="rb-v">${value ? escapeHtml(value) : '—'}</span></div>`;
   return `<div class="rating-badges">
-      ${badge('Projeção', p.projecao, 'rb-proj')}
+      ${badge('Projeção atual', p.projecao, 'rb-proj')}
       ${badge('Enquadramento', p.enquadramento, 'rb-enq')}
       ${badge('Estado', p.status ? st.label : '', 'rb-st ' + st.cls)}
     </div>`;
@@ -4906,7 +4960,7 @@ function renderReportTabHtml(p){
             </div>
           </div>
           <div class="section">
-            <h3>Projeção</h3>
+            <h3>Projeção atual</h3>
             <div class="class-row">
               ${PROJECAO_OPTIONS.map(v=>`<button class="class-chip ${p.projecao===v?'active':''}" onclick="updateProjecao('${p.id}','${v}')">${v}</button>`).join('')}
             </div>
@@ -4914,7 +4968,8 @@ function renderReportTabHtml(p){
           <div class="section">
             <h3>Enquadramento</h3>
             <div class="class-row">
-              ${ENQUADRAMENTO_OPTIONS.map(v=>`<button class="class-chip ${p.enquadramento===v?'active':''}" onclick="updateEnquadramento('${p.id}','${v}')">${v}</button>`).join('')}
+              ${(() => { const opts = enquadramentoOptionsFor(p); const list = (p.enquadramento && !opts.includes(p.enquadramento)) ? [...opts, p.enquadramento] : opts; // valor antigo que já não é opção continua visível
+                return list.map(v=>`<button class="class-chip ${p.enquadramento===v?'active':''}" onclick="updateEnquadramento('${p.id}','${escapeHtml(v)}')">${escapeHtml(v)}</button>`).join(''); })()}
             </div>
           </div>
         </div>
@@ -5062,34 +5117,43 @@ function renderDossier(){
   const nt = p.nationalTeamId ? clubInfo(p.nationalTeamId) : null;
   const natLabel = nt ? nt.name : (p.nationality || '—');
   const stI = statusInfo(p.status);
-  const sideHtml = `
-      <aside class="pd-card pd-side">
-        ${avatarHtml(p.photo, initials(p.name), pos.line, 'pd-photo')}
-        <h2 class="pd-name">${escapeHtml(p.name)}</h2>
-        <div class="pd-sub">${escapeHtml(pos.label)} · ${club ? escapeHtml(club.name) : 'Sem clube'}</div>
-        ${p.status ? `<span class="pd-status ${stI.cls}">${escapeHtml(stI.label)}</span>` : ''}
-        <dl class="pd-kv">
-          <div><dt>Nascimento</dt><dd>${p.birthDate ? fmtDateOnly(p.birthDate) : '—'}</dd></div>
-          <div><dt>Idade</dt><dd>${age !== null ? age+' anos' : '—'}</dd></div>
-          <div><dt>Altura</dt><dd>${p.height ? p.height+' cm' : '—'}</dd></div>
-          <div><dt>Nacionalidade</dt><dd>${escapeHtml(natLabel)}</dd></div>
-          <div><dt>Pé</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
-          <div><dt>Contrato</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ` <span class="status-pill ${cStatus.cls}">${cStatus.label}</span>` : ''}</dd></div>
-        </dl>
-        <button class="btn-ghost pd-club-btn" onclick="openUpdateClubModal('${p.id}')">⟳ Atualizar clube</button>
-      </aside>`;
   const curLvl = currentUrgencyLevel(p);
-  const lastNote = p.notes.length ? p.notes.slice().sort((a,b)=>b.date-a.date)[0] : null;
-  const kpisHtml = `
-        <section class="pd-kpis">
-          <div class="pd-card pd-kpi"><div class="pd-l">Rating</div>${ratingStarsHtml}<div class="pd-s">${p.rating ? p.rating+' de 5' : 'Sem rating'}</div></div>
-          <div class="pd-card pd-kpi"><div class="pd-l">Projeção</div><div class="pd-v">${p.projecao ? escapeHtml(p.projecao) : '—'}</div><div class="pd-s">${p.projecao ? '' : 'Por definir'}</div></div>
-          <div class="pd-card pd-kpi"><div class="pd-l">Enquadramento</div><div class="pd-v">${p.enquadramento ? escapeHtml(p.enquadramento) : '—'}</div><div class="pd-s">${p.enquadramento ? '' : 'Por definir'}</div></div>
-          <div class="pd-card pd-kpi"><div class="pd-l">Urgência</div>
-            <div class="lvl-row" style="margin-top:8px;">${URGENCY_LEVELS.map(l=>`<button class="lvl-chip ${l.cls} ${curLvl===l.v?'active':''}" ${urgencyClosed(p)?'disabled':''} onclick="updateUrgencyLevel('${p.id}','${l.v}',null)">${l.v}</button>`).join('')}</div>
-            <div class="pd-s">${urgencyClosed(p) ? 'Avaliação fechada (Aprovado)' : (curLvl ? (curLvl==='A' ? 'Nível A: na lista da página inicial' : 'Nível atual: '+curLvl) : 'Sem nível atribuído')}</div></div>
-          <div class="pd-card pd-kpi"><div class="pd-l">Notas</div><div class="pd-v">${p.notes.length}</div><div class="pd-s">${lastNote ? 'última '+timeAgo(lastNote.date) : 'Ainda sem notas'}</div></div>
-        </section>`;
+  const posBadge = pos.v;
+  const bornTxt = p.birthDate ? fmtDateOnly(p.birthDate) : null;
+  const heroPhoto = p.photo
+    ? `<div class="ph-photo has-img"><img src="${p.photo}" alt=""></div>`
+    : `<div class="ph-photo b-${pos.line}">${escapeHtml(initials(p.name))}</div>`;
+  const heroHtml = `
+      <section class="ph-hero-card" style="${bannerStyleFor(club)}">
+        <div class="ph-hero">
+          ${heroPhoto}
+          <div class="ph-info">
+            <div class="ph-posrow"><span class="ph-badge">${escapeHtml(posBadge)}</span><span class="ph-poslabel">${escapeHtml(pos.label)}${p.foot ? ' · ' + escapeHtml(p.foot) : ''}</span></div>
+            <h2 class="ph-name">${escapeHtml(p.name)}</h2>
+            <div class="ph-meta">
+              <span class="ph-m ph-club">${club && club.logo ? `<img src="${club.logo}" class="ph-mini" alt="">` : ''}<b>${club ? escapeHtml(club.name) : 'Sem clube'}</b></span>
+              <span class="ph-m"><b>${escapeHtml(natLabel)}</b></span>
+              <span class="ph-m">${age !== null ? `Idade ${age}` : 'Idade —'}${bornTxt ? ` · nasc. ${bornTxt}` : ''}</span>
+              <span class="ph-m">${p.height ? p.height+' cm' : 'Altura —'}</span>
+              ${p.status ? `<span class="pd-status ${stI.cls} ph-status">${escapeHtml(stI.label)}</span>` : ''}
+            </div>
+            <button class="ph-club-btn" onclick="openUpdateClubModal('${p.id}')">⟳ Atualizar clube</button>
+          </div>
+          <div class="ph-logos">
+            ${club && club.logo ? `<img src="${club.logo}" alt="">` : ''}
+            ${nt && nt.logo ? `<img src="${nt.logo}" class="ph-flag" alt="">` : ''}
+          </div>
+        </div>
+        <div class="ph-strip">
+          <div class="ph-cell"><div class="ph-l">Rating</div>${ratingStarsHtml}<div class="ph-s">${p.rating ? p.rating+' de 5' : 'Sem rating'}</div></div>
+          <div class="ph-cell"><div class="ph-l">Projeção atual</div><div class="ph-v">${p.projecao ? escapeHtml(p.projecao) : '—'}</div><div class="ph-s">${p.projecao ? '&nbsp;' : 'Por definir'}</div></div>
+          <div class="ph-cell"><div class="ph-l">Enquadramento</div><div class="ph-v ${p.enquadramento && p.enquadramento.length > 5 ? 'ph-v-sm' : ''}">${p.enquadramento ? escapeHtml(p.enquadramento) : '—'}</div><div class="ph-s">${p.enquadramento ? '&nbsp;' : 'Por definir'}</div></div>
+          <div class="ph-cell"><div class="ph-l">Urgência</div>
+            <div class="lvl-row">${URGENCY_LEVELS.map(l=>`<button class="lvl-chip ${l.cls} ${curLvl===l.v?'active':''}" ${urgencyClosed(p)?'disabled':''} onclick="updateUrgencyLevel('${p.id}','${l.v}',null)">${l.v}</button>`).join('')}</div>
+            <div class="ph-s">${urgencyClosed(p) ? 'Avaliação fechada (Aprovado)' : (curLvl ? (curLvl==='A' ? 'Nível A: na lista da página inicial' : 'Nível atual: '+curLvl) : 'Sem nível atribuído')}</div></div>
+          <div class="ph-cell"><div class="ph-l">Contrato</div><div class="ph-v ph-v-sm">${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}</div><div class="ph-s">${cStatus ? `<span class="status-pill ${cStatus.cls}">${cStatus.label}</span>` : '&nbsp;'}</div></div>
+        </div>
+      </section>`;
   const gameIds = [...new Set(p.notes.map(n=>n.gameId).filter(Boolean))];
   const seenGames = gameIds.map(id=>games.find(g=>g.id===id)).filter(Boolean);
   const gamesHtml = `
@@ -5105,9 +5169,8 @@ function renderDossier(){
         </div>`;
   const dossierInner = `
         <div class="pd-wrap">
-          ${sideHtml}
           <div class="pd-main">
-            ${kpisHtml}
+            ${heroHtml}
             <section class="pd-card pd-panel pd-tabs-panel">
               <div class="pd-ptabs">
                 <button type="button" class="pd-ptab ${tab==='relatorio'?'active':''}" onclick="setDossierTab('relatorio')">Relatório final</button>
@@ -5134,6 +5197,61 @@ function renderDossier(){
     panel = root.querySelector('.dossier');
     requestAnimationFrame(()=>{ panel.classList.add('open'); });
   }
+  applyBannerColor(club);
+}
+
+/* ---------------- cor do banner da ficha (cor dominante do logo do clube; sem logo fica preto) ---------------- */
+const BANNER_DEFAULT = {a:'#262626', b:'#000000'};
+const bannerColorCache = {}; // logo (data URL) -> {a, b}
+function rgbToHsl(r,g,b){
+  r/=255; g/=255; b/=255;
+  const mx = Math.max(r,g,b), mn = Math.min(r,g,b), l = (mx+mn)/2;
+  let h = 0, sat = 0;
+  if(mx !== mn){
+    const d = mx - mn;
+    sat = l > .5 ? d/(2-mx-mn) : d/(mx+mn);
+    h = mx === r ? (g-b)/d + (g<b?6:0) : (mx === g ? (b-r)/d + 2 : (r-g)/d + 4);
+    h /= 6;
+  }
+  return [h, sat, l];
+}
+function hslToCss(h,sat,l){ return `hsl(${Math.round(h*360)} ${Math.round(sat*100)}% ${Math.round(l*100)}%)`; }
+// devolve a cor dominante (a mais "colorida") do logo, ajustada para dar bom contraste com texto branco
+function dominantBannerColor(img){
+  const N = 48, cv = document.createElement('canvas'); cv.width = N; cv.height = N;
+  const ctx = cv.getContext('2d', {willReadFrequently:true});
+  ctx.drawImage(img, 0, 0, N, N);
+  const d = ctx.getImageData(0, 0, N, N).data;
+  const bins = Array.from({length:12}, () => ({w:0, r:0, g:0, b:0}));
+  let greyN = 0, greyL = 0;
+  for(let i = 0; i < d.length; i += 4){
+    if(d[i+3] < 140) continue;
+    const [h, sat, l] = rgbToHsl(d[i], d[i+1], d[i+2]);
+    if(l > .93) continue; // branco do fundo/escudo
+    if(sat < .22 || l < .08){ greyN++; greyL += l; continue; } // cinzentos e preto
+    const bin = bins[Math.floor(h*12) % 12], w = sat * (1 - Math.abs(l - .5));
+    bin.w += w; bin.r += d[i]*w; bin.g += d[i+1]*w; bin.b += d[i+2]*w;
+  }
+  let best = bins[0]; bins.forEach(b => { if(b.w > best.w) best = b; });
+  if(best.w < 1.5) return {...BANNER_DEFAULT}; // logo só a preto/branco/cinzento
+  const [h, sat] = rgbToHsl(best.r/best.w, best.g/best.w, best.b/best.w);
+  const sA = Math.min(.85, Math.max(.45, sat));
+  return {a: hslToCss(h, sA, .36), b: hslToCss(h, Math.min(.7, sA), .11)};
+}
+function bannerStyleFor(club){
+  const c = club && club.logo && bannerColorCache[club.logo] ? bannerColorCache[club.logo] : BANNER_DEFAULT;
+  return `--ph-a:${c.a};--ph-b:${c.b};`;
+}
+function applyBannerColor(club){
+  const card = document.querySelector('.ph-hero-card');
+  if(!card || !club || !club.logo || bannerColorCache[club.logo]) return;
+  const img = new Image();
+  img.onload = () => {
+    try{ bannerColorCache[club.logo] = dominantBannerColor(img); }catch(e){ bannerColorCache[club.logo] = {...BANNER_DEFAULT}; }
+    const el = document.querySelector('.ph-hero-card');
+    if(el && openDossierId){ const pp = players.find(x=>x.id===openDossierId); if(pp && pp.clubId === club.id) el.setAttribute('style', bannerStyleFor(club)); }
+  };
+  img.src = club.logo;
 }
 
 /* ---------------- exportar relatório do jogador ---------------- */
@@ -5275,7 +5393,7 @@ function playerReportHtml(p){
         <div><dt>Pé preferido</dt><dd>${escapeHtml(p.foot || '—')}</dd></div>
         <div><dt>Contrato até</dt><dd>${p.contractUntil ? fmtDateOnly(p.contractUntil) : '—'}${cStatus ? ' · '+escapeHtml(cStatus.label) : ''}</dd></div>
         <div><dt>Rating geral</dt><dd>${starsHtml} <span style="font-size:12px;color:var(--ink-muted);">${p.rating||0}/5</span></dd></div>
-        <div><dt>Projeção</dt><dd>${p.projecao ? escapeHtml(p.projecao) : '—'}</dd></div>
+        <div><dt>Projeção atual</dt><dd>${p.projecao ? escapeHtml(p.projecao) : '—'}</dd></div>
         <div><dt>Enquadramento</dt><dd>${p.enquadramento ? escapeHtml(p.enquadramento) : '—'}</dd></div>
       </dl>
     </div>
@@ -5321,6 +5439,8 @@ async function updateProjecao(id, v){
   const p = players.find(x=>x.id===id);
   if(!p) return;
   p.projecao = (p.projecao === v) ? null : v;
+  // se o enquadramento escolhido não existe nas opções da nova projeção (ex: 'Titular' ao passar a B), limpa-o
+  if(p.enquadramento && !enquadramentoOptionsFor(p).includes(p.enquadramento)) p.enquadramento = null;
   await saveData();
   render();
 }
