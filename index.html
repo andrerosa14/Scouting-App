@@ -10,7 +10,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --pitch-dark:#12271f;
@@ -615,52 +615,46 @@
   .sp-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);margin:0 0 10px;}
   .sp-legend span{display:inline-flex;align-items:center;gap:6px;}
   .sp-legend i{display:inline-flex;align-items:center;justify-content:center;width:20px;height:16px;border-radius:3px;font-style:normal;font-weight:800;font-size:10px;color:#10241a;border:1px solid rgba(0,0,0,.3);}
-  .sp-pitch{position:relative;min-width:1180px;border-radius:var(--radius);overflow:hidden;border:2px solid #2d6b2b;
-    background:repeating-linear-gradient(90deg,#3f8a3a 0 6.25%,#4a9a43 6.25% 12.5%);padding:26px 22px;}
-  .sp-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
-  .sp-cols{position:relative;display:grid;grid-template-columns:1fr 1.05fr 1fr 1.05fr 1.05fr 1fr;gap:18px;min-height:700px;}
-  .sp-col{display:flex;flex-direction:column;justify-content:space-around;gap:18px;min-width:0;}
-  .sp-grp{min-width:0;}
-  .sp-tag{display:inline-flex;align-items:center;gap:7px;background:#1b2a3a;color:#fff;font-weight:800;font-size:12px;letter-spacing:.04em;padding:3px 12px 2px;border-radius:6px 6px 0 0;margin-left:6px;border:1px solid #0d1722;border-bottom:none;font-family:var(--font-display);}
-  .sp-tag small{font-weight:600;opacity:.7;font-size:10px;}
-  .sp-grp.empty .sp-tag{opacity:.55;}
-  .sp-card{position:relative;display:flex;align-items:center;gap:7px;padding:4px 6px;border:1px solid rgba(0,0,0,.45);border-top:none;box-shadow:0 1px 2px rgba(0,0,0,.35);color:#111;}
-  .sp-card:first-of-type{border-top:1px solid rgba(0,0,0,.45);}
-  .sp-card.c-none{background:linear-gradient(90deg,#f1f1ee,#d7d9d4);}
-  .sp-card.c-titular{background:linear-gradient(90deg,#c8e6c9,#81c784);}
-  .sp-card.c-pot_titular{background:linear-gradient(90deg,#f1f9e6,#d9eec0);}
-  .sp-card.c-suplente{background:linear-gradient(90deg,#fdf3b8,#f4d95a);}
-  .sp-card.c-pot_plantel{background:linear-gradient(90deg,#fde1bd,#f2a867);}
-  .sp-photo{width:30px;height:34px;border-radius:3px;border:1px solid rgba(0,0,0,.4);background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#556;overflow:hidden;flex-shrink:0;}
-  .sp-photo img{width:100%;height:100%;object-fit:cover;}
-  .sp-info{flex:1;min-width:0;line-height:1.2;}
-  /* só o logo: o branco do fundo (logos guardados com fundo branco) funde-se com a cor do cartão */
-  .sp-clogo{width:16px;height:16px;object-fit:contain;vertical-align:-3px;margin-right:4px;mix-blend-mode:multiply;}
-  .sp-name{display:block;max-width:100%;font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:none;padding:0;color:#111;text-align:left;cursor:pointer;font-family:inherit;}
-  .sp-name:hover{text-decoration:underline;}
-  .sp-sub{font-size:10px;color:#3a3a3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .sp-cat{width:24px;height:30px;border-radius:3px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.4);color:#10241a;flex-shrink:0;padding:0;cursor:pointer;background:#cfd2cc;}
-  .c-titular .sp-cat{background:#43a047;} .c-pot_titular .sp-cat{background:#b5e08f;} .c-suplente .sp-cat{background:#f1c40f;} .c-pot_plantel .sp-cat{background:#ef8a2b;}
-  .sp-cat{min-width:24px;width:auto;padding:0 4px;font-size:12px;}
-  /* shadow team gerada a partir de uma shortlist: a cor é o estado atual do jogador */
-  .sp-card.c-approved{background:linear-gradient(90deg,#e4f3d2,#b9dc9a);}
-  .sp-card.c-urgent{background:linear-gradient(90deg,#dcefff,#a8d2f5);}
-  .sp-card.c-follow{background:linear-gradient(90deg,#fdf3b8,#f4d95a);}
-  .sp-card.c-rejected{background:linear-gradient(90deg,#fadbd8,#ee9a94);}
-  .sp-st{width:24px;height:30px;border-radius:3px;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.4);color:#10241a;flex-shrink:0;background:#cfd2cc;}
-  .c-approved .sp-st{background:#7cc050;} .c-urgent .sp-st{background:#4aa3df;} .c-follow .sp-st{background:#f1c40f;} .c-rejected .sp-st{background:#e0584f;color:#fff;}
+  /* Shadow Team: quadro de giz na vertical */
   .sl-view-toggle{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin:0 0 14px;}
   .sl-view-toggle button{background:transparent;border:none;color:var(--muted);padding:7px 16px;font-family:inherit;font-size:13.5px;cursor:pointer;}
   .sl-view-toggle button.active{background:var(--pitch-panel-raise);color:var(--chalk);font-weight:700;}
   .sp-legend-note{opacity:.8;}
-  .sp-cat:hover{filter:brightness(1.08);transform:translateY(-1px);}
-  .sp-rank{display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
-  .sp-rank button{width:15px;height:12px;border-radius:2px;border:1px solid rgba(0,0,0,.35);background:rgba(255,255,255,.55);color:#222;font-size:7px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;}
-  .sp-rank button:hover{background:#fff;}
-  .sp-rank button:disabled{opacity:.25;cursor:default;}
-  .sp-rm{position:absolute;top:-7px;right:-7px;width:17px;height:17px;border-radius:50%;border:1px solid rgba(0,0,0,.5);background:#fff;color:#a33;font-size:12px;line-height:1;display:none;align-items:center;justify-content:center;padding:0;cursor:pointer;z-index:3;}
-  .sp-card:hover .sp-rm{display:flex;}
-  @media (hover:none){ .sp-rm{display:flex;} }
+  .sb-board{--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;position:relative;max-width:980px;min-width:780px;margin:0 auto;min-height:1180px;padding:46px 42px;border-radius:14px;overflow:hidden;background:radial-gradient(900px 700px at 40% 25%,#35584a,#223d33);box-shadow:inset 0 0 40px rgba(0,0,0,.45),0 6px 20px rgba(0,0,0,.35);font-family:'Inter',system-ui,sans-serif;color:#fff;}
+  .sb-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;stroke:rgba(240,246,236,.6);}
+  .sb-lines circle[r="3"]{fill:rgba(240,246,236,.7);}
+  .sb-rows{position:relative;display:flex;flex-direction:column;min-height:1090px;}
+  .sb-row{flex:1;display:flex;justify-content:space-around;align-items:center;gap:6px;}
+  .sp-grp{display:flex;flex-direction:column;align-items:center;min-width:0;}
+  .sp-tag{font-family:'Inter',system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#fff;background:rgba(10,30,15,.78);padding:3px 11px;border-radius:5px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .sp-tag small{font-weight:500;opacity:.6;margin-left:6px;}
+  .sp-grp.empty .sp-tag{opacity:.5;}
+  .sb-p{--c:#b9bdb5;position:relative;display:flex;align-items:center;gap:6px;max-width:100%;margin-bottom:6px;background:#fff;border:2px solid var(--c);border-radius:999px;padding:3px 7px 3px 3px;box-shadow:0 2px 6px rgba(0,0,0,.35);font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:#10241a;}
+  .sb-p.c-titular{--c:#43a047;} .sb-p.c-pot_titular{--c:#9ccf6e;} .sb-p.c-suplente{--c:#f1c40f;} .sb-p.c-pot_plantel{--c:#ef8a2b;}
+  .sb-p.c-approved{--c:#7cc050;} .sb-p.c-urgent{--c:#4aa3df;} .sb-p.c-follow{--c:#f1c40f;} .sb-p.c-rejected{--c:#e0584f;}
+  .sb-logo{width:22px;height:22px;border-radius:50%;object-fit:contain;background:#fff;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.12);}
+  .sb-logo.ini{display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#6b7780;}
+  .sb-n{min-width:0;background:none;border:none;padding:0;text-align:left;cursor:pointer;color:#10241a;font-family:inherit;font-weight:600;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sb-n:hover{text-decoration:underline;}
+  .sb-y{flex-shrink:0;font-size:10px;font-weight:600;color:#6b7780;}
+  .sb-p[draggable=true]{cursor:grab;user-select:none;-webkit-user-select:none;}
+  .sb-p.sb-dragging{opacity:.35;}
+  .sb-p.sb-ob{box-shadow:0 -4px 0 0 #ffe66b,0 2px 6px rgba(0,0,0,.35);}
+  .sb-p.sb-oa{box-shadow:0 4px 0 0 #ffe66b,0 2px 6px rgba(0,0,0,.35);}
+  .sp-grp{padding:4px 8px;border-radius:10px;}
+  .sp-grp.empty{min-width:96px;min-height:48px;}
+  .sp-grp.sb-drop{background:rgba(255,255,255,.16);outline:2px dashed rgba(255,255,255,.85);outline-offset:-2px;}
+  .sb-c{flex-shrink:0;background:var(--c);color:#10241a;border:none;border-radius:999px;font-family:inherit;font-weight:800;font-size:10px;padding:1px 6px;margin-left:auto;line-height:1.5;}
+  button.sb-c{cursor:pointer;}
+  button.sb-c:hover{filter:brightness(1.08);}
+  .sb-p.c-rejected .sb-c{color:#fff;}
+  .sb-rank{position:absolute;right:6px;top:-10px;display:none;gap:2px;}
+  .sb-rank button{width:18px;height:16px;border-radius:4px;border:none;background:rgba(255,255,255,.9);color:#222;font-size:7px;line-height:1;padding:0;cursor:pointer;}
+  .sb-rank button:disabled{opacity:.3;cursor:default;}
+  .sb-p:hover .sb-rank{display:flex;}
+  .sb-rm{position:absolute;left:-7px;top:-7px;width:17px;height:17px;border-radius:50%;border:none;background:#fff;color:#a33;font-size:12px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+  .sb-p:hover .sb-rm{display:flex;}
+  @media (hover:none){ .sb-rm{display:flex;} }
 
   /* ---------- shadow team: pesquisar e adicionar jogador ---------- */
   .st-add-player{position:relative;max-width:420px;margin-bottom:18px;}
@@ -3228,20 +3222,91 @@ function shortlistPlayersByStatus(sl){
     .map((p,i) => ({p, i})).sort((a,b) => (STATUS_RANK[a.p.status||''] ?? 3) - (STATUS_RANK[b.p.status||''] ?? 3) || a.i - b.i).map(x=>x.p);
 }
 function setShortlistView(v){ shortlistView = v; renderTabContent(); }
-function shortlistPitchCardHtml(p){
+// posição de um jogador dentro de uma Shadow Team (pode ser diferente da ficha, se foi arrastado para outra posição)
+function shadowPos(st, p){ return (st && st.playerPositions && st.playerPositions[p.id]) || p.position; }
+// arrastar e largar (Shadow Team): mudar de posição ou de ranking dentro da mesma posição
+let sbDragPid = null;
+function sbDragStart(e, stId, pid){
+  sbDragPid = pid;
+  try{ e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', pid); }catch(err){}
+  setTimeout(()=>{ const el = e.target && e.target.closest ? e.target.closest('.sb-p') : null; if(el) el.classList.add('sb-dragging'); }, 0);
+}
+function sbDragEnd(){
+  sbDragPid = null;
+  document.querySelectorAll('.sb-dragging,.sb-drop,.sb-ob,.sb-oa').forEach(el=>el.classList.remove('sb-dragging','sb-drop','sb-ob','sb-oa'));
+}
+function sbGroupOver(e){
+  if(!sbDragPid) return;
+  e.preventDefault();
+  e.currentTarget.classList.add('sb-drop');
+}
+function sbGroupLeave(e){
+  if(e.currentTarget.contains(e.relatedTarget)) return;
+  e.currentTarget.classList.remove('sb-drop');
+}
+function sbPillOver(e){
+  if(!sbDragPid) return;
+  e.preventDefault(); e.stopPropagation();
+  const el = e.currentTarget, r = el.getBoundingClientRect();
+  const after = e.clientY > r.top + r.height/2;
+  el.classList.toggle('sb-oa', after); el.classList.toggle('sb-ob', !after);
+  const g = el.closest('.sp-grp'); if(g) g.classList.add('sb-drop');
+}
+function sbPillLeave(e){ e.currentTarget.classList.remove('sb-ob','sb-oa'); }
+async function sbDropOnGroup(e, stId, pos){
+  if(!sbDragPid) return;
+  e.preventDefault();
+  const pid = sbDragPid; sbDragEnd();
+  await dropShadowPlayer(stId, pid, pos, null, false);
+}
+async function sbDropOnPill(e, stId, refPid, pos){
+  if(!sbDragPid) return;
+  e.preventDefault(); e.stopPropagation();
+  const r = e.currentTarget.getBoundingClientRect();
+  const after = e.clientY > r.top + r.height/2;
+  const pid = sbDragPid; sbDragEnd();
+  if(pid === refPid) return;
+  await dropShadowPlayer(stId, pid, pos, refPid, after);
+}
+async function dropShadowPlayer(stId, pid, pos, refPid, after){
+  const st = shadowTeams.find(s=>s.id===stId);
+  const p = players.find(x=>x.id===pid);
+  if(!st || !p || !st.playerIds.includes(pid)) return;
+  const ids = st.playerIds.filter(x=>x!==pid);
+  if(!st.playerPositions) st.playerPositions = {};
+  if(pos === p.position) delete st.playerPositions[pid]; else st.playerPositions[pid] = pos;
+  let at;
+  if(refPid && ids.includes(refPid)){
+    at = ids.indexOf(refPid) + (after ? 1 : 0);
+  } else {
+    // fim do grupo da posição de destino (ou fim da lista se estiver vazia)
+    let last = -1;
+    ids.forEach((id,i)=>{ const q = players.find(x=>x.id===id); if(q && shadowPos(st,q) === pos) last = i; });
+    at = last === -1 ? ids.length : last + 1;
+  }
+  ids.splice(at, 0, pid);
+  st.playerIds = ids;
+  await saveData();
+  renderTabContent();
+}
+function sbPlayerHtml(p, cls, letter, title, ctl){
   const club = clubInfo(p.clubId);
+  const year = /^(\d{4})/.test(p.birthDate || '') ? p.birthDate.slice(0,4) : '';
+  const logo = club ? (club.logo ? `<img class="sb-logo" src="${club.logo}" alt="">` : `<span class="sb-logo ini">${escapeHtml(initials(club.name))}</span>`) : `<span class="sb-logo ini">–</span>`;
+  return `
+  <div class="sb-p ${cls}" ${ctl && ctl.attrs ? ctl.attrs : ''} title="${escapeHtml(p.name)} · ${club ? escapeHtml(club.name) : 'Sem clube'}${year ? ' · ' + year : ''}">
+    ${logo}
+    <button type="button" class="sb-n" onclick="openDossier('${p.id}')">${escapeHtml(p.name)}</button>
+    ${year ? `<span class="sb-y">${year}</span>` : ''}
+    ${ctl && ctl.cat ? ctl.cat : `<span class="sb-c" title="${escapeHtml(title)}">${letter}</span>`}
+    ${ctl && ctl.rank ? ctl.rank : ''}
+    ${ctl && ctl.rm ? ctl.rm : ''}
+  </div>`;
+}
+function shortlistPitchCardHtml(p){
   const st = p.status || '';
   const cat = STATUS_CATS.find(c=>c.v===st);
-  const year = /^(\d{4})/.test(p.birthDate || '') ? p.birthDate.slice(0,4) : '—';
-  return `
-  <div class="sp-card ${st ? 'c-'+st : 'c-none'}">
-    <div class="sp-photo">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div>
-    <div class="sp-info">
-      <button type="button" class="sp-name" title="Abrir perfil de ${escapeHtml(p.name)}" onclick="openDossier('${p.id}')">${escapeHtml(p.name)}</button>
-      <div class="sp-sub">${year} | ${club && club.logo ? `<img class="sp-clogo" src="${club.logo}" alt="">` : ''}${club ? escapeHtml(club.name) : 'Sem clube'}</div>
-    </div>
-    <div class="sp-st" title="${cat ? escapeHtml(cat.label) : 'Sem estado'}">${cat ? cat.letter : '–'}</div>
-  </div>`;
+  return sbPlayerHtml(p, st ? 'c-'+st : 'c-none', cat ? cat.letter : '–', cat ? cat.label : 'Sem estado');
 }
 function shortlistShadowHtml(sl){
   const list = shortlistPlayersByStatus(sl);
@@ -3390,47 +3455,34 @@ function openShadowTeamDetail(id){
 }
 
 function pitchPlayerRowHtml(st, p, rank, isFirst, isLast){
-  const club = clubInfo(p.clubId);
   const cat = (st.playerCategories && st.playerCategories[p.id]) || '';
   const catDef = SHADOW_CATS.find(c => c.v === cat);
   const catClass = catDef ? 'c-' + catDef.v : 'c-none';
   const catLetter = catDef ? catDef.letter : '–';
   const catName = catDef ? catDef.label : 'Sem categoria';
-  const year = /^(\d{4})/.test(p.birthDate || '') ? p.birthDate.slice(0,4) : '—';
-  return `
-  <div class="sp-card ${catClass}">
-    <div class="sp-photo">${p.photo ? `<img src="${p.photo}" alt="">` : escapeHtml(initials(p.name))}</div>
-    <div class="sp-info">
-      <button type="button" class="sp-name" title="Abrir perfil de ${escapeHtml(p.name)}" onclick="openDossier('${p.id}')">${escapeHtml(p.name)}</button>
-      <div class="sp-sub">${year} | ${club && club.logo ? `<img class="sp-clogo" src="${club.logo}" alt="">` : ''}${club ? escapeHtml(club.name) : 'Sem clube'}</div>
-    </div>
-    <div class="sp-rank">
-      <button type="button" title="Subir no ranking" ${isFirst?'disabled':''} onclick="moveShadowPlayerRank('${st.id}','${p.id}',-1)">▲</button>
-      <button type="button" title="Descer no ranking" ${isLast?'disabled':''} onclick="moveShadowPlayerRank('${st.id}','${p.id}',1)">▼</button>
-    </div>
-    <button type="button" class="sp-cat" title="${catName} — clica para mudar" onclick="cycleShadowPlayerCategory('${st.id}','${p.id}')">${catLetter}</button>
-    <button type="button" class="sp-rm" title="Remover da Shadow Team" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderTabContent);">×</button>
-  </div>`;
+  return sbPlayerHtml(p, catClass, catLetter, catName, {
+    attrs:`draggable="true" ondragstart="sbDragStart(event,'${st.id}','${p.id}')" ondragend="sbDragEnd()" ondragover="sbPillOver(event)" ondragleave="sbPillLeave(event)" ondrop="sbDropOnPill(event,'${st.id}','${p.id}','${shadowPos(st,p)}')"`,
+    cat:`<button type="button" class="sb-c" title="${catName} — clica para mudar" onclick="cycleShadowPlayerCategory('${st.id}','${p.id}')">${catLetter}</button>`,
+    rank:`<div class="sb-rank"><button type="button" title="Subir no ranking" ${isFirst?'disabled':''} onclick="moveShadowPlayerRank('${st.id}','${p.id}',-1)">▲</button><button type="button" title="Descer no ranking" ${isLast?'disabled':''} onclick="moveShadowPlayerRank('${st.id}','${p.id}',1)">▼</button></div>`,
+    rm:`<button type="button" class="sb-rm" title="Remover da Shadow Team" onclick="toggleShadowTeamPlayer('${st.id}','${p.id}').then(renderTabContent);">×</button>`
+  });
 }
 
 // o campo (relvado + colunas por posição); `slotHtml(posCode)` devolve o grupo de cartões de cada posição
 function shadowPitchHtml(slotHtml){
+  const row = (arr) => `<div class="sb-row">${arr.map(slotHtml).join('')}</div>`;
   return `
     <div class="sp-scroll">
-      <div class="sp-pitch">
-        <svg class="sp-lines" viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2.2">
-          <rect x="8" y="8" width="984" height="584"/><line x1="500" y1="8" x2="500" y2="592"/>
-          <circle cx="500" cy="300" r="70"/><circle cx="500" cy="300" r="3" fill="rgba(255,255,255,.8)"/>
-          <rect x="8" y="140" width="150" height="320"/><rect x="8" y="225" width="52" height="150"/>
-          <rect x="842" y="140" width="150" height="320"/><rect x="940" y="225" width="52" height="150"/>
+      <div class="sb-board">
+        <svg class="sb-lines" viewBox="0 0 600 1000" preserveAspectRatio="none" fill="none" stroke-width="2.2">
+          <rect x="14" y="14" width="572" height="972"/><line x1="14" y1="500" x2="586" y2="500"/>
+          <circle cx="300" cy="500" r="70"/><circle cx="300" cy="500" r="3"/>
+          <rect x="140" y="14" width="320" height="150"/><rect x="225" y="14" width="150" height="52"/>
+          <rect x="140" y="836" width="320" height="150"/><rect x="225" y="934" width="150" height="52"/>
+          <path d="M255 164 A60 60 0 0 0 345 164"/><path d="M255 836 A60 60 0 0 1 345 836"/>
         </svg>
-        <div class="sp-cols">
-          <div class="sp-col">${slotHtml('GR')}</div>
-          <div class="sp-col">${slotHtml('DE')}${slotHtml('DCE')}${slotHtml('DCD')}${slotHtml('DD')}</div>
-          <div class="sp-col">${slotHtml('MDC')}</div>
-          <div class="sp-col">${slotHtml('MC')}${slotHtml('MOC')}</div>
-          <div class="sp-col">${slotHtml('EE')}${slotHtml('SA')}${slotHtml('ED')}</div>
-          <div class="sp-col">${slotHtml('PL')}</div>
+        <div class="sb-rows">
+          ${row(['PL'])}${row(['EE','SA','ED'])}${row(['MOC','MC'])}${row(['MDC'])}${row(['DE','DCE','DCD','DD'])}${row(['GR'])}
         </div>
       </div>
     </div>
@@ -3455,13 +3507,14 @@ function renderShadowTeamDetailHtml(st){
   st.playerIds.forEach(pid=>{
     const p = players.find(x=>x.id===pid);
     if(!p) return;
-    if(!byPos[p.position]) byPos[p.position] = [];
-    byPos[p.position].push(p);
+    const pp = shadowPos(st, p);
+    if(!byPos[pp]) byPos[pp] = [];
+    byPos[pp].push(p);
   });
   const slotHtml = (posCode) => {
     const list = byPos[posCode] || [];
     return `
-      <div class="sp-grp ${list.length ? '' : 'empty'}">
+      <div class="sp-grp ${list.length ? '' : 'empty'}" ondragover="sbGroupOver(event)" ondragleave="sbGroupLeave(event)" ondrop="sbDropOnGroup(event,'${st.id}','${posCode}')">
         <div class="sp-tag">${posCode}${list.length ? '' : '<small>—</small>'}</div>
         ${list.map((p,i)=>pitchPlayerRowHtml(st, p, i+1, i===0, i===list.length-1)).join('')}
       </div>`;
@@ -3476,7 +3529,7 @@ function renderShadowTeamDetailHtml(st){
   return headHtml + addPlayerHtml + `
     <div class="sp-legend">
       ${SHADOW_CATS.map(c => `<span><i style="background:${c.color};min-width:20px;padding:0 3px;">${c.letter}</i>${c.label}</span>`).join('')}
-      <span style="opacity:.8;">Clica na letra para mudar a categoria · clica no nome para abrir o perfil</span>
+      <span style="opacity:.8;">Arrasta um jogador para outra posição ou para cima/baixo para mudar o ranking · clica na letra para mudar a categoria · clica no nome para abrir o perfil</span>
     </div>
     ${shadowPitchHtml(slotHtml)}
   `;
@@ -3504,8 +3557,9 @@ function shadowTeamPdfHtml(st, autoPrint, opts){
   st.playerIds.forEach(pid=>{
     const p = players.find(x=>x.id===pid);
     if(!p) return;
-    if(!byPos[p.position]) byPos[p.position] = [];
-    byPos[p.position].push(p);
+    const pp = shadowPos(st, p);
+    if(!byPos[pp]) byPos[pp] = [];
+    byPos[pp].push(p);
   });
   const COLS = [['GR'], ['DE','DCE','DCD','DD'], ['MDC'], ['MC','MOC'], ['EE','SA','ED'], ['PL']];
   // altura de cada cartão (mm): ajusta-se para tudo caber numa só página, mesmo com muitos jogadores
@@ -3647,6 +3701,7 @@ async function toggleShadowTeamPlayer(shadowTeamId, playerId){
   const idx = st.playerIds.indexOf(playerId);
   if(idx === -1) st.playerIds.push(playerId); else st.playerIds.splice(idx,1);
   if(st.playerCategories) delete st.playerCategories[playerId];
+  if(st.playerPositions) delete st.playerPositions[playerId];
   await saveData();
 }
 
@@ -3675,7 +3730,7 @@ async function moveShadowPlayerRank(shadowTeamId, playerId, direction){
   // ranking é relativo apenas aos outros jogadores na mesma posição exata
   const samePos = st.playerIds.filter(id=>{
     const pp = players.find(x=>x.id===id);
-    return pp && pp.position === p.position;
+    return pp && shadowPos(st, pp) === shadowPos(st, p);
   });
   const posIdx = samePos.indexOf(playerId);
   const swapWith = samePos[posIdx + direction];
@@ -4986,6 +5041,9 @@ function renderReportTabHtml(p){
 }
 
 function renderDossier(){
+  // se havia uma nota nova a ser escrita e ainda por gravar, grava-a antes de refazer a ficha
+  if(_autosavePending['newnote']){ const fn = _autosavePending['newnote']; clearTimeout(_autosaveTimers['newnote']); delete _autosaveTimers['newnote']; delete _autosavePending['newnote']; try{ fn(); }catch(e){} }
+  newNoteAuto = {};
   const p = players.find(x=>x.id===openDossierId);
   const root = document.getElementById('dossierRoot');
   if(!p){ root.innerHTML=''; return; }
@@ -5053,9 +5111,10 @@ function renderDossier(){
   const notesTabHtml = `        <div class="section">
           <h3>Notas</h3>
           <div class="note-form">
-            <textarea id="noteText" placeholder="Escreve uma nota sobre o jogador..."></textarea>
+            <textarea id="noteText" rows="12" oninput="onNewNoteInput('${p.id}')" placeholder="Escreve uma nota sobre o jogador...">${escapeHtml(NOTE_TEMPLATE)}</textarea>
             <div class="note-form-actions">
-              <button class="btn btn-primary" onclick="addNote('${p.id}')">Adicionar</button>
+              <span id="noteNewStatus" class="note-edit-status" style="margin-right:auto;font-size:12px;color:var(--muted);">Guarda automaticamente enquanto escreves</span>
+              <button class="btn btn-primary" onclick="addNote('${p.id}')">Concluir nota</button>
             </div>
           </div>
           ${p.notes.length === 0 ? '' : `<div class="note-filters">${[['all','Todas'],['nota','Notas'],['final','Avaliação final'],['nivel','Nível de urgência']].map(([v,l])=>`<button type="button" class="chip ${noteFilter===v?'active':''}" onclick="setNoteFilter('${v}')">${l}</button>`).join('')}</div>`}
@@ -5354,7 +5413,7 @@ function playerReportHtml(p){
   .report-note-type{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--gold-dim);}
   .report-note-date{font-size:12px;color:var(--ink-muted);}
   .report-note-tag{font-size:11.5px;color:var(--ink-muted);}
-  .report-note p{margin:0;font-size:13.5px;line-height:1.55;}
+  .report-note p{margin:0;font-size:13.5px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;}
   .report-metrics{width:100%;border-collapse:collapse;font-size:13.5px;}
   .report-metrics td{padding:8px 4px;border-bottom:1px solid var(--paper-line);vertical-align:middle;}
   .report-metrics tr:last-child td{border-bottom:none;}
@@ -5474,13 +5533,42 @@ async function updateUrgencyLevel(id, v, gameId){
 async function updateRating(id, v){
   const p = players.find(x=>x.id===id); p.rating = (p.rating===v ? 0 : v); await saveData(); render();
 }
-async function addNote(id){
+// texto inicial de cada nova nota na ficha do jogador
+const NOTE_TEMPLATE = 'Físico\n\n\nOfensivo\n\n\nDefensivo\n\n\nMental\n';
+// nova nota: grava sozinha enquanto escreves (a primeira vez cria a nota, as seguintes atualizam essa mesma nota)
+let newNoteAuto = {}; // id do jogador -> id da nota criada automaticamente
+function setNewNoteStatus(msg){ const el = document.getElementById('noteNewStatus'); if(el) el.textContent = msg; }
+function noteIsOnlyTemplate(text){ return !text || text.replace(/\s+/g,'') === NOTE_TEMPLATE.replace(/\s+/g,''); }
+async function commitNewNote(id){
   const ta = document.getElementById('noteText');
-  const text = ta.value.trim();
-  if(!text) return;
   const p = players.find(x=>x.id===id);
-  p.notes.push({id: uid(), date: Date.now(), text, type: noteFormType});
-  await saveData(); renderDossier();
+  if(!ta || !p) return false;
+  const text = ta.value.trim();
+  if(noteIsOnlyTemplate(text)){ setNewNoteStatus(newNoteAuto[id] ? 'Guardado ✓' : 'Guarda automaticamente enquanto escreves'); return false; }
+  let n = newNoteAuto[id] ? (p.notes||[]).find(x=>x.id===newNoteAuto[id]) : null;
+  if(n){
+    if(n.text === text){ setNewNoteStatus('Guardado ✓'); return true; }
+    n.text = text;
+  } else {
+    n = {id: uid(), date: Date.now(), text, type: noteFormType};
+    p.notes.push(n);
+    newNoteAuto[id] = n.id;
+  }
+  await saveData();
+  setNewNoteStatus(storageOk ? 'Guardado ✓' : 'Não foi possível guardar');
+  return true;
+}
+function onNewNoteInput(id){
+  setNewNoteStatus('A escrever…');
+  debounceAutosave('newnote', () => commitNewNote(id));
+}
+// "Concluir nota": grava o que falta, fecha esta nota e deixa o formulário pronto para uma nova
+async function addNote(id){
+  clearTimeout(_autosaveTimers['newnote']); delete _autosaveTimers['newnote']; delete _autosavePending['newnote'];
+  const ok = await commitNewNote(id);
+  if(!ok && !newNoteAuto[id]) return;
+  newNoteAuto = {};
+  renderDossier();
 }
 let editingNoteId = null; // nota que está a ser editada no separador Notas da ficha
 let noteEditDraft = '';
